@@ -34,12 +34,7 @@ Konwertowanie typów bazowych przy pomocy operatora `as`:
 | str    |  ❌  | ❌     | 〰️️ | ✔️ |
 | bool   |  ❌  | ❌     | ✔️ | 〰️️ |
 
-W przypadku `variant`ów jedyne możliwe konwersje:
-
-| Z \ Na      | x | variant {x} 
-|-------------|--|-------------------
-| x           | 〰️️ | ✔️                 
-| variant {x} | ✔️ | 〰️️
+W przypadku `variant`ów możemy dokonać konwersji na typ znajdujący się wewnątrz `variant`a. Ewentualnie możemy skorzystać z mechanizmu `inspect` do wykonywania różnych operacji dla różnych typów.
 
 W przypadku `struct`ów nie ma możliwości castowania na inny typ niż ten sam.
 
@@ -95,12 +90,18 @@ Parametry funkcji zawsze mutowalne.
 
 Funkcje mogą wywoływać same siebie (rekursja).
 
-Użycie `return` w funkcji powoduje, że reszta kodu w ciele funkcji nie jest wykonywana. Jest natychmiastowo zwracana podana wartość.
-
-Funkcje zawsze muszą zwrócić wartość (brak funkcji typu `void`), `return;` nie jest poprawnym kodem.
+Użycie `return` w funkcji powoduje, że reszta kodu w ciele funkcji nie jest wykonywana. Jest natychmiastowo zwracana podana wartość. W przypadku funkcji typu `void` nic nie jest zwracane.
 
 ### Komunikaty o błędach
-Analizator leksykalny nie powinien zwracać błędów, nierozpoznane tokeny otrzymają typ `TOKEN_UNKOWN`.
+
+**Błędy analizatora semantycznego**
+
+`LexerError: Line {number} column {number} at '{lexeme}': {message}`
+
+Przykład:
+
+`LexerError: Line 6 column 8 at '999999999999999999': Type int limit exceeded`
+`LexerError: Line 6 column 8 at '12..': Unknown token type`
 
 **Błędy analizatora składniowego**
 
@@ -133,6 +134,7 @@ Język pozwala na umieszczenie w kodzie dwóch rodzajów komentarzy:
 - `//` zakończone znakiem nowej linii `\n`
 - `/*` zakończone `*/`
 
+
 ```
 print "Hello World!";
 print 123;
@@ -142,9 +144,13 @@ Zmienne zawsze muszą być zainicjalizowane.
 
 Przypisanie zmiennej do innej zmiennej powoduje skopiowanie jej wartości.
 
+Długość identyfikatorów i zakres wartości zmiennych `int` i `float` ograniczone.
+
 ## Struktura projektu
 
-`Lexer` - leniwe generowanie `Token`ów ze źródła (ciąg znaków/plik)
+`Source` - abstrakcja dostępu do kodu źródłowego (ciąg znaków/plik)
+
+`Lexer` - leniwe generowanie `Token`ów z `Source`
 
 `Parser` - konsumuje tokeny wygenerowane przez `Lexer`, tworzy `drzewo AST`
 
@@ -156,7 +162,7 @@ Przypisanie zmiennej do innej zmiennej powoduje skopiowanie jej wartości.
 
 ## Testownie
 
-- testy jednostkowe analizatora leksykalnego
+- testy jednostkowe analizatora leksykalnego, składniowego i interpretera
 
 - testy integracyjne analizatora leksykalnego i składniowego
 
@@ -172,10 +178,9 @@ declaration	=	var_decl
                 |       variant_decl
                 |       statement ;
 
-var_decl	=	[ "mut" ] type identifier "=" ( expression | "{" init_list "}" ) ";" ;
-init_list       =       expression { "," expression } ;
+var_decl	=	[ "mut" ] type identifier "=" expression ";" ;
 
-func_decl	=	type identifier "(" [ func_params ] ")" block ;,
+func_decl	=	( type | "void" ) identifier "(" [ func_params ] ")" block ;
 func_params     =	type identifier { "," type identifier } ;
 
 struct_decl 	=	"struct" identifier "{" { struct_field } "}" ;
@@ -189,12 +194,14 @@ statement 	=	expr_stmt
                 |	while_stmt
                 |	return_stmt
                 |	print_stmt
+                |       inspect_stmt
                 |	block ;
 expr_stmt	=	expression ";" ;
 if_stmt		=	"if" "(" expression ")" statement [ "else" statement ] ;
 while_stmt	=	"while" "(" expression ")" statement ;
-return_stmt	=	"return" expression ";" ;
+return_stmt	=	"return" [ expression ] ";" ;
 print_stmt	=	"print" expression ";" ;
+inspect_stmt    =       "inspect" identifier "{" { type identifier "=" ">" statement } [ "default" "=" ">" statement ] "}" ;
 
 block		=	"{" { declaration } "}" ;
 
@@ -207,11 +214,13 @@ equality	=	comparison [ ( "!=" | "==" ) comparison ] ;
 comparison	=	term [ ( ">" | ">=" | "<" | "<=" ) term ] ;
 term		=	factor [ ( "-" | "+" ) factor ] ;
 factor		=	unary [ ( "/" | "*" ) unary ] ;
-unary		=	("not" | "-" ) unary
-                |	type_cast ;
+unary		=	("not" | "-" ) type_cast ;
 type_cast	=	call [ ("as" | "is") type ] ;
-call		=	primary { "(" [ expression { "," expression } ] ")" | "." identifier } ;
-primary		=	string | int_val | float_val | bool_values | identifier | "(" expression ")" ;
+call		=	identifier ( "(" [ expressions_list ] ")" | { "." identifier } )
+                |       primary ;
+primary		=	string | int_val | float_val | bool_values | identifier | "(" expression ")" | "{" struct_init_list "}" ;
+struct_init_list=       expressions_list ;  (* alias *)
+expressions_list=       expression { "," expression } ;
 
 bool_value	=	"true" | "false" ;
 type		=	"bool" | "str" | "int" | "float" | identifier ;
@@ -241,7 +250,7 @@ struct S {
 mut S st_obj = {6, 1.0};
 st_obj.a = st_obj.b as int;
 
-S another_st_obj;
+S another_st_obj = {1, 6.0};
 st_obj = another_st_obj;
 // another_st_obj = st_obj; // BŁĄD, próba przypisania wartości do stałej
 
@@ -255,6 +264,13 @@ mut V varnt_obj = st_obj;
 
 if ( varnt_obj is S ) {
     print varnt_obj.a;
+}
+
+inspect varnt_obj {
+    int val => print val;
+    float val => print val;
+    S val => print val.a;
+    default => print "default";
 }
 
 /*
@@ -301,4 +317,24 @@ Numeric fib(Numeric n) {
         return fib((n - 1.0) as Numeric) + fib((n - 2.0) as Numeric);
     }
 }
+
+Numeric fib2(Numeric n) {
+    inspect n {
+        int val => {
+            if (val <= 1) {
+                return n;
+            }
+            return fib((val - 1) as Numeric) + fib((val - 2) as Numeric);
+        }
+        float val => {
+            if (val <= 1.0) {
+                return n;
+            }
+            return fib((val - 1) as Numeric) + fib((val - 2) as Numeric);
+        }
+    }
+}
+
+int fibval = fib2(3 as Numeric) as int;
+print fibval;
 ```
