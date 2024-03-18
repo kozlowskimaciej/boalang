@@ -25,7 +25,7 @@ if ( vrnt is int ) {
 print text;
 ```
 
-Konwertowanie typów bazowych:
+Konwertowanie typów bazowych przy pomocy operatora `as`:
 
 | Z \ Na | int | float | str | bool |  
 |--------|----|-------|--|--|
@@ -42,6 +42,8 @@ W przypadku `variant`ów jedyne możliwe konwersje:
 | variant {x} | ✔️ | 〰️️
 
 W przypadku `struct`ów nie ma możliwości castowania na inny typ niż ten sam.
+
+Wypisywanie danych na standardowe wyjście odbywa się poprzez użycie słowa kluczowego `print`. Printować można jedynie wartości typów `str`, `int`, `bool` i `float`.
 
 ### Mutowanie zmiennych
 
@@ -130,8 +132,6 @@ Język pozwala na umieszczenie w kodzie dwóch rodzajów komentarzy:
 
 - `//` zakończone znakiem nowej linii `\n`
 - `/*` zakończone `*/`
-
-Wypisywanie danych na standardowe wyjście odbywa się poprzez użycie słowa kluczowego `print`. Printować można jedynie wartości typów `str`, `int`, `bool` i `float`.
 
 ```
 print "Hello World!";
