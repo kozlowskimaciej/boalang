@@ -131,7 +131,7 @@ Język pozwala na umieszczenie w kodzie dwóch rodzajów komentarzy:
 - `//` zakończone znakiem nowej linii `\n`
 - `/*` zakończone `*/`
 
-Wypisywanie danych na standardowe wyjście odbywa się poprzez użycie słowa kluczowego `print`. Printować można jedynie wartości typów `str`, `int` i `float`.
+Wypisywanie danych na standardowe wyjście odbywa się poprzez użycie słowa kluczowego `print`. Printować można jedynie wartości typów `str`, `int`, `bool` i `float`.
 
 ```
 print "Hello World!";
