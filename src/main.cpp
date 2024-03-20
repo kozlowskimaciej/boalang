@@ -1,12 +1,14 @@
 #include <iostream>
-#include <vector>
+
+#include "token/token.hpp"
 
 
 int main() {
-  std::vector<int> v = {1, 2, 3, 4, 5};
-  for (auto &i : v) {
-    std::cout << i << '\n';
-  }
+
+  Token t = Token(TOKEN_INTVAL, 10, {1, 1});
+  Token t2 = Token(TOKEN_INT, {1, 1});
+
+  std::cout << (t2.value == std::nullopt?"true":"false");
 
   return 0;
 }

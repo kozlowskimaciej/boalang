@@ -3,7 +3,7 @@
 
 struct Position {
   unsigned int line;
-  unsigned int col;
+  unsigned int column;
 };
 
 #endif //BOALANG_POSITION_HPP

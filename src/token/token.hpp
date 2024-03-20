@@ -2,13 +2,15 @@
 #define TKOM_BOALANG_TOKEN_HPP
 
 #include <map>
+#include <optional>
 #include <string>
 #include <variant>
 
-#include "utils/position.hpp"
+#include "../utils/position.hpp"
 
 enum TokenType {
-  TOKEN_EOF = 0,
+  // END OF TEXT
+  TOKEN_ETX = 0,
 
   // SINGLE CHAR
   TOKEN_LEFT_PAREN,
@@ -36,9 +38,9 @@ enum TokenType {
 
   // LITERALS
   TOKEN_IDENTIFIER,
-  TOKEN_STR_VAL,
-  TOKEN_INT_VAL,
-  TOKEN_FLOAT_VAL,
+  TOKEN_STRVAL,
+  TOKEN_INTVAL,
+  TOKEN_FLOATVAL,
 
   // KEYWORDS
   TOKEN_MUT,
@@ -64,27 +66,30 @@ enum TokenType {
 };
 
 static const std::map<std::string, TokenType> keywords{
-    {"mut", TOKEN_MUT},         {"if", TOKEN_IF},
-    {"else", TOKEN_ELSE},       {"and", TOKEN_AND},
-    {"or", TOKEN_OR},           {"true", TOKEN_TRUE},
-    {"false", TOKEN_FALSE},     {"while", TOKEN_WHILE},
-    {"return", TOKEN_RETURN},   {"is", TOKEN_IS},
-    {"as", TOKEN_AS},           {"print", TOKEN_PRINT},
-    {"inspect", TOKEN_INSPECT}, {"struct", TOKEN_STRUCT},
-    {"variant", TOKEN_VARIANT}, {"int", TOKEN_INT},
-    {"float", TOKEN_FLOAT},     {"str", TOKEN_STR},
-    {"bool", TOKEN_BOOL},       {"void", TOKEN_VOID}};
+    {"if", TOKEN_IF},         {"else", TOKEN_ELSE},
+    {"and", TOKEN_AND},       {"or", TOKEN_OR},
+    {"true", TOKEN_TRUE},     {"false", TOKEN_FALSE},
+    {"while", TOKEN_WHILE},   {"return", TOKEN_RETURN},
+    {"is", TOKEN_IS},         {"as", TOKEN_AS},
+    {"print", TOKEN_PRINT},   {"inspect", TOKEN_INSPECT},
+    {"struct", TOKEN_STRUCT}, {"variant", TOKEN_VARIANT},
+    {"int", TOKEN_INT},       {"float", TOKEN_FLOAT},
+    {"str", TOKEN_STR},       {"bool", TOKEN_BOOL},
+    {"void", TOKEN_VOID},     {"mut", TOKEN_MUT},
+};
 
 class Token {
-  typedef std::variant<std::string, int, float, bool> value_t;
+  using value_t = std::optional<std::variant<std::string, int, float, bool>>;
 
  public:
   const TokenType type;
   const value_t value;
   const Position position;
 
+  Token(TokenType type, Position position)
+      : type(type), value(std::nullopt), position(position){};
   Token(TokenType type, value_t value, Position position)
-      : type(type), value(value), position(position){};
+      : type(type), value(std::move(value)), position(position){};
 };
 
 #endif  // TKOM_BOALANG_TOKEN_HPP

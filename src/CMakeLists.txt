@@ -1,8 +1,10 @@
+file(GLOB SOURCE_FILES source/*.cpp source/*.hpp)
 file(GLOB LEXER_FILES lexer/*.cpp lexer/*.hpp)
 
 add_library(
         boalang_lib
         main.cpp
+        ${SOURCE_FILES}
         ${LEXER_FILES}
 )
 add_executable(
