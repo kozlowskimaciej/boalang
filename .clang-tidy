@@ -1,0 +1,19 @@
+---
+Checks:
+  'clang-diagnostic-*,
+   clang-analyzer-*,
+   cppcoreguidelines-*,
+   modernize-*,
+   -modernize-use-trailing-return-type,
+   -readability-identifier-length,
+   bugprone-*,
+   readability-*,
+   performance-*'
+WarningsAsErrors: true
+HeaderFilterRegex: '.'
+AnalyzeTemporaryDtors: false
+FormatStyle:     google
+CheckOptions:
+  - key:             modernize-loop-convert.NamingStyle
+    value:           CamelCase
+...
