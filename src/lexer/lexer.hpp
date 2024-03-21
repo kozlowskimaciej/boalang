@@ -3,29 +3,16 @@
 
 #include <vector>
 
-#include "token/token.hpp"
-#include "utils/position.hpp"
+#include "../source/source.hpp"
+#include "../token/token.hpp"
 
 class Lexer {
  private:
-  const std::string source;
-  std::vector<Token> tokens;
-  unsigned int start = 0;
-  unsigned int current = 0;
-  Position position = {1, 0};
-
-  char advance();
-  void tokenize_string();
-  void tokenize_number();
-  void tokenize_identifier();
-  void increase_line_no();
-  void add_token(TokenType type);
-  void add_token(TokenType type, std::string text);
-  void scan_token();
+  const Source& source_;
 
  public:
-  Lexer(std::string source) : source(source){};
-  std::vector<Token>& scan_tokens();
+  explicit Lexer(const Source& source) : source_(source){};
+  Token next_token();
 };
 
 #endif  // BOALANG_LEXER_HPP

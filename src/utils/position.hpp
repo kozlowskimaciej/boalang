@@ -6,4 +6,4 @@ struct Position {
   unsigned int column;
 };
 
-#endif //BOALANG_POSITION_HPP
+#endif  // BOALANG_POSITION_HPP
