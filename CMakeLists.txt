@@ -12,3 +12,13 @@ set(CMAKE_CXX_CLANG_TIDY
 include(CTest)
 add_subdirectory(src)
 add_subdirectory(tests)
+
+file(GLOB_RECURSE ALL_CXX_SOURCE_FILES *.cpp *.hpp)
+
+add_custom_target(
+        clangformat
+        COMMAND clang-format
+        -i
+        -style=Google
+        ${ALL_CXX_SOURCE_FILES}
+)

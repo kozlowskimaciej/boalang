@@ -14,7 +14,14 @@ add_executable(
 target_link_libraries(
         boalang
         boalang_lib
+        -fsanitize=undefined
 )
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    message(STATUS "Using Clang")
+    list(APPEND COMMON_FLAGS -fsanitize=undefined)
+    target_link_options(boalang PUBLIC -fsanitize=undefined)
+endif()
 
 set(COMMON_FLAGS -Wall -Wfloat-conversion -Wextra -pedantic -Werror)
 target_compile_options(boalang PUBLIC ${COMMON_FLAGS})
