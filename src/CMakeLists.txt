@@ -3,7 +3,6 @@ file(GLOB LEXER_FILES lexer/*.cpp lexer/*.hpp)
 
 add_library(
         boalang_lib
-        main.cpp
         ${SOURCE_FILES}
         ${LEXER_FILES}
 )

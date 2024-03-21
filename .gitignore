@@ -1,4 +1,5 @@
 .idea/
 _deps/
+cmake-build-debug/
 build/
 CMakeFiles/
