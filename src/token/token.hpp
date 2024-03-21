@@ -8,15 +8,17 @@
 
 #include "../utils/position.hpp"
 
+using token_value_t = std::optional<std::variant<std::wstring, int, float, bool>>;
+
 enum TokenType {
   // END OF TEXT
   TOKEN_ETX = 0,
 
   // SINGLE CHAR
-  TOKEN_LEFT_PAREN,
-  TOKEN_RIGHT_PAREN,
-  TOKEN_LEFT_BRACE,
-  TOKEN_RIGHT_BRACE,
+  TOKEN_LPAREN,
+  TOKEN_RPAREN,
+  TOKEN_LBRACE,
+  TOKEN_RBRACE,
   TOKEN_COMMA,
   TOKEN_DOT,
   TOKEN_MINUS,
@@ -79,17 +81,17 @@ static const std::map<std::string, TokenType> keywords{
 };
 
 class Token {
-  using value_t = std::optional<std::variant<std::string, int, float, bool>>;
-
  public:
   const TokenType type;
-  const value_t value;
+  const token_value_t value;
   const Position position;
 
   Token(TokenType type, Position position)
       : type(type), value(std::nullopt), position(position){};
-  Token(TokenType type, value_t value, Position position)
+  Token(TokenType type, token_value_t value, Position position)
       : type(type), value(std::move(value)), position(position){};
+
+  [[nodiscard]] std::wstring stringify() const;
 };
 
 #endif  // TKOM_BOALANG_TOKEN_HPP

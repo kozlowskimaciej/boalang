@@ -1,8 +1,10 @@
+file(GLOB TOKEN_FILES token/*.cpp token/*.hpp)
 file(GLOB SOURCE_FILES source/*.cpp source/*.hpp)
 file(GLOB LEXER_FILES lexer/*.cpp lexer/*.hpp)
 
 add_library(
         boalang_lib
+        ${TOKEN_FILES}
         ${SOURCE_FILES}
         ${LEXER_FILES}
 )

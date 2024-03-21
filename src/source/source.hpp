@@ -21,6 +21,7 @@ class Source {
   virtual ~Source() = default;
   [[nodiscard]] const Position& position() const { return position_; }
   wchar_t next();
+  wchar_t peek();
 };
 
 class FileSource : public Source {

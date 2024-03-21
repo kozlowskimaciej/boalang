@@ -19,3 +19,11 @@ wchar_t Source::next() {
   }
   return current_;
 }
+
+wchar_t Source::peek() {
+  std::wistream::int_type c = stream_->peek();
+  if (c == std::wistream::traits_type::eof()) {
+    return L'\0';
+  }
+  return static_cast<wchar_t>(c);
+}
