@@ -18,7 +18,21 @@ class Source {
   stream_ptr stream_;
 
  public:
-  virtual ~Source() = default;
+  Source() = default;
+  virtual ~Source() = 0;
+
+  Source(const Source&) = delete;
+  Source& operator=(const Source&) = delete;
+
+  Source(Source&& other) noexcept : stream_(std::move(other.stream_)) {}
+
+  Source& operator=(Source&& other) noexcept {
+    if (this != &other) {
+      stream_ = std::move(other.stream_);
+    }
+    return *this;
+  }
+
   [[nodiscard]] const Position& position() const { return position_; }
   wchar_t next();
   wchar_t peek();

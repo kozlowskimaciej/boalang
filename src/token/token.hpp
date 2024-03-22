@@ -8,7 +8,8 @@
 
 #include "../utils/position.hpp"
 
-using token_value_t = std::optional<std::variant<std::wstring, int, float, bool>>;
+using token_value_t =
+    std::optional<std::variant<std::wstring, int, float, bool>>;
 
 enum TokenType {
   // END OF TEXT
@@ -64,7 +65,9 @@ enum TokenType {
   TOKEN_FLOAT,
   TOKEN_STR,
   TOKEN_BOOL,
-  TOKEN_VOID
+  TOKEN_VOID,
+
+  TOKEN_UNKNOWN
 };
 
 static const std::map<std::string, TokenType> keywords{
@@ -92,6 +95,13 @@ class Token {
       : type(type), value(std::move(value)), position(position){};
 
   [[nodiscard]] std::wstring stringify() const;
+
+  friend std::wostream& operator<<(std::wostream& os, const Token& token);
 };
+
+std::wostream& operator<<(std::wostream& os, const Token& token) {
+  os << L", " << token.stringify() << L">";
+  return os;
+}
 
 #endif  // TKOM_BOALANG_TOKEN_HPP
