@@ -31,3 +31,7 @@ wchar_t Source::peek() const {
 wchar_t Source::current() const {
   return current_;
 }
+
+bool Source::eof() const {
+  return peek() == L'\0';
+}

@@ -37,6 +37,7 @@ class Source {
   wchar_t next();
   wchar_t peek() const;
   wchar_t current() const;
+  bool eof() const;
 };
 
 class FileSource : public Source {

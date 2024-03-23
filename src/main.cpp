@@ -4,7 +4,7 @@
 #include "source/source.hpp"
 
 int main() {
-  auto src = StringSource(L",.{}\"Hello, World!\" hi");
+  auto src = StringSource(L",.{}\"Hello, World!\" hi // a comment\n hello 0.01 123 00");
   auto lexer = Lexer(src);
   while (true) {
     auto token = lexer.next_token();
