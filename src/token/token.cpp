@@ -20,8 +20,11 @@ std::wstring Token::stringify() const {
 }
 
 std::wostream& operator<<(std::wostream& os, const Token& token) {
-  std::wstring repr =
-      L"<" + token_strings.at(token.type) + L", " + token.stringify() + L">";
+  std::wstring repr = L"<" + token_strings.at(token.type);
+  if (token.value) {
+    repr += L", " + token.stringify();
+  }
+  repr += L">";
   os << repr;
   return os;
 }
