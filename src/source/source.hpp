@@ -35,9 +35,9 @@ class Source {
 
   [[nodiscard]] const Position& position() const { return position_; }
   wchar_t next();
-  wchar_t peek() const;
-  wchar_t current() const;
-  bool eof() const;
+  [[nodiscard]] wchar_t peek() const;
+  [[nodiscard]] wchar_t current() const;
+  [[nodiscard]] bool eof() const;
 };
 
 class FileSource : public Source {

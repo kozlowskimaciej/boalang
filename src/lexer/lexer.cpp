@@ -1,3 +1,4 @@
+#include <cfloat>
 #include "lexer.hpp"
 
 Token Lexer::build_token(const TokenType& type,
@@ -39,7 +40,16 @@ Token Lexer::tokenize_number() {
     while (std::iswdigit(source_.peek())) {
       str += source_.next();
     }
+
+    if (str > std::to_wstring(FLT_MAX)) {
+        throw LexerError(build_token(TOKEN_FLOAT_VAL, str),
+                         L"Float literal exceeds maximum value");
+    }
     return build_token(TOKEN_FLOAT_VAL, std::stof(str));
+  }
+  if (str > std::to_wstring(INT_MAX)) {
+    throw LexerError(build_token(TOKEN_INT_VAL, str),
+                     L"Int literal exceeds maximum value");
   }
   return build_token(TOKEN_INT_VAL, std::stoi(str));
 }

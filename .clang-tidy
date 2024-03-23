@@ -9,6 +9,7 @@ Checks: '
   -modernize-use-trailing-return-type,
   -readability-identifier-length,
   -cppcoreguidelines-non-private-member-variables-in-classes
+  -readability-implicit-bool-conversion
   '
 WarningsAsErrors: true
 HeaderFilterRegex: '.'
