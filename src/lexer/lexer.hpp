@@ -10,9 +10,11 @@
 class Lexer {
  private:
   const unsigned int MAX_IDENTIFIER_LENGTH = 64;
+  std::wstring current_scope_;
   Source& source_;
   [[nodiscard]] Token build_token(
       const TokenType& type, const token_value_t& value = std::nullopt) const;
+  wchar_t advance();
   Token tokenize_string();
   Token tokenize_number();
   Token tokenize_identifier();

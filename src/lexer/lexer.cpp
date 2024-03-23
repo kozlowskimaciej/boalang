@@ -7,45 +7,42 @@ Token Lexer::build_token(const TokenType& type,
 }
 
 Token Lexer::tokenize_string() {
-  std::wstring str;
   while (source_.peek() != L'"' && !source_.eof() &&
          source_.peek() != L'\n') {
-    str += source_.next();
+    advance();
   }
   if (source_.peek() != L'"') {
-      throw LexerError(build_token(TOKEN_UNKNOWN, L'"' + str),
+      throw LexerError(build_token(TOKEN_UNKNOWN, current_scope_),
                        L"Unterminated string");
   }
-  source_.next();  // consume closing quote
-  return build_token(TOKEN_STR_VAL, str);
+  advance();  // consume closing quote
+  return build_token(TOKEN_STR_VAL, current_scope_.substr(1, current_scope_.length() - 2));
 }
 
 Token Lexer::tokenize_number() {
-  std::wstring str;
-  str += source_.current();
   if (source_.current() == L'0' && source_.peek() == L'0') {
-    throw LexerError(build_token(TOKEN_INT_VAL, str),
+    throw LexerError(build_token(TOKEN_INT_VAL, current_scope_),
                      L"Leading zeros are not allowed");
   }
 
   while (std::iswdigit(source_.peek())) {
-    str += source_.next();
+    advance();
   }
   if (source_.peek() == L'.') {
-    str += source_.next();
+    advance();
     if (!std::iswdigit(source_.peek())) {
-        throw LexerError(build_token(TOKEN_FLOAT_VAL, str),
+        throw LexerError(build_token(TOKEN_FLOAT_VAL, current_scope_),
                          L"Expected digit after '.'");
     }
     while (std::iswdigit(source_.peek())) {
-      str += source_.next();
+      advance();
     }
 
     float val;
     try {
-      val = std::stof(str);
+      val = std::stof(current_scope_);
     } catch (std::out_of_range&) {
-      throw LexerError(build_token(TOKEN_FLOAT_VAL, str),
+      throw LexerError(build_token(TOKEN_FLOAT_VAL, current_scope_),
                        L"Float literal exceeds maximum value");
     }
     return build_token(TOKEN_FLOAT_VAL, val);
@@ -53,36 +50,31 @@ Token Lexer::tokenize_number() {
 
   int val;
   try {
-    val = std::stoi(str);
+    val = std::stoi(current_scope_);
   } catch (std::out_of_range&) {
-    throw LexerError(build_token(TOKEN_INT_VAL, str),
+    throw LexerError(build_token(TOKEN_INT_VAL, current_scope_),
                      L"Int literal exceeds maximum value");
   }
   return build_token(TOKEN_INT_VAL, val);
 }
 
 Token Lexer::tokenize_identifier() {
-  std::wstring str;
-
-  str += source_.current();
   while (std::iswalnum(source_.peek()) || source_.peek() == L'_') {
-    str += source_.next();
+    advance();
   }
-  if (keywords.find(str) != keywords.end()) {
-    return build_token(keywords.at(str));
+  if (keywords.find(current_scope_) != keywords.end()) {
+    return build_token(keywords.at(current_scope_));
   }
-  if (str.length() > MAX_IDENTIFIER_LENGTH) {
-    throw LexerError(build_token(TOKEN_IDENTIFIER, str),
+  if (current_scope_.length() > MAX_IDENTIFIER_LENGTH) {
+    throw LexerError(build_token(TOKEN_IDENTIFIER, current_scope_),
                      L"Identifier exceeds maximum length");
   }
-  return build_token(TOKEN_IDENTIFIER, str);
+  return build_token(TOKEN_IDENTIFIER, current_scope_);
 }
 
 Token Lexer::next_token() {
-  wchar_t c = source_.next();
-  while (std::iswspace(c)) {
-    c = source_.next();
-  }
+  current_scope_ = L"";
+  wchar_t c = advance();
 
   switch (c) {
     case L'\0':
@@ -108,7 +100,7 @@ Token Lexer::next_token() {
     case L'/':
       if (source_.peek() == L'/') {
         while (source_.peek() != L'\n' && !source_.eof()) {
-          source_.next();
+          advance();
         }
         return next_token();
       }
@@ -152,7 +144,16 @@ Token Lexer::next_token() {
       if (std::iswdigit(c)) {
           return tokenize_number();
       }
-      throw LexerError(build_token(TOKEN_UNKNOWN, std::wstring{c}),
+      throw LexerError(build_token(TOKEN_UNKNOWN, current_scope_),
                        L"Encountered unknown token");
   }
+}
+
+wchar_t Lexer::advance() {
+  wchar_t c = source_.next();
+  while (std::iswspace(c)) {
+    c = source_.next();
+  }
+  current_scope_ += c;
+  return c;
 }
