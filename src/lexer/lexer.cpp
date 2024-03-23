@@ -41,17 +41,24 @@ Token Lexer::tokenize_number() {
       str += source_.next();
     }
 
-    if (str > std::to_wstring(FLT_MAX)) {
-        throw LexerError(build_token(TOKEN_FLOAT_VAL, str),
-                         L"Float literal exceeds maximum value");
+    float val;
+    try {
+      val = std::stof(str);
+    } catch (std::out_of_range&) {
+      throw LexerError(build_token(TOKEN_FLOAT_VAL, str),
+                       L"Float literal exceeds maximum value");
     }
-    return build_token(TOKEN_FLOAT_VAL, std::stof(str));
+    return build_token(TOKEN_FLOAT_VAL, val);
   }
-  if (str > std::to_wstring(INT_MAX)) {
+
+  int val;
+  try {
+    val = std::stoi(str);
+  } catch (std::out_of_range&) {
     throw LexerError(build_token(TOKEN_INT_VAL, str),
                      L"Int literal exceeds maximum value");
   }
-  return build_token(TOKEN_INT_VAL, std::stoi(str));
+  return build_token(TOKEN_INT_VAL, val);
 }
 
 Token Lexer::tokenize_identifier() {
