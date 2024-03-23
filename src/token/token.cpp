@@ -8,9 +8,7 @@ std::wstring Token::stringify() const {
   return std::visit(
       [](auto&& arg) -> std::wstring {
         using T = std::decay_t<decltype(arg)>;
-        if constexpr (std::is_same_v<T, int>) {
-          return std::to_wstring(arg);
-        } else if constexpr (std::is_same_v<T, float>) {
+        if constexpr (std::is_same_v<T, int> || std::is_same_v<T, float>) {
           return std::to_wstring(arg);
         } else if constexpr (std::is_same_v<T, std::wstring>) {
           return arg;
@@ -19,4 +17,11 @@ std::wstring Token::stringify() const {
         }
       },
       value.value());
+}
+
+std::wostream& operator<<(std::wostream& os, const Token& token) {
+  std::wstring repr =
+      L"<" + token_strings.at(token.type) + L", " + token.stringify() + L">";
+  os << repr;
+  return os;
 }

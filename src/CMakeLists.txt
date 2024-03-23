@@ -4,16 +4,19 @@ file(GLOB LEXER_FILES lexer/*.cpp lexer/*.hpp)
 
 add_library(
         boalang_lib
+        STATIC
         ${TOKEN_FILES}
         ${SOURCE_FILES}
         ${LEXER_FILES}
 )
+
 add_executable(
         boalang
         main.cpp
 )
 target_link_libraries(
         boalang
+        PRIVATE
         boalang_lib
         -fsanitize=undefined
 )

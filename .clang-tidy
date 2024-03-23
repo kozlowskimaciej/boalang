@@ -7,7 +7,8 @@ Checks: '
   readability-*,
   performance-*,
   -modernize-use-trailing-return-type,
-  -readability-identifier-length
+  -readability-identifier-length,
+  -cppcoreguidelines-non-private-member-variables-in-classes
   '
 WarningsAsErrors: true
 HeaderFilterRegex: '.'

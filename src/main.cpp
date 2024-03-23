@@ -1,15 +1,15 @@
 #include <iostream>
 
-#include "source/source.hpp"
 #include "lexer/lexer.hpp"
+#include "source/source.hpp"
 
 int main() {
-  auto src = StringSource(L",.{}");
+  auto src = StringSource(L",.{}\"Hello, World!\" hi");
   auto lexer = Lexer(src);
   while (true) {
     auto token = lexer.next_token();
-    std::wcout << token;
-    if (token.type == TokenType::END_OF_FILE) {
+    std::wcout << token << L' ';
+    if (token.type == TokenType::TOKEN_ETX) {
       break;
     }
   }

@@ -11,12 +11,37 @@ Token Lexer::tokenize_string() {
          source_.peek() != L'\n') {
     str += source_.next();
   }
+  if (source_.peek() == L'\0' || source_.peek() == L'\n') {
+      throw LexerError(build_token(TOKEN_UNKNOWN, L'"' + str),
+                       L"Unterminated string.");
+  }
   source_.next();  // consume closing quote
-  return build_token(TOKEN_STRVAL, str);
+  return build_token(TOKEN_STR_VAL, str);
+}
+
+//Token Lexer::tokenize_number() {
+//  return Token(TOKEN_INT_VAL, Position());
+//}
+
+Token Lexer::tokenize_identifier() {
+  std::wstring str;
+
+  str += source_.current();
+  while (std::iswalnum(source_.peek()) || source_.peek() == L'_') {
+    str += source_.next();
+  }
+  if (keywords.find(str) != keywords.end()) {
+    return build_token(keywords.at(str));
+  }
+  if (str.length() > MAX_IDENTIFIER_LENGTH) {
+    throw LexerError(build_token(TOKEN_IDENTIFIER, str),
+                     L"Identifier exceeds maximum length.");
+  }
+  return build_token(TOKEN_IDENTIFIER, str);
 }
 
 Token Lexer::next_token() {
-  wchar_t c = source_.next();
+  const wchar_t c = source_.next();
   switch (c) {
     case L'\0':
       return build_token(TOKEN_ETX);
@@ -69,36 +94,29 @@ Token Lexer::next_token() {
       return build_token(TOKEN_GREATER);
 
     // Literals
-    case L'"': {
+    case L'"':
       return tokenize_string();
-    }
+
     default:
-//        if (std::iswalpha(c) || c == L'_') {
-//            std::wstring str;
-//            str += c;
-//            while (std::iswalnum(source_.peek()) || source_.peek() == L'_') {
-//            str += source_.next();
-//            }
-//            if (keywords.find(str) != keywords.end()) {
-//            return build_token(keywords.at(str));
-//            }
-//            return build_token(TOKEN_IDENTIFIER, str);
-//        }
-//        if (std::iswdigit(c)) {
-//            std::wstring str;
-//            str += c;
-//            while (std::iswdigit(source_.peek())) {
-//            str += source_.next();
-//            }
-//            if (source_.peek() == L'.' && std::iswdigit(source_.peek(2))) {
-//            str += source_.next();  // consume '.'
-//            while (std::iswdigit(source_.peek())) {
-//                str += source_.next();
-//            }
-//            return build_token(TOKEN_FLOATVAL, str);
-//            }
-//            return build_token(TOKEN_INTVAL, str);
-//        }
-        throw LexerError(build_token(TOKEN_UNKNOWN), L"Encountered unknown token.");
+      if (std::iswalpha(c) || c == L'_') {
+          return tokenize_identifier();
+      }
+//      if (std::iswdigit(c)) {
+//          std::wstring str;
+//          str += c;
+//          while (std::iswdigit(source_.peek())) {
+//          str += source_.next();
+//          }
+//          if (source_.peek() == L'.' &&
+//          std::iswdigit(source_.peek(2))) { str += source_.next();  //
+//          consume '.' while (std::iswdigit(source_.peek())) {
+//              str += source_.next();
+//          }
+//          return build_token(TOKEN_FLOATVAL, str);
+//          }
+//          return build_token(TOKEN_INTVAL, str);
+//      }
+      throw LexerError(build_token(TOKEN_UNKNOWN, std::wstring{c}),
+                       L"Encountered unknown token.");
   }
 }

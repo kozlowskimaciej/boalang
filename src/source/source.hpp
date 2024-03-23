@@ -19,7 +19,7 @@ class Source {
 
  public:
   Source() = default;
-  virtual ~Source() = 0;
+  virtual ~Source() = default;
 
   Source(const Source&) = delete;
   Source& operator=(const Source&) = delete;
@@ -35,7 +35,8 @@ class Source {
 
   [[nodiscard]] const Position& position() const { return position_; }
   wchar_t next();
-  wchar_t peek();
+  wchar_t peek() const;
+  wchar_t current() const;
 };
 
 class FileSource : public Source {
@@ -43,7 +44,6 @@ class FileSource : public Source {
   explicit FileSource(const std::string& path) {
     stream_ = std::make_unique<std::wifstream>(path);
   }
-  ~FileSource() override = default;
 };
 
 class StringSource : public Source {
@@ -51,7 +51,6 @@ class StringSource : public Source {
   explicit StringSource(const std::wstring& source) {
     stream_ = std::make_unique<std::wistringstream>(source);
   }
-  ~StringSource() override = default;
 };
 
 #endif  // BOALANG_SOURCE_HPP

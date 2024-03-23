@@ -1,5 +1,5 @@
-#ifndef TKOM_BOALANG_TOKEN_HPP
-#define TKOM_BOALANG_TOKEN_HPP
+#ifndef BOALANG_TOKEN_HPP
+#define BOALANG_TOKEN_HPP
 
 #include <map>
 #include <optional>
@@ -41,9 +41,9 @@ enum TokenType {
 
   // LITERALS
   TOKEN_IDENTIFIER,
-  TOKEN_STRVAL,
-  TOKEN_INTVAL,
-  TOKEN_FLOATVAL,
+  TOKEN_STR_VAL,
+  TOKEN_INT_VAL,
+  TOKEN_FLOAT_VAL,
 
   // KEYWORDS
   TOKEN_MUT,
@@ -70,17 +70,66 @@ enum TokenType {
   TOKEN_UNKNOWN
 };
 
-static const std::map<std::string, TokenType> keywords{
-    {"if", TOKEN_IF},         {"else", TOKEN_ELSE},
-    {"and", TOKEN_AND},       {"or", TOKEN_OR},
-    {"true", TOKEN_TRUE},     {"false", TOKEN_FALSE},
-    {"while", TOKEN_WHILE},   {"return", TOKEN_RETURN},
-    {"is", TOKEN_IS},         {"as", TOKEN_AS},
-    {"print", TOKEN_PRINT},   {"inspect", TOKEN_INSPECT},
-    {"struct", TOKEN_STRUCT}, {"variant", TOKEN_VARIANT},
-    {"int", TOKEN_INT},       {"float", TOKEN_FLOAT},
-    {"str", TOKEN_STR},       {"bool", TOKEN_BOOL},
-    {"void", TOKEN_VOID},     {"mut", TOKEN_MUT},
+static const std::map<TokenType, std::wstring> token_strings{
+    {TOKEN_ETX, L"ETX"},
+    {TOKEN_LPAREN, L"LPAREN"},
+    {TOKEN_RPAREN, L"RPAREN"},
+    {TOKEN_LBRACE, L"LBRACE"},
+    {TOKEN_RBRACE, L"RBRACE"},
+    {TOKEN_COMMA, L"COMMA"},
+    {TOKEN_DOT, L"DOT"},
+    {TOKEN_MINUS, L"MINUS"},
+    {TOKEN_PLUS, L"PLUS"},
+    {TOKEN_SEMICOLON, L"SEMICOLON"},
+    {TOKEN_SLASH, L"SLASH"},
+    {TOKEN_STAR, L"STAR"},
+    {TOKEN_EXCLAMATION, L"EXCLAMATION"},
+    {TOKEN_EQUAL, L"EQUAL"},
+    {TOKEN_LESS, L"LESS"},
+    {TOKEN_GREATER, L"GREATER"},
+    {TOKEN_EQUAL_EQUAL, L"EQUAL_EQUAL"},
+    {TOKEN_NOT_EQUAL, L"NOT_EQUAL"},
+    {TOKEN_LESS_EQUAL, L"LESS_EQUAL"},
+    {TOKEN_GREATER_EQUAL, L"GREATER_EQUAL"},
+    {TOKEN_ARROW, L"ARROW"},
+    {TOKEN_IDENTIFIER, L"IDENTIFIER"},
+    {TOKEN_STR_VAL, L"STR_VAL"},
+    {TOKEN_INT_VAL, L"INT_VAL"},
+    {TOKEN_FLOAT_VAL, L"FLOAT_VAL"},
+    {TOKEN_MUT, L"MUT"},
+    {TOKEN_IF, L"IF"},
+    {TOKEN_ELSE, L"ELSE"},
+    {TOKEN_AND, L"AND"},
+    {TOKEN_OR, L"OR"},
+    {TOKEN_TRUE, L"TRUE"},
+    {TOKEN_FALSE, L"FALSE"},
+    {TOKEN_WHILE, L"WHILE"},
+    {TOKEN_RETURN, L"RETURN"},
+    {TOKEN_IS, L"IS"},
+    {TOKEN_AS, L"AS"},
+    {TOKEN_PRINT, L"PRINT"},
+    {TOKEN_INSPECT, L"INSPECT"},
+    {TOKEN_STRUCT, L"STRUCT"},
+    {TOKEN_VARIANT, L"VARIANT"},
+    {TOKEN_INT, L"INT"},
+    {TOKEN_FLOAT, L"FLOAT"},
+    {TOKEN_STR, L"STR"},
+    {TOKEN_BOOL, L"BOOL"},
+    {TOKEN_VOID, L"VOID"},
+    {TOKEN_UNKNOWN, L"UNKNOWN"},
+};
+
+static const std::map<std::wstring, TokenType> keywords{
+    {L"if", TOKEN_IF},         {L"else", TOKEN_ELSE},
+    {L"and", TOKEN_AND},       {L"or", TOKEN_OR},
+    {L"true", TOKEN_TRUE},     {L"false", TOKEN_FALSE},
+    {L"while", TOKEN_WHILE},   {L"return", TOKEN_RETURN},
+    {L"is", TOKEN_IS},         {L"as", TOKEN_AS},
+    {L"print", TOKEN_PRINT},   {L"inspect", TOKEN_INSPECT},
+    {L"struct", TOKEN_STRUCT}, {L"variant", TOKEN_VARIANT},
+    {L"int", TOKEN_INT},       {L"float", TOKEN_FLOAT},
+    {L"str", TOKEN_STR},       {L"bool", TOKEN_BOOL},
+    {L"void", TOKEN_VOID},     {L"mut", TOKEN_MUT},
 };
 
 class Token {
@@ -99,9 +148,4 @@ class Token {
   friend std::wostream& operator<<(std::wostream& os, const Token& token);
 };
 
-std::wostream& operator<<(std::wostream& os, const Token& token) {
-  os << L", " << token.stringify() << L">";
-  return os;
-}
-
-#endif  // TKOM_BOALANG_TOKEN_HPP
+#endif  // BOALANG_TOKEN_HPP
