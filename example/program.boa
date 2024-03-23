@@ -1,0 +1,7 @@
+struct S {
+    mut int a;
+    float b;
+}
+
+mut S st_obj = {1, 1.0};
+st_obj.a = st_obj.b as int;
