@@ -9,25 +9,29 @@ Token Lexer::build_token_with_value(const TokenType& type,
   }
 }
 
-Token Lexer::build_token(const TokenType &type) const {
+Token Lexer::build_token(const TokenType& type) const {
   return {type, source_.position()};
 }
 
 Token Lexer::tokenize_string() {
-  while (source_.peek() != L'"' && !source_.eof() &&
-         source_.peek() != L'\n') {
+  while (source_.peek() != L'"' && !source_.eof() && source_.peek() != L'\n') {
     advance();
   }
   if (source_.peek() != L'"') {
-      throw LexerError(build_token_with_value(TOKEN_UNKNOWN), L"Unterminated string");
+    throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
+                     L"Unterminated string");
   }
   advance();  // consume closing quote
-  return build_token_with_value(TOKEN_STR_VAL, current_context_.substr(1, current_context_.length() - 2));  // trim quotes
+  return build_token_with_value(
+      TOKEN_STR_VAL,
+      current_context_.substr(1, current_context_.length() - 2)  // trim quotes
+  );
 }
 
 Token Lexer::tokenize_number() {
   if (source_.current() == L'0' && source_.peek() == L'0') {
-    throw LexerError(build_token_with_value(TOKEN_UNKNOWN), L"Leading zeros are not allowed");
+    throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
+                     L"Leading zeros are not allowed");
   }
 
   while (std::iswdigit(source_.peek())) {
@@ -36,7 +40,8 @@ Token Lexer::tokenize_number() {
   if (source_.peek() == L'.') {
     advance();
     if (!std::iswdigit(source_.peek())) {
-        throw LexerError(build_token_with_value(TOKEN_UNKNOWN), L"Expected digit after '.'");
+      throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
+                       L"Expected digit after '.'");
     }
     while (std::iswdigit(source_.peek())) {
       advance();
@@ -46,7 +51,8 @@ Token Lexer::tokenize_number() {
     try {
       val = std::stof(current_context_);
     } catch (std::out_of_range&) {
-      throw LexerError(build_token_with_value(TOKEN_UNKNOWN), L"Float literal exceeds maximum value");
+      throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
+                       L"Float literal exceeds maximum value");
     }
     return build_token_with_value(TOKEN_FLOAT_VAL, val);
   }
@@ -55,7 +61,8 @@ Token Lexer::tokenize_number() {
   try {
     val = std::stoi(current_context_);
   } catch (std::out_of_range&) {
-    throw LexerError(build_token_with_value(TOKEN_UNKNOWN), L"Int literal exceeds maximum value");
+    throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
+                     L"Int literal exceeds maximum value");
   }
   return build_token_with_value(TOKEN_INT_VAL, val);
 }
@@ -68,7 +75,8 @@ Token Lexer::tokenize_identifier() {
     return build_token(keywords.at(current_context_));
   }
   if (current_context_.length() > MAX_IDENTIFIER_LENGTH) {
-    throw LexerError(build_token_with_value(TOKEN_IDENTIFIER), L"Identifier exceeds maximum length");
+    throw LexerError(build_token_with_value(TOKEN_IDENTIFIER),
+                     L"Identifier exceeds maximum length");
   }
   return build_token_with_value(TOKEN_IDENTIFIER);
 }
@@ -140,12 +148,13 @@ Token Lexer::next_token() {
 
     default:
       if (std::iswalpha(c) || c == L'_') {
-          return tokenize_identifier();
+        return tokenize_identifier();
       }
       if (std::iswdigit(c)) {
-          return tokenize_number();
+        return tokenize_number();
       }
-      throw LexerError(build_token_with_value(TOKEN_UNKNOWN), L"Encountered unknown token");
+      throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
+                       L"Encountered unknown token");
   }
 }
 

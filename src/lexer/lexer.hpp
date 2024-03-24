@@ -31,9 +31,9 @@ class LexerError : public std::exception {
 
  public:
   LexerError(const Token& token, const std::wstring& message) {
-    message_utf8_ = L"Line " + std::to_wstring(token.position.line) + L" column " +
-        std::to_wstring(token.position.column) + L" at '" +
-        token.stringify() + L"': " + message;
+    message_utf8_ = L"Line " + std::to_wstring(token.position.line) +
+                    L" column " + std::to_wstring(token.position.column) +
+                    L" at '" + token.stringify() + L"': " + message;
     message_ = std::string(message_utf8_.begin(), message_utf8_.end());
   };
 

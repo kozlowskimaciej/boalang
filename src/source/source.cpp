@@ -28,10 +28,6 @@ wchar_t Source::peek() const {
   return static_cast<wchar_t>(c);
 }
 
-wchar_t Source::current() const {
-  return current_;
-}
+wchar_t Source::current() const { return current_; }
 
-bool Source::eof() const {
-  return peek() == L'\0';
-}
+bool Source::eof() const { return peek() == L'\0'; }
