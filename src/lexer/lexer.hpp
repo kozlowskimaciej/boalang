@@ -12,7 +12,7 @@ class Lexer {
   const unsigned int MAX_IDENTIFIER_LENGTH = 64;
   std::wstring current_context_;
   Source& source_;
-  [[nodiscard]] Token build_token_value(
+  [[nodiscard]] Token build_token_with_value(
       const TokenType& type, const token_value_t& value = std::nullopt) const;
   [[nodiscard]] Token build_token(const TokenType& type) const;
   wchar_t advance();
