@@ -1,9 +1,16 @@
-#include <cfloat>
 #include "lexer.hpp"
 
-Token Lexer::build_token(const TokenType& type,
+Token Lexer::build_token_value(const TokenType& type,
                          const token_value_t& value) const {
-  return {type, value, source_.position()};
+  if (value.has_value()) {
+    return {type, value, source_.position()};
+  } else {
+    return {type, current_context_, source_.position()};
+  }
+}
+
+Token Lexer::build_token(const TokenType &type) const {
+  return {type, source_.position()};
 }
 
 Token Lexer::tokenize_string() {
@@ -12,17 +19,15 @@ Token Lexer::tokenize_string() {
     advance();
   }
   if (source_.peek() != L'"') {
-      throw LexerError(build_token(TOKEN_UNKNOWN, current_scope_),
-                       L"Unterminated string");
+      throw LexerError(build_token_value(TOKEN_UNKNOWN), L"Unterminated string");
   }
   advance();  // consume closing quote
-  return build_token(TOKEN_STR_VAL, current_scope_.substr(1, current_scope_.length() - 2));
+  return build_token_value(TOKEN_STR_VAL, current_context_.substr(1, current_context_.length() - 2));  // trim quotes
 }
 
 Token Lexer::tokenize_number() {
   if (source_.current() == L'0' && source_.peek() == L'0') {
-    throw LexerError(build_token(TOKEN_INT_VAL, current_scope_),
-                     L"Leading zeros are not allowed");
+    throw LexerError(build_token_value(TOKEN_UNKNOWN), L"Leading zeros are not allowed");
   }
 
   while (std::iswdigit(source_.peek())) {
@@ -31,8 +36,7 @@ Token Lexer::tokenize_number() {
   if (source_.peek() == L'.') {
     advance();
     if (!std::iswdigit(source_.peek())) {
-        throw LexerError(build_token(TOKEN_FLOAT_VAL, current_scope_),
-                         L"Expected digit after '.'");
+        throw LexerError(build_token_value(TOKEN_UNKNOWN), L"Expected digit after '.'");
     }
     while (std::iswdigit(source_.peek())) {
       advance();
@@ -40,40 +44,37 @@ Token Lexer::tokenize_number() {
 
     float val;
     try {
-      val = std::stof(current_scope_);
+      val = std::stof(current_context_);
     } catch (std::out_of_range&) {
-      throw LexerError(build_token(TOKEN_FLOAT_VAL, current_scope_),
-                       L"Float literal exceeds maximum value");
+      throw LexerError(build_token_value(TOKEN_UNKNOWN), L"Float literal exceeds maximum value");
     }
-    return build_token(TOKEN_FLOAT_VAL, val);
+    return build_token_value(TOKEN_FLOAT_VAL, val);
   }
 
   int val;
   try {
-    val = std::stoi(current_scope_);
+    val = std::stoi(current_context_);
   } catch (std::out_of_range&) {
-    throw LexerError(build_token(TOKEN_INT_VAL, current_scope_),
-                     L"Int literal exceeds maximum value");
+    throw LexerError(build_token_value(TOKEN_UNKNOWN), L"Int literal exceeds maximum value");
   }
-  return build_token(TOKEN_INT_VAL, val);
+  return build_token_value(TOKEN_INT_VAL, val);
 }
 
 Token Lexer::tokenize_identifier() {
   while (std::iswalnum(source_.peek()) || source_.peek() == L'_') {
     advance();
   }
-  if (keywords.find(current_scope_) != keywords.end()) {
-    return build_token(keywords.at(current_scope_));
+  if (keywords.find(current_context_) != keywords.end()) {
+    return build_token(keywords.at(current_context_));
   }
-  if (current_scope_.length() > MAX_IDENTIFIER_LENGTH) {
-    throw LexerError(build_token(TOKEN_IDENTIFIER, current_scope_),
-                     L"Identifier exceeds maximum length");
+  if (current_context_.length() > MAX_IDENTIFIER_LENGTH) {
+    throw LexerError(build_token_value(TOKEN_IDENTIFIER), L"Identifier exceeds maximum length");
   }
-  return build_token(TOKEN_IDENTIFIER, current_scope_);
+  return build_token_value(TOKEN_IDENTIFIER);
 }
 
 Token Lexer::next_token() {
-  current_scope_ = L"";
+  current_context_ = L"";
   wchar_t c = advance();
 
   switch (c) {
@@ -144,8 +145,7 @@ Token Lexer::next_token() {
       if (std::iswdigit(c)) {
           return tokenize_number();
       }
-      throw LexerError(build_token(TOKEN_UNKNOWN, current_scope_),
-                       L"Encountered unknown token");
+      throw LexerError(build_token_value(TOKEN_UNKNOWN), L"Encountered unknown token");
   }
 }
 
@@ -154,6 +154,6 @@ wchar_t Lexer::advance() {
   while (std::iswspace(c)) {
     c = source_.next();
   }
-  current_scope_ += c;
+  current_context_ += c;
   return c;
 }
