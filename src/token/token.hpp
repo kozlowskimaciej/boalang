@@ -70,7 +70,7 @@ enum TokenType {
   TOKEN_UNKNOWN
 };
 
-static const std::map<TokenType, std::wstring> token_strings{
+static const std::map<TokenType, std::wstring> token_repr{
     {TOKEN_ETX, L"ETX"},
     {TOKEN_LPAREN, L"LPAREN"},
     {TOKEN_RPAREN, L"RPAREN"},

@@ -4,9 +4,8 @@ Token Lexer::build_token_with_value(const TokenType& type,
                                     const token_value_t& value) const {
   if (value.has_value()) {
     return {type, value, source_.position()};
-  } else {
-    return {type, current_context_, source_.position()};
   }
+  return {type, current_context_, source_.position()};
 }
 
 Token Lexer::build_token(const TokenType& type) const {
@@ -47,24 +46,20 @@ Token Lexer::tokenize_number() {
       advance();
     }
 
-    float val;
     try {
-      val = std::stof(current_context_);
+      return build_token_with_value(TOKEN_FLOAT_VAL, std::stof(current_context_));
     } catch (std::out_of_range&) {
       throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
                        L"Float literal exceeds maximum value");
     }
-    return build_token_with_value(TOKEN_FLOAT_VAL, val);
   }
 
-  int val;
   try {
-    val = std::stoi(current_context_);
+    return build_token_with_value(TOKEN_INT_VAL, std::stoi(current_context_));
   } catch (std::out_of_range&) {
     throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
                      L"Int literal exceeds maximum value");
   }
-  return build_token_with_value(TOKEN_INT_VAL, val);
 }
 
 Token Lexer::tokenize_identifier() {
