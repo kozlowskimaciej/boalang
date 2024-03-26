@@ -1,3 +1,4 @@
+#include <cmath>
 #include "lexer.hpp"
 
 Token Lexer::build_token_with_value(const TokenType& type,
@@ -33,8 +34,17 @@ Token Lexer::tokenize_number() {
                      L"Leading zeros are not allowed");
   }
 
+  int decimal_part = source_.current() - L'0';
+
+  int digit;
   while (std::iswdigit(source_.peek())) {
-    advance();
+    digit = advance() - L'0';
+    if (decimal_part > (INT_MAX - digit) / 10) {
+      throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
+                       L"Int literal exceeds maximum value (" + std::to_wstring(INT_MAX) + L")");
+    }
+    decimal_part *= 10;
+    decimal_part += digit;
   }
   if (source_.peek() == L'.') {
     advance();
@@ -42,24 +52,25 @@ Token Lexer::tokenize_number() {
       throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
                        L"Expected digit after '.'");
     }
+
+    int fraction_part = 0;
+    int exponent = 0;
+    float float_val;
+
     while (std::iswdigit(source_.peek())) {
-      advance();
+      fraction_part *= 10;
+      fraction_part += advance() - L'0';
+      ++exponent;
+      float_val = static_cast<float>(decimal_part + fraction_part*std::pow(10, -exponent));
+      if (float_val == HUGE_VALF) {
+        throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
+                         L"Float literal exceeds maximum value");
+      }
     }
-
-    try {
-      return build_token_with_value(TOKEN_FLOAT_VAL, std::stof(current_context_));
-    } catch (std::out_of_range&) {
-      throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
-                       L"Float literal exceeds maximum value");
-    }
+    return build_token_with_value(TOKEN_FLOAT_VAL, float_val);
   }
-
-  try {
-    return build_token_with_value(TOKEN_INT_VAL, std::stoi(current_context_));
-  } catch (std::out_of_range&) {
-    throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
-                     L"Int literal exceeds maximum value");
-  }
+  int int_val = decimal_part;
+  return build_token_with_value(TOKEN_INT_VAL, int_val);
 }
 
 Token Lexer::tokenize_identifier() {
