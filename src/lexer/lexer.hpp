@@ -1,9 +1,6 @@
 #ifndef BOALANG_LEXER_HPP
 #define BOALANG_LEXER_HPP
 
-#include <codecvt>
-#include <locale>
-
 #include "../source/source.hpp"
 #include "../token/token.hpp"
 
