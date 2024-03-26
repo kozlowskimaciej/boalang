@@ -1,5 +1,6 @@
-#include <cmath>
 #include "lexer.hpp"
+
+#include <cmath>
 
 Token Lexer::build_token_with_value(const TokenType& type,
                                     const token_value_t& value) const {
@@ -41,7 +42,8 @@ Token Lexer::tokenize_number() {
     digit = advance() - L'0';
     if (decimal_part > (INT_MAX - digit) / 10) {
       throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
-                       "Int literal exceeds maximum value (" + std::to_string(INT_MAX) + ")");
+                       "Int literal exceeds maximum value (" +
+                           std::to_string(INT_MAX) + ")");
     }
     decimal_part *= 10;
     decimal_part += digit;
@@ -61,7 +63,8 @@ Token Lexer::tokenize_number() {
       fraction_part *= 10;
       fraction_part += advance() - L'0';
       ++exponent;
-      float_val = static_cast<float>(decimal_part + fraction_part*std::pow(10, -exponent));
+      float_val = static_cast<float>(decimal_part +
+                                     fraction_part * std::pow(10, -exponent));
       if (float_val == HUGE_VALF) {
         throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
                          "Float literal exceeds maximum value");
@@ -91,40 +94,53 @@ Token Lexer::tokenize_comment() {
   while (source_.current() != L'\n' && !source_.eof()) {
     advance();
   }
-  return build_token_with_value(TOKEN_COMMENT, current_context_.substr(2, current_context_.length() - 3));
+  return build_token_with_value(
+      TOKEN_COMMENT, current_context_.substr(2, current_context_.length() - 3));
 }
 
 Token Lexer::tokenize_long_comment() {
   while (!source_.eof()) {
     if (advance() == L'*' && source_.peek() == L'/') {
       advance();  // consume closing comment
-      return build_token_with_value(TOKEN_COMMENT, current_context_.substr(2, current_context_.length() - 4));
+      return build_token_with_value(
+          TOKEN_COMMENT,
+          current_context_.substr(2, current_context_.length() - 4));
     }
   }
   throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
                    "Unterminated long comment");
 }
 
-
 Token Lexer::next_token() {
   char c;
   do {
     current_context_.clear();
     c = advance();
-  } while(std::iswspace(c));
+  } while (std::iswspace(c));
 
   switch (c) {
-    case L'\0':return build_token(TOKEN_ETX);
-    case L'(':return build_token(TOKEN_LPAREN);
-    case L')':return build_token(TOKEN_RPAREN);
-    case L'{':return build_token(TOKEN_LBRACE);
-    case L'}':return build_token(TOKEN_RBRACE);
-    case L',':return build_token(TOKEN_COMMA);
-    case L'.':return build_token(TOKEN_DOT);
-    case L'-':return build_token(TOKEN_MINUS);
-    case L'+':return build_token(TOKEN_PLUS);
-    case L';':return build_token(TOKEN_SEMICOLON);
-    case L'*':return build_token(TOKEN_STAR);
+    case L'\0':
+      return build_token(TOKEN_ETX);
+    case L'(':
+      return build_token(TOKEN_LPAREN);
+    case L')':
+      return build_token(TOKEN_RPAREN);
+    case L'{':
+      return build_token(TOKEN_LBRACE);
+    case L'}':
+      return build_token(TOKEN_RBRACE);
+    case L',':
+      return build_token(TOKEN_COMMA);
+    case L'.':
+      return build_token(TOKEN_DOT);
+    case L'-':
+      return build_token(TOKEN_MINUS);
+    case L'+':
+      return build_token(TOKEN_PLUS);
+    case L';':
+      return build_token(TOKEN_SEMICOLON);
+    case L'*':
+      return build_token(TOKEN_STAR);
 
     // Double chars
     case L'!':  // '!='
@@ -161,7 +177,8 @@ Token Lexer::next_token() {
       return build_token(TOKEN_SLASH);
 
     // Literals
-    case L'"':return tokenize_string();
+    case L'"':
+      return tokenize_string();
 
     default:
       if (std::iswalpha(c) || c == L'_') {

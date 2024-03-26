@@ -1,5 +1,6 @@
-#include <magic_enum/magic_enum.hpp>
 #include "token.hpp"
+
+#include <magic_enum/magic_enum.hpp>
 
 std::string Token::stringify() const {
   if (!value.has_value()) {

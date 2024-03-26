@@ -3,9 +3,9 @@
 
 #include <map>
 #include <optional>
+#include <ostream>
 #include <string>
 #include <variant>
-#include <ostream>
 
 #include "../utils/position.hpp"
 
