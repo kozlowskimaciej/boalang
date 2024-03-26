@@ -20,7 +20,7 @@ std::wstring Token::stringify() const {
 }
 
 std::wostream& operator<<(std::wostream& os, const Token& token) {
-  std::wstring repr = L"<" + token_repr.at(token.type);
+  std::wstring repr = L"<" + magic_enum::enum_type_name<decltype(token.type)>();
   if (token.value) {
     repr += L", " + token.stringify();
   }

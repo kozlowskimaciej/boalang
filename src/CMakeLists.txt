@@ -2,7 +2,7 @@ file(GLOB TOKEN_FILES token/*.cpp token/*.hpp)
 file(GLOB SOURCE_FILES source/*.cpp source/*.hpp)
 file(GLOB LEXER_FILES lexer/*.cpp lexer/*.hpp)
 
-find_package(magic_enum)
+find_package(magic_enum REQUIRED)
 
 add_library(
         boalang_lib
@@ -10,6 +10,11 @@ add_library(
         ${TOKEN_FILES}
         ${SOURCE_FILES}
         ${LEXER_FILES}
+)
+target_link_libraries(
+        boalang_lib
+        PRIVATE
+        magic_enum::magic_enum
 )
 
 add_executable(
@@ -20,7 +25,6 @@ target_link_libraries(
         boalang
         PRIVATE
         boalang_lib
-        magic_enum::magic_enum
         -fsanitize=undefined
 )
 

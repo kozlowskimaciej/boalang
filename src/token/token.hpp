@@ -5,6 +5,7 @@
 #include <optional>
 #include <string>
 #include <variant>
+#include <magic_enum/magic_enum.hpp>
 
 #include "../utils/position.hpp"
 
@@ -69,56 +70,6 @@ enum TokenType {
 
   TOKEN_COMMENT,
   TOKEN_UNKNOWN,
-};
-
-static const std::map<TokenType, std::wstring> token_repr{
-    {TOKEN_ETX, L"ETX"},
-    {TOKEN_LPAREN, L"LPAREN"},
-    {TOKEN_RPAREN, L"RPAREN"},
-    {TOKEN_LBRACE, L"LBRACE"},
-    {TOKEN_RBRACE, L"RBRACE"},
-    {TOKEN_COMMA, L"COMMA"},
-    {TOKEN_DOT, L"DOT"},
-    {TOKEN_MINUS, L"MINUS"},
-    {TOKEN_PLUS, L"PLUS"},
-    {TOKEN_SEMICOLON, L"SEMICOLON"},
-    {TOKEN_SLASH, L"SLASH"},
-    {TOKEN_STAR, L"STAR"},
-    {TOKEN_EXCLAMATION, L"EXCLAMATION"},
-    {TOKEN_EQUAL, L"EQUAL"},
-    {TOKEN_LESS, L"LESS"},
-    {TOKEN_GREATER, L"GREATER"},
-    {TOKEN_EQUAL_EQUAL, L"EQUAL_EQUAL"},
-    {TOKEN_NOT_EQUAL, L"NOT_EQUAL"},
-    {TOKEN_LESS_EQUAL, L"LESS_EQUAL"},
-    {TOKEN_GREATER_EQUAL, L"GREATER_EQUAL"},
-    {TOKEN_ARROW, L"ARROW"},
-    {TOKEN_IDENTIFIER, L"IDENTIFIER"},
-    {TOKEN_STR_VAL, L"STR_VAL"},
-    {TOKEN_INT_VAL, L"INT_VAL"},
-    {TOKEN_FLOAT_VAL, L"FLOAT_VAL"},
-    {TOKEN_MUT, L"MUT"},
-    {TOKEN_IF, L"IF"},
-    {TOKEN_ELSE, L"ELSE"},
-    {TOKEN_AND, L"AND"},
-    {TOKEN_OR, L"OR"},
-    {TOKEN_TRUE, L"TRUE"},
-    {TOKEN_FALSE, L"FALSE"},
-    {TOKEN_WHILE, L"WHILE"},
-    {TOKEN_RETURN, L"RETURN"},
-    {TOKEN_IS, L"IS"},
-    {TOKEN_AS, L"AS"},
-    {TOKEN_PRINT, L"PRINT"},
-    {TOKEN_INSPECT, L"INSPECT"},
-    {TOKEN_STRUCT, L"STRUCT"},
-    {TOKEN_VARIANT, L"VARIANT"},
-    {TOKEN_INT, L"INT"},
-    {TOKEN_FLOAT, L"FLOAT"},
-    {TOKEN_STR, L"STR"},
-    {TOKEN_BOOL, L"BOOL"},
-    {TOKEN_VOID, L"VOID"},
-    {TOKEN_COMMENT, L"COMMENT"},
-    {TOKEN_UNKNOWN, L"UNKNOWN"},
 };
 
 static const std::map<std::wstring, TokenType> keywords{
