@@ -15,7 +15,7 @@ add_subdirectory(tests)
 file(GLOB_RECURSE ALL_CXX_SOURCE_FILES *.cpp *.hpp)
 
 add_custom_target(
-        clangformat
+        clang-format
         COMMAND clang-format
         -i
         -style=Google

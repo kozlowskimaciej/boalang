@@ -40,7 +40,7 @@ TEST_F(FileSourceTest, read_from_file) {
 }
 
 TEST_F(FileSourceTest, crlf_to_lf) {
-  stream_ << L"A\n\rB";
+  stream_ << L"A\r\nB";
   stream_.flush();
 
   FileSource source(tempname_);
@@ -71,7 +71,7 @@ TEST(StringSourceTest, read_from_string) {
 }
 
 TEST(StringSourceTest, crlf_to_lf) {
-  StringSource source(L"A\n\rB");
+  StringSource source(L"A\r\nB");
   EXPECT_EQ(source.next(), L'A');
   EXPECT_EQ(source.next(), L'\n');
   EXPECT_EQ(source.next(), L'B');
