@@ -76,41 +76,44 @@ Token Lexer::tokenize_identifier() {
   return build_token_with_value(TOKEN_IDENTIFIER);
 }
 
+Token Lexer::tokenize_comment() {
+  while (source_.current() != L'\n' && !source_.eof()) {
+    advance();
+  }
+  return build_token_with_value(TOKEN_COMMENT, current_context_.substr(2, current_context_.length() - 3));
+}
+
+Token Lexer::tokenize_long_comment() {
+  while (!source_.eof()) {
+    if (advance() == L'*' && source_.peek() == L'/') {
+      advance();  // consume closing comment
+      return build_token_with_value(TOKEN_COMMENT, current_context_.substr(2, current_context_.length() - 4));
+    }
+  }
+  throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
+                   L"Unterminated long comment");
+}
+
+
 Token Lexer::next_token() {
-  current_context_ = L"";
-  wchar_t c = advance();
+  wchar_t c;
+  do {
+    current_context_.clear();
+    c = advance();
+  } while(std::iswspace(c));
 
   switch (c) {
-    case L'\0':
-      return build_token(TOKEN_ETX);
-    case L'(':
-      return build_token(TOKEN_LPAREN);
-    case L')':
-      return build_token(TOKEN_RPAREN);
-    case L'{':
-      return build_token(TOKEN_LBRACE);
-    case L'}':
-      return build_token(TOKEN_RBRACE);
-    case L',':
-      return build_token(TOKEN_COMMA);
-    case L'.':
-      return build_token(TOKEN_DOT);
-    case L'-':
-      return build_token(TOKEN_MINUS);
-    case L'+':
-      return build_token(TOKEN_PLUS);
-    case L';':
-      return build_token(TOKEN_SEMICOLON);
-    case L'/':
-      if (source_.peek() == L'/') {
-        while (source_.peek() != L'\n' && !source_.eof()) {
-          advance();
-        }
-        return next_token();
-      }
-      return build_token(TOKEN_SLASH);
-    case L'*':
-      return build_token(TOKEN_STAR);
+    case L'\0':return build_token(TOKEN_ETX);
+    case L'(':return build_token(TOKEN_LPAREN);
+    case L')':return build_token(TOKEN_RPAREN);
+    case L'{':return build_token(TOKEN_LBRACE);
+    case L'}':return build_token(TOKEN_RBRACE);
+    case L',':return build_token(TOKEN_COMMA);
+    case L'.':return build_token(TOKEN_DOT);
+    case L'-':return build_token(TOKEN_MINUS);
+    case L'+':return build_token(TOKEN_PLUS);
+    case L';':return build_token(TOKEN_SEMICOLON);
+    case L'*':return build_token(TOKEN_STAR);
 
     // Double chars
     case L'!':  // '!='
@@ -137,9 +140,17 @@ Token Lexer::next_token() {
       }
       return build_token(TOKEN_GREATER);
 
+    case L'/':
+      if (source_.peek() == L'/') {
+        return tokenize_comment();
+      }
+      if (source_.peek() == L'*') {
+        return tokenize_long_comment();
+      }
+      return build_token(TOKEN_SLASH);
+
     // Literals
-    case L'"':
-      return tokenize_string();
+    case L'"':return tokenize_string();
 
     default:
       if (std::iswalpha(c) || c == L'_') {
@@ -155,9 +166,6 @@ Token Lexer::next_token() {
 
 wchar_t Lexer::advance() {
   wchar_t c = source_.next();
-  while (std::iswspace(c)) {
-    c = source_.next();
-  }
   current_context_ += c;
   return c;
 }

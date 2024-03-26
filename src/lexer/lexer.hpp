@@ -19,6 +19,8 @@ class Lexer {
   Token tokenize_string();
   Token tokenize_number();
   Token tokenize_identifier();
+  Token tokenize_comment();
+  Token tokenize_long_comment();
 
  public:
   explicit Lexer(Source& source) : source_(source){};

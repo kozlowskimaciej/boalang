@@ -6,6 +6,10 @@ wchar_t Source::next() {
   if (stream_->eof()) {
     return L'\0';
   }
+  if (current_ == L'\r' && stream_->peek() == L'\n') {
+    stream_->ignore();
+    current_ = L'\n';
+  }
 
   if (prev == L'\n') {
     ++position_.line;
@@ -14,9 +18,6 @@ wchar_t Source::next() {
     ++position_.column;
   }
 
-  if (current_ == L'\n' and stream_->peek() == L'\r') {
-    stream_->ignore();
-  }
   return current_;
 }
 

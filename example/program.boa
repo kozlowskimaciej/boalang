@@ -1,9 +1,4 @@
-struct S {
-    mut int a;
-    float b;
-}
-
-mut S st_obj = {121.5, 10};
-st_obj.a = st_obj.b as int;
-"elo" "hello"
-
+test
+// test
+/* test
+test */

@@ -67,7 +67,8 @@ enum TokenType {
   TOKEN_BOOL,
   TOKEN_VOID,
 
-  TOKEN_UNKNOWN
+  TOKEN_COMMENT,
+  TOKEN_UNKNOWN,
 };
 
 static const std::map<TokenType, std::wstring> token_repr{
@@ -116,6 +117,7 @@ static const std::map<TokenType, std::wstring> token_repr{
     {TOKEN_STR, L"STR"},
     {TOKEN_BOOL, L"BOOL"},
     {TOKEN_VOID, L"VOID"},
+    {TOKEN_COMMENT, L"COMMENT"},
     {TOKEN_UNKNOWN, L"UNKNOWN"},
 };
 
