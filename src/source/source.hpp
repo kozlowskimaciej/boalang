@@ -8,11 +8,11 @@
 
 #include "../utils/position.hpp"
 
-using stream_ptr = std::unique_ptr<std::wistream>;
+using stream_ptr = std::unique_ptr<std::istream>;
 
 class Source {
   Position position_ = {1, 0};
-  wchar_t current_ = L'\0';
+  char current_ = L'\0';
 
  protected:
   stream_ptr stream_;
@@ -34,23 +34,23 @@ class Source {
   }
 
   [[nodiscard]] const Position& position() const { return position_; }
-  wchar_t next();
-  [[nodiscard]] wchar_t peek() const;
-  [[nodiscard]] wchar_t current() const;
+  char next();
+  [[nodiscard]] char peek() const;
+  [[nodiscard]] char current() const;
   [[nodiscard]] bool eof() const;
 };
 
 class FileSource : public Source {
  public:
   explicit FileSource(const std::string& path) {
-    stream_ = std::make_unique<std::wifstream>(path);
+    stream_ = std::make_unique<std::ifstream>(path);
   }
 };
 
 class StringSource : public Source {
  public:
-  explicit StringSource(const std::wstring& source) {
-    stream_ = std::make_unique<std::wistringstream>(source);
+  explicit StringSource(const std::string& source) {
+    stream_ = std::make_unique<std::istringstream>(source);
   }
 };
 

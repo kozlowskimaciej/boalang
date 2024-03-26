@@ -1,6 +1,6 @@
 #include "source.hpp"
 
-wchar_t Source::next() {
+char Source::next() {
   auto prev = current_;
   stream_->get(current_);
   if (stream_->eof()) {
@@ -21,14 +21,14 @@ wchar_t Source::next() {
   return current_;
 }
 
-wchar_t Source::peek() const {
+char Source::peek() const {
   std::wistream::int_type c = stream_->peek();
   if (c == std::wistream::traits_type::eof()) {
     return L'\0';
   }
-  return static_cast<wchar_t>(c);
+  return static_cast<char>(c);
 }
 
-wchar_t Source::current() const { return current_; }
+char Source::current() const { return current_; }
 
 bool Source::eof() const { return peek() == L'\0'; }

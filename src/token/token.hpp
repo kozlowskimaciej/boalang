@@ -5,12 +5,12 @@
 #include <optional>
 #include <string>
 #include <variant>
-#include <magic_enum/magic_enum.hpp>
+#include <ostream>
 
 #include "../utils/position.hpp"
 
 using token_value_t =
-    std::optional<std::variant<std::wstring, int, float, bool>>;
+    std::optional<std::variant<std::string, int, float, bool>>;
 
 enum TokenType {
   // END OF TEXT
@@ -72,17 +72,17 @@ enum TokenType {
   TOKEN_UNKNOWN,
 };
 
-static const std::map<std::wstring, TokenType> keywords{
-    {L"if", TOKEN_IF},         {L"else", TOKEN_ELSE},
-    {L"and", TOKEN_AND},       {L"or", TOKEN_OR},
-    {L"true", TOKEN_TRUE},     {L"false", TOKEN_FALSE},
-    {L"while", TOKEN_WHILE},   {L"return", TOKEN_RETURN},
-    {L"is", TOKEN_IS},         {L"as", TOKEN_AS},
-    {L"print", TOKEN_PRINT},   {L"inspect", TOKEN_INSPECT},
-    {L"struct", TOKEN_STRUCT}, {L"variant", TOKEN_VARIANT},
-    {L"int", TOKEN_INT},       {L"float", TOKEN_FLOAT},
-    {L"str", TOKEN_STR},       {L"bool", TOKEN_BOOL},
-    {L"void", TOKEN_VOID},     {L"mut", TOKEN_MUT},
+static const std::map<std::string, TokenType> keywords{
+    {"if", TOKEN_IF},         {"else", TOKEN_ELSE},
+    {"and", TOKEN_AND},       {"or", TOKEN_OR},
+    {"true", TOKEN_TRUE},     {"false", TOKEN_FALSE},
+    {"while", TOKEN_WHILE},   {"return", TOKEN_RETURN},
+    {"is", TOKEN_IS},         {"as", TOKEN_AS},
+    {"print", TOKEN_PRINT},   {"inspect", TOKEN_INSPECT},
+    {"struct", TOKEN_STRUCT}, {"variant", TOKEN_VARIANT},
+    {"int", TOKEN_INT},       {"float", TOKEN_FLOAT},
+    {"str", TOKEN_STR},       {"bool", TOKEN_BOOL},
+    {"void", TOKEN_VOID},     {"mut", TOKEN_MUT},
 };
 
 class Token {
@@ -96,9 +96,9 @@ class Token {
   Token(TokenType type, token_value_t value, Position position)
       : type(type), value(std::move(value)), position(position){};
 
-  [[nodiscard]] std::wstring stringify() const;
+  [[nodiscard]] std::string stringify() const;
 
-  friend std::wostream& operator<<(std::wostream& os, const Token& token);
+  friend std::ostream& operator<<(std::ostream& os, const Token& token);
 };
 
 #endif  // BOALANG_TOKEN_HPP

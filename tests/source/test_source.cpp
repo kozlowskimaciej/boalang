@@ -21,7 +21,7 @@ class FileSourceTest : public ::testing::Test {
 };
 
 TEST_F(FileSourceTest, read_from_file) {
-  stream_ << L"Hi";
+  stream_ << "Hi";
   stream_.flush();
 
   FileSource source(tempname_);
@@ -40,7 +40,7 @@ TEST_F(FileSourceTest, read_from_file) {
 }
 
 TEST_F(FileSourceTest, crlf_to_lf) {
-  stream_ << L"A\r\nB";
+  stream_ << "A\r\nB";
   stream_.flush();
 
   FileSource source(tempname_);
@@ -55,7 +55,7 @@ TEST_F(FileSourceTest, crlf_to_lf) {
 }
 
 TEST(StringSourceTest, read_from_string) {
-  StringSource source(L"Hi");
+  StringSource source("Hi");
   EXPECT_EQ(source.next(), L'H');
   EXPECT_EQ(source.next(), L'i');
 
@@ -71,7 +71,7 @@ TEST(StringSourceTest, read_from_string) {
 }
 
 TEST(StringSourceTest, crlf_to_lf) {
-  StringSource source(L"A\r\nB");
+  StringSource source("A\r\nB");
   EXPECT_EQ(source.next(), L'A');
   EXPECT_EQ(source.next(), L'\n');
   EXPECT_EQ(source.next(), L'B');

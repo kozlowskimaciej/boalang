@@ -1,30 +1,30 @@
+#include <magic_enum/magic_enum.hpp>
 #include "token.hpp"
 
-std::wstring Token::stringify() const {
+std::string Token::stringify() const {
   if (!value.has_value()) {
-    return L"";
+    return "";
   }
 
   return std::visit(
-      [](auto&& arg) -> std::wstring {
+      [](auto&& arg) -> std::string {
         using T = std::decay_t<decltype(arg)>;
         if constexpr (std::is_same_v<T, int> || std::is_same_v<T, float>) {
-          return std::to_wstring(arg);
-        } else if constexpr (std::is_same_v<T, std::wstring>) {
+          return std::to_string(arg);
+        } else if constexpr (std::is_same_v<T, std::string>) {
           return arg;
         } else if constexpr (std::is_same_v<T, bool>) {
-          return arg ? L"true" : L"false";
+          return arg ? "true" : "false";
         }
       },
       value.value());
 }
 
-std::wostream& operator<<(std::wostream& os, const Token& token) {
-  std::wstring repr = L"<" + magic_enum::enum_type_name<decltype(token.type)>();
+std::ostream& operator<<(std::ostream& os, const Token& token) {
+  os << "<" << magic_enum::enum_name(token.type);
   if (token.value) {
-    repr += L", " + token.stringify();
+    os << ", " << token.stringify();
   }
-  repr += L">";
-  os << repr;
+  os << ">";
   return os;
 }

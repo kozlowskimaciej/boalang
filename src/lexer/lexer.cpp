@@ -19,7 +19,7 @@ Token Lexer::tokenize_string() {
   }
   if (source_.peek() != L'"') {
     throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
-                     L"Unterminated string");
+                     "Unterminated string");
   }
   advance();  // consume closing quote
   return build_token_with_value(
@@ -31,7 +31,7 @@ Token Lexer::tokenize_string() {
 Token Lexer::tokenize_number() {
   if (source_.current() == L'0' && source_.peek() == L'0') {
     throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
-                     L"Leading zeros are not allowed");
+                     "Leading zeros are not allowed");
   }
 
   int decimal_part = source_.current() - L'0';
@@ -41,7 +41,7 @@ Token Lexer::tokenize_number() {
     digit = advance() - L'0';
     if (decimal_part > (INT_MAX - digit) / 10) {
       throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
-                       L"Int literal exceeds maximum value (" + std::to_wstring(INT_MAX) + L")");
+                       "Int literal exceeds maximum value (" + std::to_string(INT_MAX) + ")");
     }
     decimal_part *= 10;
     decimal_part += digit;
@@ -50,7 +50,7 @@ Token Lexer::tokenize_number() {
     advance();
     if (!std::iswdigit(source_.peek())) {
       throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
-                       L"Expected digit after '.'");
+                       "Expected digit after '.'");
     }
 
     int fraction_part = 0;
@@ -64,7 +64,7 @@ Token Lexer::tokenize_number() {
       float_val = static_cast<float>(decimal_part + fraction_part*std::pow(10, -exponent));
       if (float_val == HUGE_VALF) {
         throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
-                         L"Float literal exceeds maximum value");
+                         "Float literal exceeds maximum value");
       }
     }
     return build_token_with_value(TOKEN_FLOAT_VAL, float_val);
@@ -82,7 +82,7 @@ Token Lexer::tokenize_identifier() {
   }
   if (current_context_.length() > MAX_IDENTIFIER_LENGTH) {
     throw LexerError(build_token_with_value(TOKEN_IDENTIFIER),
-                     L"Identifier exceeds maximum length");
+                     "Identifier exceeds maximum length");
   }
   return build_token_with_value(TOKEN_IDENTIFIER);
 }
@@ -102,12 +102,12 @@ Token Lexer::tokenize_long_comment() {
     }
   }
   throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
-                   L"Unterminated long comment");
+                   "Unterminated long comment");
 }
 
 
 Token Lexer::next_token() {
-  wchar_t c;
+  char c;
   do {
     current_context_.clear();
     c = advance();
@@ -171,12 +171,12 @@ Token Lexer::next_token() {
         return tokenize_number();
       }
       throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
-                       L"Encountered unknown token");
+                       "Encountered unknown token");
   }
 }
 
-wchar_t Lexer::advance() {
-  wchar_t c = source_.next();
+char Lexer::advance() {
+  char c = source_.next();
   current_context_ += c;
   return c;
 }
