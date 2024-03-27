@@ -12,7 +12,7 @@ using stream_ptr = std::unique_ptr<std::istream>;
 
 class Source {
   Position position_ = {1, 0};
-  char current_ = L'\0';
+  char current_ = '\0';
 
  protected:
   stream_ptr stream_;
@@ -34,9 +34,9 @@ class Source {
   }
 
   [[nodiscard]] const Position& position() const { return position_; }
-  const char& next();
+  char next();
   [[nodiscard]] char peek() const;
-  [[nodiscard]] const char& current() const;
+  [[nodiscard]] char current() const;
   [[nodiscard]] bool eof() const;
 };
 

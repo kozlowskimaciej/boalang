@@ -1,20 +1,20 @@
 #include "source.hpp"
 
-const char& Source::next() {
+char Source::next() {
   auto prev = current_;
   stream_->get(current_);
 
   if (stream_->eof()) {
-    current_ = L'\0';
+    current_ = '\0';
     return current_;
   }
 
-  if (current_ == L'\r' && stream_->peek() == L'\n') {
+  if (current_ == '\r' && stream_->peek() == '\n') {
     stream_->ignore();
-    current_ = L'\n';
+    current_ = '\n';
   }
 
-  if (prev == L'\n') {
+  if (prev == '\n') {
     ++position_.line;
     position_.column = 1;
   } else {
@@ -27,11 +27,11 @@ const char& Source::next() {
 char Source::peek() const {
   std::wistream::int_type c = stream_->peek();
   if (c == std::wistream::traits_type::eof()) {
-    return L'\0';
+    return '\0';
   }
   return static_cast<char>(c);
 }
 
-const char& Source::current() const { return current_; }
+char Source::current() const { return current_; }
 
-bool Source::eof() const { return peek() == L'\0'; }
+bool Source::eof() const { return peek() == '\0'; }
