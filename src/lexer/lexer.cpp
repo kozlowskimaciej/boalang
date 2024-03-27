@@ -192,8 +192,8 @@ Token Lexer::next_token() {
   }
 }
 
-char Lexer::advance() {
-  char c = source_.next();
+const char& Lexer::advance() {
+  const char& c = source_.next();
   current_context_ += c;
   return c;
 }

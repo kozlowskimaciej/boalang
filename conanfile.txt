@@ -1,6 +1,7 @@
 [requires]
 gtest/1.14.0
 magic_enum/0.9.5
+argparse/3.0
 [generators]
 CMakeDeps
 CMakeToolchain

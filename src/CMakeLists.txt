@@ -3,6 +3,7 @@ file(GLOB SOURCE_FILES source/*.cpp source/*.hpp)
 file(GLOB LEXER_FILES lexer/*.cpp lexer/*.hpp)
 
 find_package(magic_enum REQUIRED)
+find_package(argparse REQUIRED)
 
 add_library(
         boalang_lib
@@ -25,6 +26,7 @@ target_link_libraries(
         boalang
         PRIVATE
         boalang_lib
+        argparse::argparse
         -fsanitize=undefined
 )
 

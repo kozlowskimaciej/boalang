@@ -12,7 +12,7 @@ class Lexer {
   [[nodiscard]] Token build_token_with_value(
       const TokenType& type, const token_value_t& value = std::nullopt) const;
   [[nodiscard]] Token build_token(const TokenType& type) const;
-  char advance();
+  const char& advance();
   Token tokenize_string();
   Token tokenize_number();
   Token tokenize_identifier();

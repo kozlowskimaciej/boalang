@@ -1,11 +1,14 @@
 #include "source.hpp"
 
-char Source::next() {
+const char& Source::next() {
   auto prev = current_;
   stream_->get(current_);
+
   if (stream_->eof()) {
-    return L'\0';
+    current_ = L'\0';
+    return current_;
   }
+
   if (current_ == L'\r' && stream_->peek() == L'\n') {
     stream_->ignore();
     current_ = L'\n';
@@ -29,6 +32,6 @@ char Source::peek() const {
   return static_cast<char>(c);
 }
 
-char Source::current() const { return current_; }
+const char& Source::current() const { return current_; }
 
 bool Source::eof() const { return peek() == L'\0'; }

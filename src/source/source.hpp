@@ -34,9 +34,9 @@ class Source {
   }
 
   [[nodiscard]] const Position& position() const { return position_; }
-  char next();
+  const char& next();
   [[nodiscard]] char peek() const;
-  [[nodiscard]] char current() const;
+  [[nodiscard]] const char& current() const;
   [[nodiscard]] bool eof() const;
 };
 
