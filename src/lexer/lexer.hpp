@@ -13,12 +13,13 @@ class Lexer {
       const TokenType& type, const token_value_t& value = std::nullopt) const;
   [[nodiscard]] Token build_token(const TokenType& type) const;
   char advance();
+  bool match(char c);
   Token tokenize_string();
   Token tokenize_number();
   Token tokenize_identifier();
   Token tokenize_comment();
   Token tokenize_long_comment();
-  int build_int();
+  int build_decimal();
 
  public:
   explicit Lexer(Source& source) : source_(source){};

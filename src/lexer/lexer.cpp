@@ -30,14 +30,8 @@ Token Lexer::tokenize_string() {
 }
 
 Token Lexer::tokenize_number() {
-  if (source_.current() == '0' && source_.peek() == '0') {
-    throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
-                     "Leading zeros are not allowed");
-  }
-
-  int decimal_part = build_int();
-  if (source_.peek() == '.') {
-    advance();
+  int decimal_part = build_decimal();
+  if (match('.')) {
     if (!std::iswdigit(source_.peek())) {
       throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
                        "Expected digit after '.'");
@@ -69,7 +63,8 @@ Token Lexer::tokenize_identifier() {
   }
   if (current_context_.length() > MAX_IDENTIFIER_LENGTH) {
     throw LexerError(build_token_with_value(TOKEN_IDENTIFIER),
-                     "Identifier exceeds maximum length");
+                     "Identifier exceeds maximum length (" +
+                         std::to_string(MAX_IDENTIFIER_LENGTH) + ")");
   }
   return build_token_with_value(TOKEN_IDENTIFIER);
 }
@@ -84,8 +79,7 @@ Token Lexer::tokenize_comment() {
 
 Token Lexer::tokenize_long_comment() {
   while (!source_.eof()) {
-    if (advance() == '*' && source_.peek() == '/') {
-      advance();  // consume closing comment
+    if (advance() == '*' && match('/')) {
       return build_token_with_value(
           TOKEN_COMMENT,
           current_context_.substr(2, current_context_.length() - 4));
@@ -95,7 +89,11 @@ Token Lexer::tokenize_long_comment() {
                    "Unterminated long comment");
 }
 
-int Lexer::build_int() {
+int Lexer::build_decimal() {
+  if (source_.current() == '0' && match('0')) {
+    throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
+                     "Leading zeros are not allowed");
+  }
   int integer = source_.current() - '0';
 
   int digit;
@@ -145,34 +143,34 @@ Token Lexer::next_token() {
 
     // Double chars
     case '!':  // '!='
-      if (source_.peek() == '=') {
+      if (match('=')) {
         return build_token(TOKEN_NOT_EQUAL);
       }
       return build_token(TOKEN_EXCLAMATION);
     case '=':  // '=='
-      if (source_.peek() == '=') {
+      if (match('=')) {
         return build_token(TOKEN_EQUAL_EQUAL);
       }
-      if (source_.peek() == '>') {
+      if (match('>')) {
         return build_token(TOKEN_ARROW);
       }
       return build_token(TOKEN_EQUAL);
     case '<':  // '<='
-      if (source_.peek() == '=') {
+      if (match('=')) {
         return build_token(TOKEN_LESS_EQUAL);
       }
       return build_token(TOKEN_LESS);
     case '>':  // '>='
-      if (source_.peek() == '=') {
+      if (match('=')) {
         return build_token(TOKEN_GREATER_EQUAL);
       }
       return build_token(TOKEN_GREATER);
 
     case '/':
-      if (source_.peek() == '/') {
+      if (match('/')) {
         return tokenize_comment();
       }
-      if (source_.peek() == '*') {
+      if (match('*')) {
         return tokenize_long_comment();
       }
       return build_token(TOKEN_SLASH);
@@ -197,4 +195,12 @@ char Lexer::advance() {
   char c = source_.next();
   current_context_ += c;
   return c;
+}
+
+bool Lexer::match(char c) {
+  if (c == source_.peek()) {
+    advance();
+    return true;
+  }
+  return false;
 }
