@@ -6,3 +6,5 @@ pip install -U conan
 
 conan profile detect
 conan install . --build=missing --settings=build_type=Debug
+
+./build.sh

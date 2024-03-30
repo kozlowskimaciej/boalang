@@ -1,9 +1,8 @@
 #include <iostream>
-#include <string>
 #include <memory>
+#include <string>
 
 #include "argparse/argparse.hpp"
-
 #include "lexer/lexer.hpp"
 #include "source/source.hpp"
 
@@ -16,14 +15,12 @@ void parse_args(int& argc, char* argv[], argparse::ArgumentParser& program) {
 
   try {
     program.parse_args(argc, argv);
-  }
-  catch (const std::exception& err) {
+  } catch (const std::exception& err) {
     std::cerr << err.what() << std::endl;
     std::cerr << program;
     std::exit(1);
   }
 }
-
 
 int main(int argc, char* argv[]) {
   argparse::ArgumentParser program("boalang");

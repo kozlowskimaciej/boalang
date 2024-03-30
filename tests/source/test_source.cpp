@@ -25,14 +25,14 @@ TEST_F(FileSourceTest, read_from_file) {
   stream_.flush();
 
   FileSource source(tempname_);
-  EXPECT_EQ(source.next(), L'H');
-  EXPECT_EQ(source.next(), L'i');
+  EXPECT_EQ(source.next(), 'H');
+  EXPECT_EQ(source.next(), 'i');
 
   EXPECT_EQ(source.position().column, 2);
   EXPECT_EQ(source.position().line, 1);
 
   // Reaching the end of the file
-  EXPECT_EQ(source.next(), L'\0');
+  EXPECT_EQ(source.next(), '\0');
 
   // Check if the position is still the same after reaching the end of the file
   EXPECT_EQ(source.position().column, 2);
@@ -44,26 +44,26 @@ TEST_F(FileSourceTest, crlf_to_lf) {
   stream_.flush();
 
   FileSource source(tempname_);
-  EXPECT_EQ(source.next(), L'A');
-  EXPECT_EQ(source.next(), L'\n');
-  EXPECT_EQ(source.next(), L'B');
+  EXPECT_EQ(source.next(), 'A');
+  EXPECT_EQ(source.next(), '\n');
+  EXPECT_EQ(source.next(), 'B');
 
   EXPECT_EQ(source.position().column, 1);
   EXPECT_EQ(source.position().line, 2);
 
-  EXPECT_EQ(source.next(), L'\0');
+  EXPECT_EQ(source.next(), '\0');
 }
 
 TEST(StringSourceTest, read_from_string) {
   StringSource source("Hi");
-  EXPECT_EQ(source.next(), L'H');
-  EXPECT_EQ(source.next(), L'i');
+  EXPECT_EQ(source.next(), 'H');
+  EXPECT_EQ(source.next(), 'i');
 
   EXPECT_EQ(source.position().column, 2);
   EXPECT_EQ(source.position().line, 1);
 
   // Reaching the end of the file
-  EXPECT_EQ(source.next(), L'\0');
+  EXPECT_EQ(source.next(), '\0');
 
   // Check if the position is still the same after reaching the end of the file
   EXPECT_EQ(source.position().column, 2);
@@ -72,12 +72,12 @@ TEST(StringSourceTest, read_from_string) {
 
 TEST(StringSourceTest, crlf_to_lf) {
   StringSource source("A\r\nB");
-  EXPECT_EQ(source.next(), L'A');
-  EXPECT_EQ(source.next(), L'\n');
-  EXPECT_EQ(source.next(), L'B');
+  EXPECT_EQ(source.next(), 'A');
+  EXPECT_EQ(source.next(), '\n');
+  EXPECT_EQ(source.next(), 'B');
 
   EXPECT_EQ(source.position().column, 1);
   EXPECT_EQ(source.position().line, 2);
 
-  EXPECT_EQ(source.next(), L'\0');
+  EXPECT_EQ(source.next(), '\0');
 }

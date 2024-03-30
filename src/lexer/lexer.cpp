@@ -53,10 +53,6 @@ Token Lexer::tokenize_number() {
       ++exponent;
       float_val = static_cast<float>(decimal_part +
                                      fraction_part * std::pow(10, -exponent));
-      if (float_val == HUGE_VALF) {
-        throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
-                         "Float literal exceeds maximum value");
-      }
     }
     return build_token_with_value(TOKEN_FLOAT_VAL, float_val);
   }
@@ -100,20 +96,20 @@ Token Lexer::tokenize_long_comment() {
 }
 
 int Lexer::build_int() {
-    int integer = source_.current() - '0';
+  int integer = source_.current() - '0';
 
-    int digit;
-    while (std::iswdigit(source_.peek())) {
-        digit = advance() - '0';
-        if (integer > (INT_MAX - digit) / 10) {
-            throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
-                             "Int literal exceeds maximum value (" +
-                             std::to_string(INT_MAX) + ")");
-        }
-        integer *= 10;
-        integer += digit;
+  int digit;
+  while (std::iswdigit(source_.peek())) {
+    digit = advance() - '0';
+    if (integer > (INT_MAX - digit) / 10) {
+      throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
+                       "Int literal exceeds maximum value (" +
+                           std::to_string(INT_MAX) + ")");
     }
-    return integer;
+    integer *= 10;
+    integer += digit;
+  }
+  return integer;
 }
 
 Token Lexer::next_token() {

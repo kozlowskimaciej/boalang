@@ -19,39 +19,34 @@ class Source {
 
  public:
   Source() = default;
+  explicit Source(stream_ptr stream) : stream_(std::move(stream)) {}
   virtual ~Source() = default;
-
-  Source(const Source&) = delete;
-  Source& operator=(const Source&) = delete;
-
-  Source(Source&& other) noexcept : stream_(std::move(other.stream_)) {}
-
-  Source& operator=(Source&& other) noexcept {
-    if (this != &other) {
-      stream_ = std::move(other.stream_);
-    }
-    return *this;
-  }
 
   [[nodiscard]] const Position& position() const { return position_; }
   char next();
   [[nodiscard]] char peek() const;
   [[nodiscard]] char current() const;
   [[nodiscard]] bool eof() const;
+
+  virtual void attach(std::string source) = 0;
 };
 
 class FileSource : public Source {
  public:
-  explicit FileSource(const std::string& path) {
-    stream_ = std::make_unique<std::ifstream>(path);
-  }
+  FileSource() = default;
+  explicit FileSource(const std::string& path)
+      : Source(std::make_unique<std::ifstream>(path)){};
+
+  void attach(std::string source) override;
 };
 
 class StringSource : public Source {
  public:
-  explicit StringSource(const std::string& source) {
-    stream_ = std::make_unique<std::istringstream>(source);
-  }
+  StringSource() = default;
+  explicit StringSource(const std::string& source)
+      : Source(std::make_unique<std::istringstream>(source)){};
+
+  void attach(std::string source) override;
 };
 
 #endif  // BOALANG_SOURCE_HPP
