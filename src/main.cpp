@@ -28,19 +28,15 @@ int main(int argc, char* argv[]) {
 
   std::unique_ptr<Source> src;
   if (program["--cmd"] == true) {
-    std::cout << "string" << std::endl;
     src = std::make_unique<StringSource>(program.get<std::string>("source"));
   } else {
-    std::cout << "file" << std::endl;
     src = std::make_unique<FileSource>(program.get<std::string>("source"));
   }
-  auto lexer = Lexer(*src);
-  while (true) {
+
+  Lexer lexer(*src);
+  while (!lexer.is_exhausted()) {
     auto token = lexer.next_token();
     std::cout << token << ' ';
-    if (token.type == TokenType::TOKEN_ETX) {
-      break;
-    }
   }
 
   return 0;

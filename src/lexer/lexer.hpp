@@ -4,9 +4,10 @@
 #include "../source/source.hpp"
 #include "../token/token.hpp"
 
+constexpr unsigned int MAX_IDENTIFIER_LENGTH = 64;
+
 class Lexer {
  private:
-  const unsigned int MAX_IDENTIFIER_LENGTH = 64;
   std::string current_context_;
   Source& source_;
   [[nodiscard]] Token build_token_with_value(
@@ -24,6 +25,7 @@ class Lexer {
  public:
   explicit Lexer(Source& source) : source_(source){};
   Token next_token();
+  [[nodiscard]] bool is_exhausted() const;
 };
 
 class LexerError : public std::exception {

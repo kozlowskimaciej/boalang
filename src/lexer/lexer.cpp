@@ -39,7 +39,7 @@ Token Lexer::tokenize_number() {
 
     int fraction_part = 0;
     int exponent = 0;
-    float float_val;
+    float float_val = 0;
 
     while (std::iswdigit(source_.peek())) {
       fraction_part *= 10;
@@ -94,20 +94,19 @@ int Lexer::build_decimal() {
     throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
                      "Leading zeros are not allowed");
   }
-  int integer = source_.current() - '0';
+  int decimal = source_.current() - '0';
 
-  int digit;
   while (std::iswdigit(source_.peek())) {
-    digit = advance() - '0';
-    if (integer > (INT_MAX - digit) / 10) {
+    int digit = advance() - '0';
+    if (decimal > (INT_MAX - digit) / 10) {
       throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
                        "Int literal exceeds maximum value (" +
                            std::to_string(INT_MAX) + ")");
     }
-    integer *= 10;
-    integer += digit;
+    decimal *= 10;
+    decimal += digit;
   }
-  return integer;
+  return decimal;
 }
 
 Token Lexer::next_token() {
@@ -204,3 +203,5 @@ bool Lexer::match(char c) {
   }
   return false;
 }
+
+bool Lexer::is_exhausted() const { return source_.eof(); }

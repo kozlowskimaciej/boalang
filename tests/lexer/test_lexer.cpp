@@ -142,7 +142,7 @@ TEST_F(LexerTokenizeTest, identifier_valid) {
 }
 
 TEST_F(LexerTokenizeTest, identifier_too_long) {
-  std::string id = std::string(65, 'A');
+  std::string id = std::string(MAX_IDENTIFIER_LENGTH + 1, 'A');
   source_.attach(id);
 
   EXPECT_THROW(
@@ -157,6 +157,32 @@ TEST_F(LexerTokenizeTest, identifier_too_long) {
         }
       },
       LexerError);
+}
+
+TEST_F(LexerTokenizeTest, string) {
+    source_.attach("\"Hello World!\"");
+
+    Token token = lexer_.next_token();
+    EXPECT_EQ(token.type, TokenType::TOKEN_STR_VAL);
+    EXPECT_TRUE(std::holds_alternative<std::string>(token.value.value()));
+    EXPECT_EQ(std::get<std::string>(token.value.value()), "Hello World!");
+}
+
+TEST_F(LexerTokenizeTest, string_unterminated) {
+    std::string str = "\"Hello World!";
+    source_.attach(str);
+
+    EXPECT_THROW(
+            {
+                try {
+                    lexer_.next_token();
+                } catch (const LexerError& e) {
+                    EXPECT_TRUE(str_contains(e.what(), str));
+                    EXPECT_TRUE(str_contains(e.what(), "Unterminated string"));
+                    throw;
+                }
+            },
+            LexerError);
 }
 
 TEST_F(LexerTokenizeTest, tokenize_sample_code) {
@@ -237,13 +263,4 @@ TEST_F(LexerTokenizeTest, tokenize_double_chars) {
   EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_ARROW);
 
   EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_ETX);
-}
-
-TEST_F(LexerTokenizeTest, tokenize_string) {
-  source_.attach("\"Hello World!\"");
-
-  Token token = lexer_.next_token();
-  EXPECT_EQ(token.type, TokenType::TOKEN_STR_VAL);
-  EXPECT_TRUE(std::holds_alternative<std::string>(token.value.value()));
-  EXPECT_EQ(std::get<std::string>(token.value.value()), "Hello World!");
 }
