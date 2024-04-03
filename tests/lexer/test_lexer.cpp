@@ -160,29 +160,29 @@ TEST_F(LexerTokenizeTest, identifier_too_long) {
 }
 
 TEST_F(LexerTokenizeTest, string) {
-    source_.attach("\"Hello World!\"");
+  source_.attach("\"Hello World!\"");
 
-    Token token = lexer_.next_token();
-    EXPECT_EQ(token.type, TokenType::TOKEN_STR_VAL);
-    EXPECT_TRUE(std::holds_alternative<std::string>(token.value.value()));
-    EXPECT_EQ(std::get<std::string>(token.value.value()), "Hello World!");
+  Token token = lexer_.next_token();
+  EXPECT_EQ(token.type, TokenType::TOKEN_STR_VAL);
+  EXPECT_TRUE(std::holds_alternative<std::string>(token.value.value()));
+  EXPECT_EQ(std::get<std::string>(token.value.value()), "Hello World!");
 }
 
 TEST_F(LexerTokenizeTest, string_unterminated) {
-    std::string str = "\"Hello World!";
-    source_.attach(str);
+  std::string str = "\"Hello World!";
+  source_.attach(str);
 
-    EXPECT_THROW(
-            {
-                try {
-                    lexer_.next_token();
-                } catch (const LexerError& e) {
-                    EXPECT_TRUE(str_contains(e.what(), str));
-                    EXPECT_TRUE(str_contains(e.what(), "Unterminated string"));
-                    throw;
-                }
-            },
-            LexerError);
+  EXPECT_THROW(
+      {
+        try {
+          lexer_.next_token();
+        } catch (const LexerError& e) {
+          EXPECT_TRUE(str_contains(e.what(), str));
+          EXPECT_TRUE(str_contains(e.what(), "Unterminated string"));
+          throw;
+        }
+      },
+      LexerError);
 }
 
 TEST_F(LexerTokenizeTest, tokenize_sample_code) {
@@ -200,67 +200,61 @@ TEST_F(LexerTokenizeTest, tokenize_sample_code) {
   EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_ETX);
 }
 
-TEST_F(LexerTokenizeTest, tokenize_chars) {
-  source_.attach("( ) { } , . - + ; / ! = * < >");
+class LexerTokenizeParamTest
+    : public LexerTokenizeTest,
+      public ::testing::WithParamInterface<std::pair<std::string, TokenType>> {
+};
 
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_LPAREN);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_RPAREN);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_LBRACE);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_RBRACE);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_COMMA);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_DOT);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_MINUS);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_PLUS);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_SEMICOLON);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_SLASH);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_EXCLAMATION);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_EQUAL);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_STAR);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_LESS);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_GREATER);
-
+TEST_P(LexerTokenizeParamTest, tokenize_chars) {
+  source_.attach(GetParam().first);
+  EXPECT_EQ(lexer_.next_token().type, GetParam().second);
   EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_ETX);
 }
 
-TEST_F(LexerTokenizeTest, tokenize_keywords) {
-  source_.attach(
-      "mut if else and or "
-      "true false while return "
-      "is as print inspect struct "
-      "variant int float str bool void");
-
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_MUT);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_IF);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_ELSE);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_AND);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_OR);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_TRUE);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_FALSE);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_WHILE);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_RETURN);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_IS);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_AS);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_PRINT);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_INSPECT);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_STRUCT);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_VARIANT);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_INT);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_FLOAT);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_STR);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_BOOL);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_VOID);
-
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_ETX);
-}
-
-TEST_F(LexerTokenizeTest, tokenize_double_chars) {
-  source_.attach("== != <= >= =>");
-
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_EQUAL_EQUAL);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_NOT_EQUAL);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_LESS_EQUAL);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_GREATER_EQUAL);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_ARROW);
-
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_ETX);
-}
+INSTANTIATE_TEST_SUITE_P(
+    LexerSingleTokensTests, LexerTokenizeParamTest,
+    ::testing::Values(std::make_pair("", TokenType::TOKEN_ETX),
+                      std::make_pair("(", TokenType::TOKEN_LPAREN),
+                      std::make_pair(")", TokenType::TOKEN_RPAREN),
+                      std::make_pair("{", TokenType::TOKEN_LBRACE),
+                      std::make_pair("}", TokenType::TOKEN_RBRACE),
+                      std::make_pair(",", TokenType::TOKEN_COMMA),
+                      std::make_pair(".", TokenType::TOKEN_DOT),
+                      std::make_pair("-", TokenType::TOKEN_MINUS),
+                      std::make_pair("+", TokenType::TOKEN_PLUS),
+                      std::make_pair(";", TokenType::TOKEN_SEMICOLON),
+                      std::make_pair("/", TokenType::TOKEN_SLASH),
+                      std::make_pair("*", TokenType::TOKEN_STAR),
+                      std::make_pair("!", TokenType::TOKEN_EXCLAMATION),
+                      std::make_pair("=", TokenType::TOKEN_EQUAL),
+                      std::make_pair("<", TokenType::TOKEN_LESS),
+                      std::make_pair(">", TokenType::TOKEN_GREATER),
+                      std::make_pair("identifier", TokenType::TOKEN_IDENTIFIER),
+                      std::make_pair("\"123\"", TokenType::TOKEN_STR_VAL),
+                      std::make_pair("123", TokenType::TOKEN_INT_VAL),
+                      std::make_pair("123.0", TokenType::TOKEN_FLOAT_VAL),
+                      std::make_pair("mut", TokenType::TOKEN_MUT),
+                      std::make_pair("if", TokenType::TOKEN_IF),
+                      std::make_pair("else", TokenType::TOKEN_ELSE),
+                      std::make_pair("and", TokenType::TOKEN_AND),
+                      std::make_pair("or", TokenType::TOKEN_OR),
+                      std::make_pair("true", TokenType::TOKEN_TRUE),
+                      std::make_pair("false", TokenType::TOKEN_FALSE),
+                      std::make_pair("while", TokenType::TOKEN_WHILE),
+                      std::make_pair("return", TokenType::TOKEN_RETURN),
+                      std::make_pair("is", TokenType::TOKEN_IS),
+                      std::make_pair("as", TokenType::TOKEN_AS),
+                      std::make_pair("print", TokenType::TOKEN_PRINT),
+                      std::make_pair("inspect", TokenType::TOKEN_INSPECT),
+                      std::make_pair("struct", TokenType::TOKEN_STRUCT),
+                      std::make_pair("variant", TokenType::TOKEN_VARIANT),
+                      std::make_pair("int", TokenType::TOKEN_INT),
+                      std::make_pair("float", TokenType::TOKEN_FLOAT),
+                      std::make_pair("str", TokenType::TOKEN_STR),
+                      std::make_pair("bool", TokenType::TOKEN_BOOL),
+                      std::make_pair("void", TokenType::TOKEN_VOID),
+                      std::make_pair("==", TokenType::TOKEN_EQUAL_EQUAL),
+                      std::make_pair("!=", TokenType::TOKEN_NOT_EQUAL),
+                      std::make_pair("<=", TokenType::TOKEN_LESS_EQUAL),
+                      std::make_pair(">=", TokenType::TOKEN_GREATER_EQUAL),
+                      std::make_pair("=>", TokenType::TOKEN_ARROW)));

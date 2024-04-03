@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
   parse_args(argc, argv, program);
 
   std::unique_ptr<Source> src;
-  if (program["--cmd"] == true) {
+  if (program.is_used("--cmd")) {
     src = std::make_unique<StringSource>(program.get<std::string>("source"));
   } else {
     src = std::make_unique<FileSource>(program.get<std::string>("source"));
