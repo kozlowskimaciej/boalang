@@ -186,15 +186,66 @@ TEST_F(LexerTokenizeTest, string_unterminated) {
 }
 
 TEST_F(LexerTokenizeTest, tokenize_sample_code) {
-  source_.attach("print \"Hello World!\";\n");
+  source_.attach(
+      "struct S {\n"
+      "    mut int a;\n"
+      "    float b;\n"
+      "}\n"
+      "\n"
+      "mut S st_obj = {121.5, 10};\n"
+      "st_obj.a = st_obj.b as int;\n"
+      "\"hello\";");
 
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_PRINT);
+  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_STRUCT);
+  Token S_id = lexer_.next_token();
+  EXPECT_EQ(S_id.type, TokenType::TOKEN_IDENTIFIER);
+  EXPECT_EQ(std::get<std::string>(S_id.value.value()), "S");
+  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_LBRACE);
 
-  Token token = lexer_.next_token();
-  EXPECT_EQ(token.type, TokenType::TOKEN_STR_VAL);
-  EXPECT_TRUE(std::holds_alternative<std::string>(token.value.value()));
-  EXPECT_EQ(std::get<std::string>(token.value.value()), "Hello World!");
+  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_MUT);
+  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_INT);
+  Token a_id = lexer_.next_token();
+  EXPECT_EQ(a_id.type, TokenType::TOKEN_IDENTIFIER);
+  EXPECT_EQ(std::get<std::string>(a_id.value.value()), "a");
+  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_SEMICOLON);
 
+  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_FLOAT);
+  Token b_id = lexer_.next_token();
+  EXPECT_EQ(b_id.type, TokenType::TOKEN_IDENTIFIER);
+  EXPECT_EQ(std::get<std::string>(b_id.value.value()), "b");
+  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_SEMICOLON);
+
+  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_RBRACE);
+
+  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_MUT);
+  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_IDENTIFIER);
+  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_IDENTIFIER);
+  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_EQUAL);
+  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_LBRACE);
+  Token float_val = lexer_.next_token();
+  EXPECT_EQ(float_val.type, TokenType::TOKEN_FLOAT_VAL);
+  ASSERT_FLOAT_EQ(std::get<float>(float_val.value.value()), 121.5F);
+  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_COMMA);
+  Token int_val = lexer_.next_token();
+  EXPECT_EQ(int_val.type, TokenType::TOKEN_INT_VAL);
+  ASSERT_EQ(std::get<int>(int_val.value.value()), 10);
+  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_RBRACE);
+  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_SEMICOLON);
+
+  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_IDENTIFIER);
+  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_DOT);
+  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_IDENTIFIER);
+  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_EQUAL);
+  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_IDENTIFIER);
+  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_DOT);
+  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_IDENTIFIER);
+  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_AS);
+  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_INT);
+  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_SEMICOLON);
+
+  Token str_val = lexer_.next_token();
+  EXPECT_EQ(str_val.type, TokenType::TOKEN_STR_VAL);
+  EXPECT_EQ(std::get<std::string>(str_val.value.value()), "hello");
   EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_SEMICOLON);
 
   EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_ETX);
