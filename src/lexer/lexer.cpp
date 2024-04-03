@@ -32,7 +32,7 @@ Token Lexer::tokenize_string() {
 Token Lexer::tokenize_number() {
   int decimal_part = build_decimal();
   if (match('.')) {
-    if (!std::iswdigit(source_.peek())) {
+    if (!std::isdigit(source_.peek())) {
       throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
                        "Expected digit after '.'");
     }
@@ -41,7 +41,7 @@ Token Lexer::tokenize_number() {
     int exponent = 0;
     float float_val = 0;
 
-    while (std::iswdigit(source_.peek())) {
+    while (std::isdigit(source_.peek())) {
       fraction_part *= 10;
       fraction_part += advance() - '0';
       ++exponent;
@@ -55,7 +55,7 @@ Token Lexer::tokenize_number() {
 }
 
 Token Lexer::tokenize_identifier() {
-  while (std::iswalnum(source_.peek()) || source_.peek() == '_') {
+  while (std::isalnum(source_.peek()) || source_.peek() == '_') {
     advance();
   }
   if (keywords.find(current_context_) != keywords.end()) {
@@ -96,7 +96,7 @@ int Lexer::build_decimal() {
   }
   int decimal = source_.current() - '0';
 
-  while (std::iswdigit(source_.peek())) {
+  while (std::isdigit(source_.peek())) {
     int digit = advance() - '0';
     if (decimal > (INT_MAX - digit) / 10) {
       throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
@@ -114,7 +114,7 @@ Token Lexer::next_token() {
   do {
     current_context_.clear();
     c = advance();
-  } while (std::iswspace(c));
+  } while (std::isspace(c));
 
   switch (c) {
     case '\0':
@@ -179,10 +179,10 @@ Token Lexer::next_token() {
       return tokenize_string();
 
     default:
-      if (std::iswalpha(c) || c == '_') {
+      if (std::isalpha(c) || c == '_') {
         return tokenize_identifier();
       }
-      if (std::iswdigit(c)) {
+      if (std::isdigit(c)) {
         return tokenize_number();
       }
       throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
