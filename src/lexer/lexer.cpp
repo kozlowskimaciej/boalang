@@ -2,6 +2,8 @@
 
 #include <cmath>
 #include <map>
+#include <vector>
+#include <functional>
 
 static const std::map<std::string, TokenType> keywords{
     {"if", TOKEN_IF},         {"else", TOKEN_ELSE},
@@ -227,24 +229,21 @@ Token Lexer::next_token() {
   current_context_.clear();
   advance();
 
-  if (opt_token_t t = handle_single_char_token()) {
-    return *t;
+  std::vector<std::function<opt_token_t()>> token_handlers = {
+      [this]() { return handle_single_char_token(); },
+      [this]() { return handle_double_char_token(); },
+      [this]() { return handle_slash_token(); },
+      [this]() { return try_tokenize_string(); },
+      [this]() { return try_tokenize_identifier(); },
+      [this]() { return try_tokenize_number(); },
+  };
+
+  for (auto& handler : token_handlers) {
+    if (opt_token_t t = handler()) {
+      return *t;
+    }
   }
-  if (opt_token_t t = handle_double_char_token()) {
-    return *t;
-  }
-  if (opt_token_t t = handle_slash_token()) {
-    return *t;
-  }
-  if (opt_token_t t = try_tokenize_string()) {
-    return *t;
-  }
-  if (opt_token_t t = try_tokenize_identifier()) {
-    return *t;
-  }
-  if (opt_token_t t = try_tokenize_number()) {
-    return *t;
-  }
+
   throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
                    "Encountered unknown token");
 }
