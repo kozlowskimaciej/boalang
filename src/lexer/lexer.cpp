@@ -70,7 +70,7 @@ opt_token_t Lexer::try_tokenize_number() {
       continue;
     }
     int digit = advance() - '0';
-    if (value > (INT_MAX - digit) / 10) {
+    if (value > (INT_MAX - digit) / 10 || (fraction_part && exponent == 10)) {
       if (fraction_part) {
         throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
                          "Float literal exceeds range (" +
@@ -85,12 +85,6 @@ opt_token_t Lexer::try_tokenize_number() {
     value += digit;
     if (fraction_part) {
       ++exponent;
-      if (exponent > 10) {
-        throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
-                         "Float literal exceeds range (" +
-                             std::to_string(INT_MAX) + ".0, 0." +
-                             std::to_string(INT_MAX) + ")");
-      }
     }
   }
 
