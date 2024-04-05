@@ -27,8 +27,6 @@ class Source {
   [[nodiscard]] char peek() const;
   [[nodiscard]] char current() const;
   [[nodiscard]] bool eof() const;
-
-  virtual void attach(std::string source) = 0;
 };
 
 class FileSource : public Source {
@@ -36,8 +34,6 @@ class FileSource : public Source {
   FileSource() = default;
   explicit FileSource(const std::string& path)
       : Source(std::make_unique<std::ifstream>(path)){};
-
-  void attach(std::string source) override;
 };
 
 class StringSource : public Source {
@@ -45,8 +41,6 @@ class StringSource : public Source {
   StringSource() = default;
   explicit StringSource(const std::string& source)
       : Source(std::make_unique<std::istringstream>(source)){};
-
-  void attach(std::string source) override;
 };
 
 #endif  // BOALANG_SOURCE_HPP

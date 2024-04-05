@@ -3,10 +3,6 @@
 #include <magic_enum/magic_enum.hpp>
 
 std::string Token::stringify() const {
-  if (!value.has_value()) {
-    return "";
-  }
-
   return std::visit(
       [](auto&& arg) -> std::string {
         using T = std::decay_t<decltype(arg)>;
@@ -16,14 +12,20 @@ std::string Token::stringify() const {
           return arg;
         } else if constexpr (std::is_same_v<T, bool>) {
           return arg ? "true" : "false";
+        } else if constexpr (std::is_same_v<T, std::monostate>) {
+          return "";
         }
       },
-      value.value());
+      value);
+}
+
+bool Token::has_value() const {
+  return std::holds_alternative<std::monostate>(value);
 }
 
 std::ostream& operator<<(std::ostream& os, const Token& token) {
   os << "<" << magic_enum::enum_name(token.type);
-  if (token.value) {
+  if (token.has_value()) {
     os << ", " << token.stringify();
   }
   os << ">";

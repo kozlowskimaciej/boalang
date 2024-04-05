@@ -1,10 +1,24 @@
 #include "lexer.hpp"
 
 #include <cmath>
+#include <map>
+
+static const std::map<std::string, TokenType> keywords{
+    {"if", TOKEN_IF},         {"else", TOKEN_ELSE},
+    {"and", TOKEN_AND},       {"or", TOKEN_OR},
+    {"true", TOKEN_TRUE},     {"false", TOKEN_FALSE},
+    {"while", TOKEN_WHILE},   {"return", TOKEN_RETURN},
+    {"is", TOKEN_IS},         {"as", TOKEN_AS},
+    {"print", TOKEN_PRINT},   {"inspect", TOKEN_INSPECT},
+    {"struct", TOKEN_STRUCT}, {"variant", TOKEN_VARIANT},
+    {"int", TOKEN_INT},       {"float", TOKEN_FLOAT},
+    {"str", TOKEN_STR},       {"bool", TOKEN_BOOL},
+    {"void", TOKEN_VOID},     {"mut", TOKEN_MUT},
+};
 
 Token Lexer::build_token_with_value(const TokenType& type,
                                     const token_value_t& value) const {
-  if (value.has_value()) {
+  if (!std::holds_alternative<std::monostate>(value)) {
     return {type, value, source_.position()};
   }
   return {type, current_context_, source_.position()};
@@ -30,6 +44,8 @@ Token Lexer::tokenize_string() {
 }
 
 Token Lexer::tokenize_number() {
+  // tutaj (std::isdigit(c)) próbować budować
+
   int decimal_part = build_decimal();
   if (match('.')) {
     if (!std::isdigit(source_.peek())) {
@@ -90,11 +106,16 @@ Token Lexer::tokenize_long_comment() {
 }
 
 int Lexer::build_decimal() {
-  if (source_.current() == '0' && match('0')) {
+  const char curr = source_.current();
+  if (!std::isdigit(curr)) {
+    throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
+                     "Expected digit when building decimal");
+  }
+  if (curr == '0' && match('0')) {
     throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
                      "Leading zeros are not allowed");
   }
-  int decimal = source_.current() - '0';
+  int decimal = curr - '0';
 
   while (std::isdigit(source_.peek())) {
     int digit = advance() - '0';
@@ -109,13 +130,16 @@ int Lexer::build_decimal() {
   return decimal;
 }
 
-Token Lexer::next_token() {
-  char c;
-  do {
-    current_context_.clear();
-    c = advance();
-  } while (std::isspace(c));
+void Lexer::skip_whitespace() {
+  while (std::isspace(source_.peek())) {
+    advance();
+  }
+}
 
+Token Lexer::next_token() {
+  skip_whitespace();
+  current_context_.clear();
+  const char c = advance();
   switch (c) {
     case '\0':
       return build_token(TOKEN_ETX);

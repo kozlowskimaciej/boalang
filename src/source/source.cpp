@@ -35,11 +35,3 @@ char Source::peek() const {
 char Source::current() const { return current_; }
 
 bool Source::eof() const { return peek() == '\0'; }
-
-void FileSource::attach(std::string source) {
-  stream_ = std::make_unique<std::ifstream>(source);
-}
-
-void StringSource::attach(std::string source) {
-  stream_ = std::make_unique<std::istringstream>(source);
-}

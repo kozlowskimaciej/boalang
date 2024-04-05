@@ -1,8 +1,6 @@
 #ifndef BOALANG_TOKEN_HPP
 #define BOALANG_TOKEN_HPP
 
-#include <map>
-#include <optional>
 #include <ostream>
 #include <string>
 #include <variant>
@@ -10,7 +8,7 @@
 #include "../utils/position.hpp"
 
 using token_value_t =
-    std::optional<std::variant<std::string, int, float, bool>>;
+    std::variant<std::monostate, std::string, int, float, bool>;
 
 enum TokenType {
   // END OF TEXT
@@ -72,31 +70,18 @@ enum TokenType {
   TOKEN_UNKNOWN,
 };
 
-static const std::map<std::string, TokenType> keywords{
-    {"if", TOKEN_IF},         {"else", TOKEN_ELSE},
-    {"and", TOKEN_AND},       {"or", TOKEN_OR},
-    {"true", TOKEN_TRUE},     {"false", TOKEN_FALSE},
-    {"while", TOKEN_WHILE},   {"return", TOKEN_RETURN},
-    {"is", TOKEN_IS},         {"as", TOKEN_AS},
-    {"print", TOKEN_PRINT},   {"inspect", TOKEN_INSPECT},
-    {"struct", TOKEN_STRUCT}, {"variant", TOKEN_VARIANT},
-    {"int", TOKEN_INT},       {"float", TOKEN_FLOAT},
-    {"str", TOKEN_STR},       {"bool", TOKEN_BOOL},
-    {"void", TOKEN_VOID},     {"mut", TOKEN_MUT},
-};
-
 class Token {
  public:
   const TokenType type;
   const token_value_t value;
   const Position position;
 
-  Token(TokenType type, Position position)
-      : type(type), value(std::nullopt), position(position){};
+  Token(TokenType type, Position position) : type(type), position(position){};
   Token(TokenType type, token_value_t value, Position position)
       : type(type), value(std::move(value)), position(position){};
 
   [[nodiscard]] std::string stringify() const;
+  [[nodiscard]] bool has_value() const;
 
   friend std::ostream& operator<<(std::ostream& os, const Token& token);
 };

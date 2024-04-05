@@ -11,7 +11,7 @@ class Lexer {
   std::string current_context_;
   Source& source_;
   [[nodiscard]] Token build_token_with_value(
-      const TokenType& type, const token_value_t& value = std::nullopt) const;
+      const TokenType& type, const token_value_t& value = {}) const;
   [[nodiscard]] Token build_token(const TokenType& type) const;
   char advance();
   bool match(char c);
@@ -21,6 +21,7 @@ class Lexer {
   Token tokenize_comment();
   Token tokenize_long_comment();
   int build_decimal();
+  void skip_whitespace();
 
  public:
   explicit Lexer(Source& source) : source_(source){};

@@ -3,36 +3,30 @@
 #include "lexer/lexer.hpp"
 #include "token/token.hpp"
 
-class LexerTokenizeTest : public ::testing::Test {
- protected:
-  StringSource source_ = {};
-  Lexer lexer_;
-
-  LexerTokenizeTest() : lexer_({source_}){};
-};
-
 bool str_contains(const std::string& str, const std::string& str2) {
   return str.find(str2) != std::string::npos;
 }
 
-TEST_F(LexerTokenizeTest, integer_valid) {
-  source_.attach("2147483647");
+TEST(LexerTokenizeTest, integer_valid) {
+  StringSource source("2147483647");
+  Lexer lexer(source);
 
-  Token token = lexer_.next_token();
+  Token token = lexer.next_token();
   EXPECT_EQ(token.type, TokenType::TOKEN_INT_VAL);
-  EXPECT_TRUE(std::holds_alternative<int>(token.value.value()));
-  EXPECT_EQ(std::get<int>(token.value.value()), 2147483647);
+  EXPECT_TRUE(std::holds_alternative<int>(token.value));
+  EXPECT_EQ(std::get<int>(token.value), 2147483647);
 
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_ETX);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_ETX);
 }
 
-TEST_F(LexerTokenizeTest, integer_overflow) {
-  source_.attach("2147483648");
+TEST(LexerTokenizeTest, integer_overflow) {
+  StringSource source("2147483648");
+  Lexer lexer(source);
 
   EXPECT_THROW(
       {
         try {
-          lexer_.next_token();
+          lexer.next_token();
         } catch (const LexerError& e) {
           EXPECT_TRUE(str_contains(
               e.what(), "Int literal exceeds maximum value (2147483647)"));
@@ -42,13 +36,14 @@ TEST_F(LexerTokenizeTest, integer_overflow) {
       LexerError);
 }
 
-TEST_F(LexerTokenizeTest, integer_leading_zeros) {
-  source_.attach("001");
+TEST(LexerTokenizeTest, integer_leading_zeros) {
+  StringSource source("001");
+  Lexer lexer(source);
 
   EXPECT_THROW(
       {
         try {
-          lexer_.next_token();
+          lexer.next_token();
         } catch (const LexerError& e) {
           EXPECT_TRUE(str_contains(e.what(), "Leading zeros are not allowed"));
           throw;
@@ -57,24 +52,26 @@ TEST_F(LexerTokenizeTest, integer_leading_zeros) {
       LexerError);
 }
 
-TEST_F(LexerTokenizeTest, float_valid) {
-  source_.attach("1.01");
+TEST(LexerTokenizeTest, float_valid) {
+  StringSource source("1.01");
+  Lexer lexer(source);
 
-  Token token = lexer_.next_token();
+  Token token = lexer.next_token();
   EXPECT_EQ(token.type, TokenType::TOKEN_FLOAT_VAL);
-  EXPECT_TRUE(std::holds_alternative<float>(token.value.value()));
-  ASSERT_FLOAT_EQ(std::get<float>(token.value.value()), 1.01F);
+  EXPECT_TRUE(std::holds_alternative<float>(token.value));
+  ASSERT_FLOAT_EQ(std::get<float>(token.value), 1.01F);
 
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_ETX);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_ETX);
 }
 
-TEST_F(LexerTokenizeTest, float_no_digit_after_dot) {
-  source_.attach("1..");
+TEST(LexerTokenizeTest, float_no_digit_after_dot) {
+  StringSource source("1..");
+  Lexer lexer(source);
 
   EXPECT_THROW(
       {
         try {
-          lexer_.next_token();
+          lexer.next_token();
         } catch (const LexerError& e) {
           EXPECT_TRUE(str_contains(e.what(), "Expected digit after '.'"));
           throw;
@@ -83,45 +80,48 @@ TEST_F(LexerTokenizeTest, float_no_digit_after_dot) {
       LexerError);
 }
 
-TEST_F(LexerTokenizeTest, comment_valid) {
-  source_.attach("void//void\nvoid");
+TEST(LexerTokenizeTest, comment_valid) {
+  StringSource source("void//void\nvoid");
+  Lexer lexer(source);
 
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_VOID);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_VOID);
 
-  Token token = lexer_.next_token();
+  Token token = lexer.next_token();
   EXPECT_EQ(token.type, TokenType::TOKEN_COMMENT);
-  EXPECT_TRUE(std::holds_alternative<std::string>(token.value.value()));
-  EXPECT_EQ(std::get<std::string>(token.value.value()), "void");
+  EXPECT_TRUE(std::holds_alternative<std::string>(token.value));
+  EXPECT_EQ(std::get<std::string>(token.value), "void");
 
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_VOID);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_VOID);
 
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_ETX);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_ETX);
 }
 
-TEST_F(LexerTokenizeTest, long_comment_valid) {
-  source_.attach("void/*void\nvoid*/void");
+TEST(LexerTokenizeTest, long_comment_valid) {
+  StringSource source("void/*void\nvoid*/void");
+  Lexer lexer(source);
 
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_VOID);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_VOID);
 
-  Token token = lexer_.next_token();
+  Token token = lexer.next_token();
   EXPECT_EQ(token.type, TokenType::TOKEN_COMMENT);
-  EXPECT_TRUE(std::holds_alternative<std::string>(token.value.value()));
-  EXPECT_EQ(std::get<std::string>(token.value.value()), "void\nvoid");
+  EXPECT_TRUE(std::holds_alternative<std::string>(token.value));
+  EXPECT_EQ(std::get<std::string>(token.value), "void\nvoid");
 
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_VOID);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_VOID);
 
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_ETX);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_ETX);
 }
 
-TEST_F(LexerTokenizeTest, long_comment_unterminated) {
-  source_.attach("void/*void\nvoid");
+TEST(LexerTokenizeTest, long_comment_unterminated) {
+  StringSource source("void/*void\nvoid");
+  Lexer lexer(source);
 
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_VOID);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_VOID);
 
   EXPECT_THROW(
       {
         try {
-          lexer_.next_token();
+          lexer.next_token();
         } catch (const LexerError& e) {
           EXPECT_TRUE(str_contains(e.what(), "Unterminated long comment"));
           throw;
@@ -130,25 +130,27 @@ TEST_F(LexerTokenizeTest, long_comment_unterminated) {
       LexerError);
 }
 
-TEST_F(LexerTokenizeTest, identifier_valid) {
+TEST(LexerTokenizeTest, identifier_valid) {
   std::string id = "_variable1";
-  source_.attach(id);
+  StringSource source(id);
+  Lexer lexer(source);
 
-  Token token = lexer_.next_token();
+  Token token = lexer.next_token();
   EXPECT_EQ(token.type, TokenType::TOKEN_IDENTIFIER);
-  EXPECT_EQ(std::get<std::string>(token.value.value()), id);
+  EXPECT_EQ(std::get<std::string>(token.value), id);
 
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_ETX);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_ETX);
 }
 
-TEST_F(LexerTokenizeTest, identifier_too_long) {
+TEST(LexerTokenizeTest, identifier_too_long) {
   std::string id = std::string(MAX_IDENTIFIER_LENGTH + 1, 'A');
-  source_.attach(id);
+  StringSource source(id);
+  Lexer lexer(source);
 
   EXPECT_THROW(
       {
         try {
-          lexer_.next_token();
+          lexer.next_token();
         } catch (const LexerError& e) {
           EXPECT_TRUE(str_contains(e.what(), id));
           EXPECT_TRUE(
@@ -159,23 +161,25 @@ TEST_F(LexerTokenizeTest, identifier_too_long) {
       LexerError);
 }
 
-TEST_F(LexerTokenizeTest, string) {
-  source_.attach("\"Hello World!\"");
+TEST(LexerTokenizeTest, string) {
+  StringSource source("\"Hello World!\"");
+  Lexer lexer(source);
 
-  Token token = lexer_.next_token();
+  Token token = lexer.next_token();
   EXPECT_EQ(token.type, TokenType::TOKEN_STR_VAL);
-  EXPECT_TRUE(std::holds_alternative<std::string>(token.value.value()));
-  EXPECT_EQ(std::get<std::string>(token.value.value()), "Hello World!");
+  EXPECT_TRUE(std::holds_alternative<std::string>(token.value));
+  EXPECT_EQ(std::get<std::string>(token.value), "Hello World!");
 }
 
-TEST_F(LexerTokenizeTest, string_unterminated) {
+TEST(LexerTokenizeTest, string_unterminated) {
   std::string str = "\"Hello World!";
-  source_.attach(str);
+  StringSource source(str);
+  Lexer lexer(source);
 
   EXPECT_THROW(
       {
         try {
-          lexer_.next_token();
+          lexer.next_token();
         } catch (const LexerError& e) {
           EXPECT_TRUE(str_contains(e.what(), str));
           EXPECT_TRUE(str_contains(e.what(), "Unterminated string"));
@@ -185,8 +189,8 @@ TEST_F(LexerTokenizeTest, string_unterminated) {
       LexerError);
 }
 
-TEST_F(LexerTokenizeTest, tokenize_sample_code) {
-  source_.attach(
+TEST(LexerTokenizeTest, tokenize_sample_code) {
+  StringSource source(
       "struct S {\n"
       "    mut int a;\n"
       "    float b;\n"
@@ -195,71 +199,71 @@ TEST_F(LexerTokenizeTest, tokenize_sample_code) {
       "mut S st_obj = {121.5, 10};\n"
       "st_obj.a = st_obj.b as int;\n"
       "\"hello\";");
+  Lexer lexer(source);
 
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_STRUCT);
-  Token S_id = lexer_.next_token();
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_STRUCT);
+  Token S_id = lexer.next_token();
   EXPECT_EQ(S_id.type, TokenType::TOKEN_IDENTIFIER);
-  EXPECT_EQ(std::get<std::string>(S_id.value.value()), "S");
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_LBRACE);
+  EXPECT_EQ(std::get<std::string>(S_id.value), "S");
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_LBRACE);
 
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_MUT);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_INT);
-  Token a_id = lexer_.next_token();
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_MUT);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_INT);
+  Token a_id = lexer.next_token();
   EXPECT_EQ(a_id.type, TokenType::TOKEN_IDENTIFIER);
-  EXPECT_EQ(std::get<std::string>(a_id.value.value()), "a");
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_SEMICOLON);
+  EXPECT_EQ(std::get<std::string>(a_id.value), "a");
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_SEMICOLON);
 
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_FLOAT);
-  Token b_id = lexer_.next_token();
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_FLOAT);
+  Token b_id = lexer.next_token();
   EXPECT_EQ(b_id.type, TokenType::TOKEN_IDENTIFIER);
-  EXPECT_EQ(std::get<std::string>(b_id.value.value()), "b");
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_SEMICOLON);
+  EXPECT_EQ(std::get<std::string>(b_id.value), "b");
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_SEMICOLON);
 
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_RBRACE);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_RBRACE);
 
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_MUT);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_IDENTIFIER);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_IDENTIFIER);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_EQUAL);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_LBRACE);
-  Token float_val = lexer_.next_token();
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_MUT);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_IDENTIFIER);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_IDENTIFIER);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_EQUAL);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_LBRACE);
+  Token float_val = lexer.next_token();
   EXPECT_EQ(float_val.type, TokenType::TOKEN_FLOAT_VAL);
-  ASSERT_FLOAT_EQ(std::get<float>(float_val.value.value()), 121.5F);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_COMMA);
-  Token int_val = lexer_.next_token();
+  ASSERT_FLOAT_EQ(std::get<float>(float_val.value), 121.5F);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_COMMA);
+  Token int_val = lexer.next_token();
   EXPECT_EQ(int_val.type, TokenType::TOKEN_INT_VAL);
-  ASSERT_EQ(std::get<int>(int_val.value.value()), 10);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_RBRACE);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_SEMICOLON);
+  ASSERT_EQ(std::get<int>(int_val.value), 10);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_RBRACE);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_SEMICOLON);
 
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_IDENTIFIER);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_DOT);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_IDENTIFIER);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_EQUAL);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_IDENTIFIER);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_DOT);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_IDENTIFIER);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_AS);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_INT);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_SEMICOLON);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_IDENTIFIER);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_DOT);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_IDENTIFIER);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_EQUAL);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_IDENTIFIER);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_DOT);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_IDENTIFIER);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_AS);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_INT);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_SEMICOLON);
 
-  Token str_val = lexer_.next_token();
+  Token str_val = lexer.next_token();
   EXPECT_EQ(str_val.type, TokenType::TOKEN_STR_VAL);
-  EXPECT_EQ(std::get<std::string>(str_val.value.value()), "hello");
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_SEMICOLON);
+  EXPECT_EQ(std::get<std::string>(str_val.value), "hello");
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_SEMICOLON);
 
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_ETX);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_ETX);
 }
 
 class LexerTokenizeParamTest
-    : public LexerTokenizeTest,
-      public ::testing::WithParamInterface<std::pair<std::string, TokenType>> {
-};
+    : public ::testing::TestWithParam<std::pair<std::string, TokenType>> {};
 
 TEST_P(LexerTokenizeParamTest, tokenize_chars) {
-  source_.attach(GetParam().first);
-  EXPECT_EQ(lexer_.next_token().type, GetParam().second);
-  EXPECT_EQ(lexer_.next_token().type, TokenType::TOKEN_ETX);
+  StringSource source(GetParam().first);
+  Lexer lexer(source);
+  EXPECT_EQ(lexer.next_token().type, GetParam().second);
+  EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_ETX);
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -281,6 +285,7 @@ INSTANTIATE_TEST_SUITE_P(
                       std::make_pair("<", TokenType::TOKEN_LESS),
                       std::make_pair(">", TokenType::TOKEN_GREATER),
                       std::make_pair("identifier", TokenType::TOKEN_IDENTIFIER),
+                      std::make_pair("muta", TokenType::TOKEN_IDENTIFIER),
                       std::make_pair("\"123\"", TokenType::TOKEN_STR_VAL),
                       std::make_pair("123", TokenType::TOKEN_INT_VAL),
                       std::make_pair("123.0", TokenType::TOKEN_FLOAT_VAL),
