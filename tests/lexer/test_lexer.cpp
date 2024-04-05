@@ -52,20 +52,30 @@ TEST(LexerTokenizeTest, integer_leading_zeros) {
       LexerError);
 }
 
-TEST(LexerTokenizeTest, float_valid) {
-  StringSource source("1.01");
+class LexerFloatValidTests
+    : public ::testing::TestWithParam<std::string> {};
+
+TEST_P(LexerFloatValidTests, tokenize_float_valid) {
+  StringSource source(GetParam());
   Lexer lexer(source);
 
   Token token = lexer.next_token();
   EXPECT_EQ(token.type, TokenType::TOKEN_FLOAT_VAL);
   EXPECT_TRUE(std::holds_alternative<float>(token.value));
-  ASSERT_FLOAT_EQ(std::get<float>(token.value), 1.01F);
+  ASSERT_FLOAT_EQ(std::get<float>(token.value), std::stof(GetParam()));
 
   EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_ETX);
 }
 
-TEST(LexerTokenizeTest, float_no_digit_after_dot) {
-  StringSource source("1..");
+INSTANTIATE_TEST_SUITE_P(
+    LexerFloatTests, LexerFloatValidTests,
+    ::testing::Values("0.2147483647", "214748364.0", "21474.83647"));
+
+class LexerFloatOverflowTests
+    : public ::testing::TestWithParam<std::string> {};
+
+TEST_P(LexerFloatOverflowTests, tokenize_float_overflow) {
+  StringSource source(GetParam());
   Lexer lexer(source);
 
   EXPECT_THROW(
@@ -73,12 +83,16 @@ TEST(LexerTokenizeTest, float_no_digit_after_dot) {
         try {
           lexer.next_token();
         } catch (const LexerError& e) {
-          EXPECT_TRUE(str_contains(e.what(), "Expected digit after '.'"));
+          EXPECT_TRUE(str_contains(e.what(), "Float literal exceeds range"));
           throw;
         }
       },
       LexerError);
 }
+
+INSTANTIATE_TEST_SUITE_P(
+    LexerFloatTests, LexerFloatOverflowTests,
+    ::testing::Values("0.00000000001", "0.2147483648", "0.02147483647", "214748364.8", "21474.83648"));
 
 TEST(LexerTokenizeTest, comment_valid) {
   StringSource source("void//void\nvoid");

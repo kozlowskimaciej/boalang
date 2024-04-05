@@ -28,7 +28,9 @@ Token Lexer::build_token(const TokenType& type) const {
   return {type, source_.position()};
 }
 
-Token Lexer::tokenize_string() {
+opt_token_t Lexer::try_tokenize_string() {
+  if (source_.current() != '"') { return std::nullopt; }
+
   while (source_.peek() != '"' && !source_.eof() && source_.peek() != '\n') {
     advance();
   }
@@ -43,34 +45,65 @@ Token Lexer::tokenize_string() {
   );
 }
 
-Token Lexer::tokenize_number() {
-  // tutaj (std::isdigit(c)) próbować budować
+opt_token_t Lexer::try_tokenize_number() {
+  char c = source_.current();
+  if (!std::isdigit(c)) { return std::nullopt; }
 
-  int decimal_part = build_decimal();
-  if (match('.')) {
-    if (!std::isdigit(source_.peek())) {
-      throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
-                       "Expected digit after '.'");
-    }
-
-    int fraction_part = 0;
-    int exponent = 0;
-    float float_val = 0;
-
-    while (std::isdigit(source_.peek())) {
-      fraction_part *= 10;
-      fraction_part += advance() - '0';
-      ++exponent;
-      float_val = static_cast<float>(decimal_part +
-                                     fraction_part * std::pow(10, -exponent));
-    }
-    return build_token_with_value(TOKEN_FLOAT_VAL, float_val);
+  if (c == '0' && match('0')) {
+    throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
+                     "Leading zeros are not allowed");
   }
-  int int_val = decimal_part;
-  return build_token_with_value(TOKEN_INT_VAL, int_val);
+  int value = c - '0';
+  bool fraction_part = false;
+  int exponent = 0;
+
+  while (std::isdigit(source_.peek()) || source_.peek() == '.') {
+    if (source_.peek() == '.') {
+      if (fraction_part) {
+        throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
+                         "Expected digit after '.'");
+      }
+      fraction_part = true;
+      advance();
+      continue;
+    }
+    int digit = advance() - '0';
+    if (value > (INT_MAX - digit) / 10) {
+      if (fraction_part) {
+        throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
+                         "Float literal exceeds range (" +
+                             std::to_string(INT_MAX) + ".0, 0." +
+                             std::to_string(INT_MAX) + ")");
+      }
+      throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
+                       "Int literal exceeds maximum value (" +
+                           std::to_string(INT_MAX) + ")");
+    }
+    value *= 10;
+    value += digit;
+    if (fraction_part) {
+      ++exponent;
+      if (exponent > 10) {
+        throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
+                         "Float literal exceeds range (" +
+                             std::to_string(INT_MAX) + ".0, 0." +
+                             std::to_string(INT_MAX) + ")");
+      }
+    }
+  }
+
+  if (fraction_part) {
+    return build_token_with_value(
+        TOKEN_FLOAT_VAL, static_cast<float>(value * std::pow(10, -exponent)));
+  }
+  return build_token_with_value(TOKEN_INT_VAL, value);
 }
 
-Token Lexer::tokenize_identifier() {
+opt_token_t Lexer::try_tokenize_identifier() {
+  if (!std::isalpha(source_.current()) && source_.current() != '_') {
+    return std::nullopt;
+  }
+
   while (std::isalnum(source_.peek()) || source_.peek() == '_') {
     advance();
   }
@@ -85,62 +118,37 @@ Token Lexer::tokenize_identifier() {
   return build_token_with_value(TOKEN_IDENTIFIER);
 }
 
-Token Lexer::tokenize_comment() {
-  while (source_.current() != '\n' && !source_.eof()) {
+opt_token_t Lexer::try_tokenize_comment() {
+  if (source_.current() != '/') {
+    return std::nullopt;
+  }
+
+  if (source_.peek() == '/') {  // Single-line comment
     advance();
-  }
-  return build_token_with_value(
-      TOKEN_COMMENT, current_context_.substr(2, current_context_.length() - 3));
-}
-
-Token Lexer::tokenize_long_comment() {
-  while (!source_.eof()) {
-    if (advance() == '*' && match('/')) {
-      return build_token_with_value(
-          TOKEN_COMMENT,
-          current_context_.substr(2, current_context_.length() - 4));
+    while (source_.current() != '\n' && !source_.eof()) {
+      advance();
     }
+    return build_token_with_value(
+        TOKEN_COMMENT, current_context_.substr(2, current_context_.length() - 3));
   }
-  throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
-                   "Unterminated long comment");
-}
-
-int Lexer::build_decimal() {
-  const char curr = source_.current();
-  if (!std::isdigit(curr)) {
-    throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
-                     "Expected digit when building decimal");
-  }
-  if (curr == '0' && match('0')) {
-    throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
-                     "Leading zeros are not allowed");
-  }
-  int decimal = curr - '0';
-
-  while (std::isdigit(source_.peek())) {
-    int digit = advance() - '0';
-    if (decimal > (INT_MAX - digit) / 10) {
-      throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
-                       "Int literal exceeds maximum value (" +
-                           std::to_string(INT_MAX) + ")");
-    }
-    decimal *= 10;
-    decimal += digit;
-  }
-  return decimal;
-}
-
-void Lexer::skip_whitespace() {
-  while (std::isspace(source_.peek())) {
+  if (source_.peek() == '*') {  // Multi-line comment
     advance();
+    while (!source_.eof()) {
+      if (advance() == '*' && match('/')) {
+        return build_token_with_value(
+            TOKEN_COMMENT,
+            current_context_.substr(2, current_context_.length() - 4));
+      }
+    }
+    throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
+                     "Unterminated long comment");
   }
+
+  return std::nullopt;
 }
 
-Token Lexer::next_token() {
-  skip_whitespace();
-  current_context_.clear();
-  const char c = advance();
-  switch (c) {
+opt_token_t Lexer::handle_single_char_token() {
+  switch (source_.current()) {
     case '\0':
       return build_token(TOKEN_ETX);
     case '(':
@@ -163,8 +171,13 @@ Token Lexer::next_token() {
       return build_token(TOKEN_SEMICOLON);
     case '*':
       return build_token(TOKEN_STAR);
+    default:
+      return std::nullopt;
+  }
+}
 
-    // Double chars
+opt_token_t Lexer::handle_double_char_token() {
+  switch (source_.current()) {
     case '!':  // '!='
       if (match('=')) {
         return build_token(TOKEN_NOT_EQUAL);
@@ -188,30 +201,52 @@ Token Lexer::next_token() {
         return build_token(TOKEN_GREATER_EQUAL);
       }
       return build_token(TOKEN_GREATER);
-
-    case '/':
-      if (match('/')) {
-        return tokenize_comment();
-      }
-      if (match('*')) {
-        return tokenize_long_comment();
-      }
-      return build_token(TOKEN_SLASH);
-
-    // Literals
-    case '"':
-      return tokenize_string();
-
     default:
-      if (std::isalpha(c) || c == '_') {
-        return tokenize_identifier();
-      }
-      if (std::isdigit(c)) {
-        return tokenize_number();
-      }
-      throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
-                       "Encountered unknown token");
+      return std::nullopt;
   }
+}
+
+opt_token_t Lexer::handle_slash_token() {
+  if (source_.current() == '/') {
+    if (opt_token_t t = try_tokenize_comment()) {
+      return *t;
+    }
+    return build_token(TOKEN_SLASH);
+  }
+  return std::nullopt;
+}
+
+void Lexer::skip_whitespace() {
+  while (std::isspace(source_.peek())) {
+    advance();
+  }
+}
+
+Token Lexer::next_token() {
+  skip_whitespace();
+  current_context_.clear();
+  advance();
+
+  if (opt_token_t t = handle_single_char_token()) {
+    return *t;
+  }
+  if (opt_token_t t = handle_double_char_token()) {
+    return *t;
+  }
+  if (opt_token_t t = handle_slash_token()) {
+    return *t;
+  }
+  if (opt_token_t t = try_tokenize_string()) {
+    return *t;
+  }
+  if (opt_token_t t = try_tokenize_identifier()) {
+    return *t;
+  }
+  if (opt_token_t t = try_tokenize_number()) {
+    return *t;
+  }
+  throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
+                   "Encountered unknown token");
 }
 
 char Lexer::advance() {
@@ -229,3 +264,12 @@ bool Lexer::match(char c) {
 }
 
 bool Lexer::is_exhausted() const { return source_.eof(); }
+
+Token FilteredLexer::next_token() {
+  while (true) {
+    Token token = Lexer::next_token();
+    if (token.type != TOKEN_COMMENT) {
+      return token;
+    }
+  }
+}

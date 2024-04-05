@@ -20,7 +20,7 @@ std::string Token::stringify() const {
 }
 
 bool Token::has_value() const {
-  return std::holds_alternative<std::monostate>(value);
+  return !std::holds_alternative<std::monostate>(value);
 }
 
 std::ostream& operator<<(std::ostream& os, const Token& token) {

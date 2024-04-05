@@ -1,10 +1,13 @@
 #ifndef BOALANG_LEXER_HPP
 #define BOALANG_LEXER_HPP
 
+#include <optional>
+
 #include "../source/source.hpp"
 #include "../token/token.hpp"
 
 constexpr unsigned int MAX_IDENTIFIER_LENGTH = 64;
+using opt_token_t = std::optional<Token>;
 
 class Lexer {
  private:
@@ -15,18 +18,25 @@ class Lexer {
   [[nodiscard]] Token build_token(const TokenType& type) const;
   char advance();
   bool match(char c);
-  Token tokenize_string();
-  Token tokenize_number();
-  Token tokenize_identifier();
-  Token tokenize_comment();
-  Token tokenize_long_comment();
-  int build_decimal();
+  opt_token_t handle_single_char_token();
+  opt_token_t handle_double_char_token();
+  opt_token_t handle_slash_token();
+  opt_token_t try_tokenize_string();
+  opt_token_t try_tokenize_number();
+  opt_token_t try_tokenize_identifier();
+  opt_token_t try_tokenize_comment();
   void skip_whitespace();
 
  public:
   explicit Lexer(Source& source) : source_(source){};
-  Token next_token();
+  virtual ~Lexer() = default;
+  virtual Token next_token();
   [[nodiscard]] bool is_exhausted() const;
+};
+
+class FilteredLexer : public Lexer {
+ public:
+  Token next_token() override;
 };
 
 class LexerError : public std::exception {
