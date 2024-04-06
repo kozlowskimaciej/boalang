@@ -113,9 +113,9 @@ opt_token_t Lexer::try_tokenize_identifier() {
   while (std::isalnum(source_.peek()) || source_.peek() == '_') {
     advance();
   }
-  for (const auto& pair : keywords) {
-    if (pair.first == current_context_) {
-      return build_token(pair.second);
+  for (const auto& kw : keywords) {
+    if (kw.first == current_context_) {
+      return build_token(kw.second);
     }
   }
   if (current_context_.length() > MAX_IDENTIFIER_LENGTH) {

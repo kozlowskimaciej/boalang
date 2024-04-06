@@ -29,10 +29,10 @@ class Lexer : public ILexer {
   opt_token_t handle_slash_token();
   opt_token_t try_tokenize_string();
   opt_token_t try_tokenize_number();
-  Token build_fraction(int value);
   opt_token_t try_tokenize_identifier();
   opt_token_t try_tokenize_comment();
   void skip_whitespace();
+  Token build_fraction(int value);
 
  public:
   explicit Lexer(Source& source) : source_(source){};
