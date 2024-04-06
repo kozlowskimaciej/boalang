@@ -52,8 +52,7 @@ TEST(LexerTokenizeTest, integer_leading_zeros) {
       LexerError);
 }
 
-class LexerFloatValidTests
-    : public ::testing::TestWithParam<std::string> {};
+class LexerFloatValidTests : public ::testing::TestWithParam<std::string> {};
 
 TEST_P(LexerFloatValidTests, tokenize_float_valid) {
   StringSource source(GetParam());
@@ -67,12 +66,11 @@ TEST_P(LexerFloatValidTests, tokenize_float_valid) {
   EXPECT_EQ(lexer.next_token().type, TokenType::TOKEN_ETX);
 }
 
-INSTANTIATE_TEST_SUITE_P(
-    LexerFloatTests, LexerFloatValidTests,
-    ::testing::Values("0.2147483647", "214748364.0", "21474.83647"));
+INSTANTIATE_TEST_SUITE_P(LexerFloatTests, LexerFloatValidTests,
+                         ::testing::Values("0.2147483647", "214748364.0",
+                                           "21474.83647"));
 
-class LexerFloatOverflowTests
-    : public ::testing::TestWithParam<std::string> {};
+class LexerFloatOverflowTests : public ::testing::TestWithParam<std::string> {};
 
 TEST_P(LexerFloatOverflowTests, tokenize_float_overflow) {
   StringSource source(GetParam());
@@ -90,9 +88,26 @@ TEST_P(LexerFloatOverflowTests, tokenize_float_overflow) {
       LexerError);
 }
 
-INSTANTIATE_TEST_SUITE_P(
-    LexerFloatTests, LexerFloatOverflowTests,
-    ::testing::Values("0.00000000001", "0.2147483648", "0.02147483647", "214748364.8", "21474.83648"));
+INSTANTIATE_TEST_SUITE_P(LexerFloatTests, LexerFloatOverflowTests,
+                         ::testing::Values("0.00000000001", "0.2147483648",
+                                           "0.02147483647", "214748364.8",
+                                           "21474.83648"));
+
+TEST(LexerFloatTests, float_no_digit_after_dot) {
+  StringSource source("1.a");
+  Lexer lexer(source);
+
+  EXPECT_THROW(
+      {
+        try {
+          lexer.next_token();
+        } catch (const LexerError& e) {
+          EXPECT_TRUE(str_contains(e.what(), "Expected digit after '.'"));
+          throw;
+        }
+      },
+      LexerError);
+}
 
 TEST(LexerTokenizeTest, comment_valid) {
   StringSource source("void//void\nvoid");
@@ -328,3 +343,14 @@ INSTANTIATE_TEST_SUITE_P(
                       std::make_pair("<=", TokenType::TOKEN_LESS_EQUAL),
                       std::make_pair(">=", TokenType::TOKEN_GREATER_EQUAL),
                       std::make_pair("=>", TokenType::TOKEN_ARROW)));
+
+TEST(LexerCommentFilterTest, comment_filter_valid) {
+  StringSource source("void//void\nvoid/*void*/");
+  Lexer lexer(source);
+  LexerCommentFilter filter(lexer);
+
+  EXPECT_EQ(filter.next_token().type, TokenType::TOKEN_VOID);
+  EXPECT_EQ(filter.next_token().type, TokenType::TOKEN_VOID);
+
+  EXPECT_EQ(filter.next_token().type, TokenType::TOKEN_ETX);
+}

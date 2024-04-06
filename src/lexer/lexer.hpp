@@ -9,7 +9,13 @@
 constexpr unsigned int MAX_IDENTIFIER_LENGTH = 64;
 using opt_token_t = std::optional<Token>;
 
-class Lexer {
+class ILexer {
+ public:
+  virtual ~ILexer() = default;
+  virtual Token next_token() = 0;
+};
+
+class Lexer : public ILexer {
  private:
   std::string current_context_;
   Source& source_;
@@ -23,19 +29,21 @@ class Lexer {
   opt_token_t handle_slash_token();
   opt_token_t try_tokenize_string();
   opt_token_t try_tokenize_number();
+  Token build_fraction(int value);
   opt_token_t try_tokenize_identifier();
   opt_token_t try_tokenize_comment();
   void skip_whitespace();
 
  public:
   explicit Lexer(Source& source) : source_(source){};
-  virtual ~Lexer() = default;
-  virtual Token next_token();
-  [[nodiscard]] bool is_exhausted() const;
+  Token next_token() override;
 };
 
-class FilteredLexer : public Lexer {
+class LexerCommentFilter : public ILexer {
+  ILexer& lexer_;
+
  public:
+  explicit LexerCommentFilter(ILexer& lexer) : lexer_(lexer){};
   Token next_token() override;
 };
 

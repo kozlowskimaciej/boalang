@@ -34,9 +34,12 @@ int main(int argc, char* argv[]) {
   }
 
   Lexer lexer(*src);
-  while (!lexer.is_exhausted()) {
+  while (true) {
     auto token = lexer.next_token();
     std::cout << token << ' ';
+    if (token.type == TokenType::TOKEN_ETX) {
+      break;
+    }
   }
 
   return 0;

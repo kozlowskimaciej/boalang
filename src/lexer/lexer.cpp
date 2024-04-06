@@ -1,11 +1,11 @@
 #include "lexer.hpp"
 
 #include <cmath>
-#include <map>
-#include <vector>
 #include <functional>
+#include <initializer_list>
+#include <vector>
 
-static const std::map<std::string, TokenType> keywords{
+static std::initializer_list<std::pair<std::string, TokenType>> keywords{
     {"if", TOKEN_IF},         {"else", TOKEN_ELSE},
     {"and", TOKEN_AND},       {"or", TOKEN_OR},
     {"true", TOKEN_TRUE},     {"false", TOKEN_FALSE},
@@ -31,7 +31,9 @@ Token Lexer::build_token(const TokenType& type) const {
 }
 
 opt_token_t Lexer::try_tokenize_string() {
-  if (source_.current() != '"') { return std::nullopt; }
+  if (source_.current() != '"') {
+    return std::nullopt;
+  }
 
   while (source_.peek() != '"' && !source_.eof() && source_.peek() != '\n') {
     advance();
@@ -49,50 +51,58 @@ opt_token_t Lexer::try_tokenize_string() {
 
 opt_token_t Lexer::try_tokenize_number() {
   char c = source_.current();
-  if (!std::isdigit(c)) { return std::nullopt; }
+  if (!std::isdigit(c)) {
+    return std::nullopt;
+  }
 
-  if (c == '0' && match('0')) {
+  if (c == '0' && source_.peek() == '0') {
     throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
                      "Leading zeros are not allowed");
   }
+
   int value = c - '0';
-  bool fraction_part = false;
-  int exponent = 0;
 
   while (std::isdigit(source_.peek()) || source_.peek() == '.') {
     if (source_.peek() == '.') {
-      if (fraction_part) {
-        throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
-                         "Expected digit after '.'");
-      }
-      fraction_part = true;
-      advance();
-      continue;
+      return build_fraction(value);
     }
     int digit = advance() - '0';
-    if (value > (INT_MAX - digit) / 10 || (fraction_part && exponent == 10)) {
-      if (fraction_part) {
-        throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
-                         "Float literal exceeds range (" +
-                             std::to_string(INT_MAX) + ".0, 0." +
-                             std::to_string(INT_MAX) + ")");
-      }
+    if (value > (INT_MAX - digit) / 10) {
       throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
                        "Int literal exceeds maximum value (" +
                            std::to_string(INT_MAX) + ")");
     }
     value *= 10;
     value += digit;
-    if (fraction_part) {
-      ++exponent;
-    }
-  }
-
-  if (fraction_part) {
-    return build_token_with_value(
-        TOKEN_FLOAT_VAL, static_cast<float>(value * std::pow(10, -exponent)));
   }
   return build_token_with_value(TOKEN_INT_VAL, value);
+}
+
+Token Lexer::build_fraction(int value) {
+  if (source_.peek() != '.') {
+    throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
+                     "Expected '.' before fraction part.");
+  }
+  advance();
+  int exponent = 0;
+  while (std::isdigit(source_.peek())) {
+    int digit = advance() - '0';
+    if (value > (INT_MAX - digit) / 10 || exponent == 10) {
+      throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
+                       "Float literal exceeds range (" +
+                           std::to_string(INT_MAX) + ".0, 0." +
+                           std::to_string(INT_MAX) + ")");
+    }
+    value *= 10;
+    value += digit;
+    ++exponent;
+  }
+  if (!exponent) {
+    throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
+                     "Expected digit after '.'");
+  }
+  return build_token_with_value(
+      TOKEN_FLOAT_VAL, static_cast<float>(value * std::pow(10, -exponent)));
 }
 
 opt_token_t Lexer::try_tokenize_identifier() {
@@ -103,8 +113,10 @@ opt_token_t Lexer::try_tokenize_identifier() {
   while (std::isalnum(source_.peek()) || source_.peek() == '_') {
     advance();
   }
-  if (keywords.find(current_context_) != keywords.end()) {
-    return build_token(keywords.at(current_context_));
+  for (const auto& pair : keywords) {
+    if (pair.first == current_context_) {
+      return build_token(pair.second);
+    }
   }
   if (current_context_.length() > MAX_IDENTIFIER_LENGTH) {
     throw LexerError(build_token_with_value(TOKEN_IDENTIFIER),
@@ -125,7 +137,8 @@ opt_token_t Lexer::try_tokenize_comment() {
       advance();
     }
     return build_token_with_value(
-        TOKEN_COMMENT, current_context_.substr(2, current_context_.length() - 3));
+        TOKEN_COMMENT,
+        current_context_.substr(2, current_context_.length() - 3));
   }
   if (source_.peek() == '*') {  // Multi-line comment
     advance();
@@ -256,11 +269,9 @@ bool Lexer::match(char c) {
   return false;
 }
 
-bool Lexer::is_exhausted() const { return source_.eof(); }
-
-Token FilteredLexer::next_token() {
+Token LexerCommentFilter::next_token() {
   while (true) {
-    Token token = Lexer::next_token();
+    Token token = lexer_.next_token();
     if (token.type != TOKEN_COMMENT) {
       return token;
     }
