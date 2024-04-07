@@ -13,13 +13,10 @@ using stream_ptr = std::unique_ptr<std::istream>;
 class Source {
   Position position_ = {1, 0};
   char current_ = '\0';
-
- protected:
   stream_ptr stream_;
 
  public:
   explicit Source(stream_ptr stream) : stream_(std::move(stream)) {}
-  virtual ~Source() = default;
 
   [[nodiscard]] const Position& position() const { return position_; }
   char next();
