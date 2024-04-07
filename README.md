@@ -2,6 +2,21 @@
 
 `silne, stałe, wartość`
 
+## Sposób uruchamiania
+Wymagania: `CMake >= 3.22`, `kompilator zgodny ze standardem C++20 (rekomendowany Clang lub g++)`, `Python >= 3.6`, `Clang-Tidy`
+
+Opcjonalnie: `Clang-Format`
+
+1. Instalacja i konfiguracja **Conan**a:
+`./configure.sh`
+
+2. Kompilacja:
+`./build.sh`
+
+3. Uruchamianie: `./boa <ścieżka_do_pliku>` lub `./boa --cmd "<kod>"`
+
+4. Opcjonalnie: formatowanie kodu `make format` (w projekcie użyty jest styl Google)
+
 ## Zasady działania języka
 
 ### Konwersja typów
@@ -155,10 +170,6 @@ Długość identyfikatorów i zakres wartości zmiennych `int` i `float` ogranic
 `Parser` - konsumuje tokeny wygenerowane przez `Lexer`, tworzy `drzewo AST`
 
 `Interpreter` - wykonuje instrukcje z `drzewa AST`
-
-## Sposób uruchamiania
-
-`./boa <ścieżka_do_pliku>`
 
 ## Testownie
 
