@@ -273,7 +273,7 @@ bool Lexer::match(char c) {
 Token LexerCommentFilter::next_token() {
   while (true) {
     Token token = lexer_.next_token();
-    if (token.type != TOKEN_COMMENT) {
+    if (token.get_type() != TOKEN_COMMENT) {
       return token;
     }
   }

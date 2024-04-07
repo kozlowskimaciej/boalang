@@ -34,12 +34,10 @@ int main(int argc, char* argv[]) {
   }
 
   Lexer lexer(*src);
-  while (true) {
-    auto token = lexer.next_token();
+  Token token = lexer.next_token();
+  while (token.get_type() != TokenType::TOKEN_ETX) {
     std::cout << token << ' ';
-    if (token.type == TokenType::TOKEN_ETX) {
-      break;
-    }
+    token = lexer.next_token();
   }
 
   return 0;

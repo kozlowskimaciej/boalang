@@ -54,9 +54,9 @@ class LexerError : public std::exception {
 
  public:
   LexerError(const Token& token, const std::string& message) : token_(token) {
-    message_ = "Line " + std::to_string(token.position.line) + " column " +
-               std::to_string(token.position.column) + " at '" +
-               token.stringify() + "': " + message;
+    message_ = "Line " + std::to_string(token.get_position().line) +
+               " column " + std::to_string(token.get_position().column) +
+               " at '" + token.stringify() + "': " + message;
   };
 
   [[nodiscard]] const char* what() const noexcept override {

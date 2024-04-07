@@ -71,14 +71,18 @@ enum TokenType {
 };
 
 class Token {
- public:
-  const TokenType type;
-  const token_value_t value;
-  const Position position;
+  TokenType type;
+  token_value_t value;
+  Position position;
 
+ public:
   Token(TokenType type, Position position) : type(type), position(position){};
   Token(TokenType type, token_value_t value, Position position)
       : type(type), value(std::move(value)), position(position){};
+
+  [[nodiscard]] const TokenType& get_type() const { return type; };
+  [[nodiscard]] const token_value_t& get_value() const { return value; };
+  [[nodiscard]] const Position& get_position() const { return position; };
 
   [[nodiscard]] std::string stringify() const;
   [[nodiscard]] bool has_value() const;

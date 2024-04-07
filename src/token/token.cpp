@@ -24,7 +24,7 @@ bool Token::has_value() const {
 }
 
 std::ostream& operator<<(std::ostream& os, const Token& token) {
-  os << "<" << magic_enum::enum_name(token.type);
+  os << "<" << magic_enum::enum_name(token.get_type());
   if (token.has_value()) {
     os << ", " << token.stringify();
   }
