@@ -18,7 +18,6 @@ class Source {
   stream_ptr stream_;
 
  public:
-  Source() = default;
   explicit Source(stream_ptr stream) : stream_(std::move(stream)) {}
   virtual ~Source() = default;
 
@@ -31,14 +30,12 @@ class Source {
 
 class FileSource : public Source {
  public:
-  FileSource() = default;
   explicit FileSource(const std::string& path)
       : Source(std::make_unique<std::ifstream>(path)){};
 };
 
 class StringSource : public Source {
  public:
-  StringSource() = default;
   explicit StringSource(const std::string& source)
       : Source(std::make_unique<std::istringstream>(source)){};
 };
