@@ -19,8 +19,9 @@ class Lexer : public ILexer {
  private:
   std::string current_context_;
   Source& source_;
-  [[nodiscard]] Token build_token_with_value(
-      const TokenType& type, const token_value_t& value = {}) const;
+  [[nodiscard]] Token build_token_with_value(const TokenType& type) const;
+  [[nodiscard]] Token build_token_with_value(const TokenType& type,
+                                             const token_value_t& value) const;
   [[nodiscard]] Token build_token(const TokenType& type) const;
   char advance();
   bool match(char c);
@@ -48,10 +49,11 @@ class LexerCommentFilter : public ILexer {
 };
 
 class LexerError : public std::exception {
+  Token token_;
   std::string message_;
 
  public:
-  LexerError(const Token& token, const std::string& message) {
+  LexerError(const Token& token, const std::string& message) : token_(token) {
     message_ = "Line " + std::to_string(token.position.line) + " column " +
                std::to_string(token.position.column) + " at '" +
                token.stringify() + "': " + message;
@@ -60,6 +62,8 @@ class LexerError : public std::exception {
   [[nodiscard]] const char* what() const noexcept override {
     return message_.c_str();
   }
+
+  [[nodiscard]] const Token& get_token() const { return token_; }
 };
 
 #endif  // BOALANG_LEXER_HPP

@@ -5,7 +5,7 @@
 #include <initializer_list>
 #include <vector>
 
-static std::initializer_list<std::pair<std::string, TokenType>> keywords{
+static const std::initializer_list<std::pair<std::string, TokenType>> keywords{
     {"if", TOKEN_IF},         {"else", TOKEN_ELSE},
     {"and", TOKEN_AND},       {"or", TOKEN_OR},
     {"true", TOKEN_TRUE},     {"false", TOKEN_FALSE},
@@ -18,12 +18,13 @@ static std::initializer_list<std::pair<std::string, TokenType>> keywords{
     {"void", TOKEN_VOID},     {"mut", TOKEN_MUT},
 };
 
+Token Lexer::build_token_with_value(const TokenType& type) const {
+  return {type, current_context_, source_.position()};
+}
+
 Token Lexer::build_token_with_value(const TokenType& type,
                                     const token_value_t& value) const {
-  if (!std::holds_alternative<std::monostate>(value)) {
-    return {type, value, source_.position()};
-  }
-  return {type, current_context_, source_.position()};
+  return {type, value, source_.position()};
 }
 
 Token Lexer::build_token(const TokenType& type) const {
@@ -119,7 +120,7 @@ opt_token_t Lexer::try_tokenize_identifier() {
     }
   }
   if (current_context_.length() > MAX_IDENTIFIER_LENGTH) {
-    throw LexerError(build_token_with_value(TOKEN_IDENTIFIER),
+    throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
                      "Identifier exceeds maximum length (" +
                          std::to_string(MAX_IDENTIFIER_LENGTH) + ")");
   }

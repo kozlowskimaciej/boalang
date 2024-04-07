@@ -30,6 +30,7 @@ TEST(LexerTokenizeTest, integer_overflow) {
         } catch (const LexerError& e) {
           EXPECT_TRUE(str_contains(
               e.what(), "Int literal exceeds maximum value (2147483647)"));
+          EXPECT_EQ(e.get_token().type, TokenType::TOKEN_UNKNOWN);
           throw;
         }
       },
@@ -46,6 +47,7 @@ TEST(LexerTokenizeTest, integer_leading_zeros) {
           lexer.next_token();
         } catch (const LexerError& e) {
           EXPECT_TRUE(str_contains(e.what(), "Leading zeros are not allowed"));
+          EXPECT_EQ(e.get_token().type, TokenType::TOKEN_UNKNOWN);
           throw;
         }
       },
@@ -82,6 +84,7 @@ TEST_P(LexerFloatOverflowTests, tokenize_float_overflow) {
           lexer.next_token();
         } catch (const LexerError& e) {
           EXPECT_TRUE(str_contains(e.what(), "Float literal exceeds range"));
+          EXPECT_EQ(e.get_token().type, TokenType::TOKEN_UNKNOWN);
           throw;
         }
       },
@@ -103,6 +106,7 @@ TEST(LexerFloatTests, float_no_digit_after_dot) {
           lexer.next_token();
         } catch (const LexerError& e) {
           EXPECT_TRUE(str_contains(e.what(), "Expected digit after '.'"));
+          EXPECT_EQ(e.get_token().type, TokenType::TOKEN_UNKNOWN);
           throw;
         }
       },
@@ -153,6 +157,7 @@ TEST(LexerTokenizeTest, long_comment_unterminated) {
           lexer.next_token();
         } catch (const LexerError& e) {
           EXPECT_TRUE(str_contains(e.what(), "Unterminated long comment"));
+          EXPECT_EQ(e.get_token().type, TokenType::TOKEN_UNKNOWN);
           throw;
         }
       },
@@ -184,6 +189,7 @@ TEST(LexerTokenizeTest, identifier_too_long) {
           EXPECT_TRUE(str_contains(e.what(), id));
           EXPECT_TRUE(
               str_contains(e.what(), "Identifier exceeds maximum length"));
+          EXPECT_EQ(e.get_token().type, TokenType::TOKEN_UNKNOWN);
           throw;
         }
       },
@@ -212,6 +218,7 @@ TEST(LexerTokenizeTest, string_unterminated) {
         } catch (const LexerError& e) {
           EXPECT_TRUE(str_contains(e.what(), str));
           EXPECT_TRUE(str_contains(e.what(), "Unterminated string"));
+          EXPECT_EQ(e.get_token().type, TokenType::TOKEN_UNKNOWN);
           throw;
         }
       },
