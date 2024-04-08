@@ -17,6 +17,7 @@ class Source {
 
  public:
   explicit Source(stream_ptr stream) : stream_(std::move(stream)) {}
+  virtual ~Source = default;
 
   [[nodiscard]] const Position& position() const { return position_; }
   char next();
