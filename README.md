@@ -2,20 +2,31 @@
 
 `silne, stałe, wartość`
 
+## Przygotowanie środowiska
+
+### Linux (Ubuntu 22.04)
+Wymagania: `CMake >= 3.22`, `kompilator zgodny ze standardem C++20 (rekomendowany Clang)`, `Python >= 3.6`, 
+
+Opcjonalnie: `Clang-Tidy`, `Clang-Format`, `Doxygen`, `Graphviz`
+
+1. Pobieranie zależności potrzebnych do kompliacji `CMake`, `Python3`, `Clang`:
+`sudo apt install cmake python3 clang`
+2. Klonowanie repozytorium: `git clone https://gitlab-stud.elka.pw.edu.pl/TKOM_24L_WW/Maciej_Kozlowski/tkom-boalang.git`
+3. Instalacja i konfiguracja `Conan`, pierwszy build:
+   `./configure.sh`
+4. Opcjonalnie:
+   - formatowanie kodu `make format` (w projekcie użyty jest styl Google)
+   - generowanie dokumentacji `make docs`
+
+### Windows 10
+
 ## Sposób uruchamiania
-Wymagania: `CMake >= 3.22`, `kompilator zgodny ze standardem C++20 (rekomendowany Clang lub g++)`, `Python >= 3.6`, `Clang-Tidy`
 
-Opcjonalnie: `Clang-Format`
+### Linux (Ubuntu 22.04)
+1. Kompilacja: `./build.sh`
+2. Uruchamianie: `./boa <ścieżka_do_pliku>` lub `./boa --cmd "<kod>"`
 
-1. Instalacja i konfiguracja **Conan**a:
-`./configure.sh`
-
-2. Kompilacja:
-`./build.sh`
-
-3. Uruchamianie: `./boa <ścieżka_do_pliku>` lub `./boa --cmd "<kod>"`
-
-4. Opcjonalnie: formatowanie kodu `make format` (w projekcie użyty jest styl Google)
+### Windows 10
 
 ## Zasady działania języka
 

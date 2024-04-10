@@ -21,3 +21,8 @@ add_custom_target(
         -style=Google
         ${ALL_CXX_SOURCE_FILES}
 )
+
+add_custom_target(
+        docs
+        COMMAND doxygen Doxyfile
+)
