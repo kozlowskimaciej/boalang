@@ -1,3 +1,7 @@
+/*! @file token.hpp
+    @brief Implementation of Token class and related types.
+*/
+
 #ifndef BOALANG_TOKEN_HPP
 #define BOALANG_TOKEN_HPP
 
@@ -8,8 +12,12 @@
 #include "../utils/position.hpp"
 
 using token_value_t =
-    std::variant<std::monostate, std::string, int, float, bool>;
+    std::variant<std::monostate, std::string, int, float,
+                 bool>; /**< Variant of all available value types. */
 
+/**
+ * @brief Represents all available token types.
+ */
 enum TokenType {
   // END OF TEXT
   TOKEN_ETX = 0,
@@ -70,13 +78,31 @@ enum TokenType {
   TOKEN_UNKNOWN,
 };
 
+/**
+ * @brief Represents a token.
+ *
+ * Holds type, value and position in source.
+ */
 class Token {
-  TokenType type;
-  token_value_t value;
-  Position position;
+  TokenType type;      /**< Token's type. */
+  token_value_t value; /**< Stored value. */
+  Position position;   /**< Position in source. */
 
  public:
+  /**
+   * @brief Construct a new Token object with no value.
+   *
+   * @param type token's type
+   * @param position token's position in source
+   */
   Token(TokenType type, Position position) : type(type), position(position){};
+  /**
+   * @brief Construct a new Token object with value.
+   *
+   * @param type token's type
+   * @param value token's value
+   * @param position token's position in source
+   */
   Token(TokenType type, token_value_t value, Position position)
       : type(type), value(std::move(value)), position(position){};
 
@@ -84,6 +110,11 @@ class Token {
   [[nodiscard]] const token_value_t& get_value() const { return value; };
   [[nodiscard]] const Position& get_position() const { return position; };
 
+  /**
+   * @brief Converts token's value to string.
+   *
+   * @return token's value as a std::string
+   */
   [[nodiscard]] std::string stringify() const;
   [[nodiscard]] bool has_value() const;
 
