@@ -5,9 +5,9 @@
 ## Przygotowanie środowiska
 
 ### Linux (Ubuntu 22.04)
-Wymagania: `CMake >= 3.22`, `kompilator zgodny ze standardem C++20 (rekomendowany Clang)`, `Python >= 3.6`, 
+Wymagania: `CMake >= 3.22`, `kompilator zgodny ze standardem C++20 (rekomendowany Clang-14)`, `Python >= 3.6`, 
 
-Opcjonalnie: `Clang-Tidy`, `Clang-Format`, `Doxygen`, `Graphviz`
+Opcjonalnie: `Clang-Tidy-14`, `Clang-Format-14`, `Doxygen Graphviz`
 
 1. Pobieranie zależności potrzebnych do kompliacji `CMake`, `Python3`, `Clang`:
 `sudo apt install cmake python3 clang`
