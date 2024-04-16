@@ -59,15 +59,15 @@ TEST(StringSourceTest, read_from_string) {
   EXPECT_EQ(source.next(), 'H');
   EXPECT_EQ(source.next(), 'i');
 
-  EXPECT_EQ(source.position().column, 2);
-  EXPECT_EQ(source.position().line, 1);
+  EXPECT_EQ(source.get_position().column, 2);
+  EXPECT_EQ(source.get_position().line, 1);
 
   // Reaching the end of the file
   EXPECT_EQ(source.next(), '\0');
 
   // Check if the position is still the same after reaching the end of the file
-  EXPECT_EQ(source.position().column, 2);
-  EXPECT_EQ(source.position().line, 1);
+  EXPECT_EQ(source.get_position().column, 2);
+  EXPECT_EQ(source.get_position().line, 1);
 }
 
 TEST(StringSourceTest, crlf_to_lf) {
@@ -76,8 +76,8 @@ TEST(StringSourceTest, crlf_to_lf) {
   EXPECT_EQ(source.next(), '\n');
   EXPECT_EQ(source.next(), 'B');
 
-  EXPECT_EQ(source.position().column, 1);
-  EXPECT_EQ(source.position().line, 2);
+  EXPECT_EQ(source.get_position().column, 1);
+  EXPECT_EQ(source.get_position().line, 2);
 
   EXPECT_EQ(source.next(), '\0');
 }

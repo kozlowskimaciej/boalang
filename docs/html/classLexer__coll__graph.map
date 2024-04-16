@@ -1,0 +1,6 @@
+<map id="Lexer" name="Lexer">
+<area shape="rect" id="node1" title="Lexer used for lazy source tokenization." alt="" coords="39,184,97,211"/>
+<area shape="rect" id="node2" href="$classILexer.html" title="Lexer interface." alt="" coords="5,95,67,121"/>
+<area shape="rect" id="node3" href="$classSource.html" title="The Source class represents a source of characters, such as a file or a string." alt="" coords="91,95,157,121"/>
+<area shape="rect" id="node4" href="$structPosition.html" title="Represents the position in source." alt="" coords="87,5,161,32"/>
+</map>

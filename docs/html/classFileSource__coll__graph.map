@@ -1,0 +1,5 @@
+<map id="FileSource" name="FileSource">
+<area shape="rect" id="node1" title="The FileSource class represents a source of characters from a file." alt="" coords="5,171,95,197"/>
+<area shape="rect" id="node2" href="$classSource.html" title="The Source class represents a source of characters, such as a file or a string." alt="" coords="17,95,83,121"/>
+<area shape="rect" id="node3" href="$structPosition.html" title="Represents the position in source." alt="" coords="13,5,87,32"/>
+</map>
