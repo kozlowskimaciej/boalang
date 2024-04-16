@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_CLANG_TIDY clang-tidy;)
 
 include(CTest)
+include_directories("src")
 add_subdirectory(src)
 add_subdirectory(tests)
 

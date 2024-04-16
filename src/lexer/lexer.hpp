@@ -3,8 +3,8 @@
 
 #include <optional>
 
-#include "../source/source.hpp"
-#include "../token/token.hpp"
+#include "source/source.hpp"
+#include "token/token.hpp"
 
 constexpr unsigned int MAX_IDENTIFIER_LENGTH = 64;
 using opt_token_t = std::optional<Token>;

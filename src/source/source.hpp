@@ -6,7 +6,7 @@
 #include <sstream>
 #include <string>
 
-#include "../utils/position.hpp"
+#include "utils/position.hpp"
 
 using stream_ptr = std::unique_ptr<std::istream>;
 

@@ -5,7 +5,7 @@
 #include <string>
 #include <variant>
 
-#include "../utils/position.hpp"
+#include "utils/position.hpp"
 
 using token_value_t =
     std::variant<std::monostate, std::string, int, float, bool>;
