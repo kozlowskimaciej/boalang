@@ -4,7 +4,9 @@
 source venv/bin/activate
 pip install -U conan
 
-conan profile detect
-conan install . --build=missing --settings=build_type=Debug
+BUILD_TYPE=${1:-Debug}
 
-./build.sh
+conan profile detect
+conan install . --build=missing --settings=build_type="${BUILD_TYPE}" -s compiler.cppstd=gnu20
+
+./build.sh "${BUILD_TYPE}"
