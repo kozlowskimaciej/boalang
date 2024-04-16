@@ -48,20 +48,15 @@ class LexerCommentFilter : public ILexer {
   Token next_token() override;
 };
 
-class LexerError : public std::exception {
+class LexerError : public std::runtime_error {
   Token token_;
-  std::string message_;
 
  public:
-  LexerError(const Token& token, const std::string& message) : token_(token) {
-    message_ = "Line " + std::to_string(token.get_position().line) +
-               " column " + std::to_string(token.get_position().column) +
-               " at '" + token.stringify() + "': " + message;
-  };
-
-  [[nodiscard]] const char* what() const noexcept override {
-    return message_.c_str();
-  }
+  LexerError(const Token& token, const std::string& message)
+      : runtime_error("Line " + std::to_string(token.get_position().line) +
+                      " column " + std::to_string(token.get_position().column) +
+                      " at '" + token.stringify() + "': " + message),
+        token_(token){};
 
   [[nodiscard]] const Token& get_token() const { return token_; }
 };
