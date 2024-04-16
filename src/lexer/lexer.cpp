@@ -19,16 +19,16 @@ static const std::initializer_list<std::pair<std::string, TokenType>> keywords{
 };
 
 Token Lexer::build_token_with_value(const TokenType& type) const {
-  return {type, current_context_, source_.position()};
+  return {type, current_context_, source_.get_position()};
 }
 
 Token Lexer::build_token_with_value(const TokenType& type,
                                     const token_value_t& value) const {
-  return {type, value, source_.position()};
+  return {type, value, source_.get_position()};
 }
 
 Token Lexer::build_token(const TokenType& type) const {
-  return {type, source_.position()};
+  return {type, source_.get_position()};
 }
 
 opt_token_t Lexer::try_tokenize_string() {
