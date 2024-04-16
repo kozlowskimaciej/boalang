@@ -2,21 +2,19 @@
 
 #include <magic_enum/magic_enum.hpp>
 
+template<class... Ts>
+struct overloaded : Ts... { using Ts::operator()...; };
+
+template<class... Ts>
+overloaded(Ts...) -> overloaded<Ts...>;
+
 std::string Token::stringify() const {
-  return std::visit(
-      [](auto&& arg) -> std::string {
-        using T = std::decay_t<decltype(arg)>;
-        if constexpr (std::is_same_v<T, int> || std::is_same_v<T, float>) {
-          return std::to_string(arg);
-        } else if constexpr (std::is_same_v<T, std::string>) {
-          return arg;
-        } else if constexpr (std::is_same_v<T, bool>) {
-          return arg ? "true" : "false";
-        } else if constexpr (std::is_same_v<T, std::monostate>) {
-          return "";
-        }
-      },
-      value);
+  return std::visit(overloaded{
+      [](auto) { return std::string(); },
+      [](int arg) { return std::to_string(arg); },
+      [](const std::string& arg) { return arg; },
+      [](bool arg) { return std::string(arg ? "true" : "false"); },
+  }, value);
 }
 
 bool Token::has_value() const {
