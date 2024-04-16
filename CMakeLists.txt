@@ -26,4 +26,5 @@ add_custom_target(
 add_custom_target(
         docs
         COMMAND doxygen Doxyfile
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
