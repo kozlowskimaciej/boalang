@@ -15,8 +15,8 @@ Opcjonalnie: `Clang-Format`, `Doxygen Graphviz`
 3. Instalacja i konfiguracja `Conan`, pierwszy build:
    `chmod +x configure.sh build.sh && ./configure.sh` (skrypty jako argument pozycyjny moga przyjac argument Debug (domyslnie) lub Release)
 4. Opcjonalnie:
-   - formatowanie kodu `make format` (w projekcie użyty jest styl Google)
-   - generowanie dokumentacji `make docs`
+   - formatowanie kodu `sudo apt install clang-format && cd build && make format` (w projekcie użyty jest styl Google)
+   - generowanie dokumentacji `sudo apt install doxygen graphviz && cd build && make docs`
 
 ## Sposób uruchamiania
 
