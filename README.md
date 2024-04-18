@@ -5,28 +5,24 @@
 ## Przygotowanie środowiska
 
 ### Linux (Ubuntu 22.04)
-Wymagania: `CMake >= 3.22`, `kompilator zgodny ze standardem C++20 (rekomendowany Clang-14)`, `Python >= 3.6`, 
+Wymagania: `CMake >= 3.22`, `kompilator zgodny ze standardem C++20 (rekomendowany Clang-14)`, `Python >= 3.6`,  `Clang-Tidy`
 
-Opcjonalnie: `Clang-Tidy-14`, `Clang-Format-14`, `Doxygen Graphviz`
+Opcjonalnie: `Clang-Format`, `Doxygen Graphviz`
 
 1. Pobieranie zależności potrzebnych do kompliacji `CMake`, `Python3`, `Clang`:
-`sudo apt install cmake python3 clang`
+`sudo apt install cmake python3 python3.10-venv clang-14 clang-tidy`
 2. Klonowanie repozytorium: `git clone https://gitlab-stud.elka.pw.edu.pl/TKOM_24L_WW/Maciej_Kozlowski/tkom-boalang.git`
 3. Instalacja i konfiguracja `Conan`, pierwszy build:
-   `./configure.sh`
+   `chmod +x configure.sh build.sh && ./configure.sh`
 4. Opcjonalnie:
    - formatowanie kodu `make format` (w projekcie użyty jest styl Google)
    - generowanie dokumentacji `make docs`
-
-### Windows 10
 
 ## Sposób uruchamiania
 
 ### Linux (Ubuntu 22.04)
 1. Kompilacja: `./build.sh`
-2. Uruchamianie: `./boa <ścieżka_do_pliku>` lub `./boa --cmd "<kod>"`
-
-### Windows 10
+2. Uruchamianie: `./build/src/boalang <ścieżka_do_pliku>` lub `./build/src/boalang --cmd "<kod>"`
 
 ## Zasady działania języka
 
