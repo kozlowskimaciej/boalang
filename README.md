@@ -13,7 +13,7 @@ Opcjonalnie: `Clang-Format`, `Doxygen Graphviz`
 `sudo apt install cmake python3 python3.10-venv clang-14 clang-tidy`
 2. Klonowanie repozytorium: `git clone https://gitlab-stud.elka.pw.edu.pl/TKOM_24L_WW/Maciej_Kozlowski/tkom-boalang.git`
 3. Instalacja i konfiguracja `Conan`, pierwszy build:
-   `chmod +x configure.sh build.sh && ./configure.sh`
+   `chmod +x configure.sh build.sh && ./configure.sh` (skrypty jako argument pozycyjny moga przyjac argument Debug (domyslnie) lub Release)
 4. Opcjonalnie:
    - formatowanie kodu `make format` (w projekcie użyty jest styl Google)
    - generowanie dokumentacji `make docs`
