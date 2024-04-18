@@ -19,7 +19,13 @@ using opt_token_t = std::optional<Token>; /**< Optional token type. */
  */
 class ILexer {
  public:
+  ILexer() = default;
   virtual ~ILexer() = default;
+  ILexer(const ILexer&) = delete;
+  ILexer& operator=(const ILexer&) = delete;
+  ILexer(ILexer&&) = delete;
+  ILexer& operator=(ILexer&&) = delete;
+
   virtual Token next_token() = 0;
 };
 

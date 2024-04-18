@@ -8,7 +8,9 @@ Checks: '
   performance-*,
   -modernize-use-trailing-return-type,
   -readability-identifier-length,
-  -cppcoreguidelines-non-private-member-variables-in-classes,
+  -cppcoreguidelines-avoid-c-arrays,
+  -modernize-avoid-c-arrays,
+  -bugprone-exception-escape,
   -readability-implicit-bool-conversion
   '
 WarningsAsErrors: true

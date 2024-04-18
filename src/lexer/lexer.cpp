@@ -16,7 +16,10 @@ static const std::initializer_list<std::pair<std::string, TokenType>> keywords{
     {"int", TOKEN_INT},       {"float", TOKEN_FLOAT},
     {"str", TOKEN_STR},       {"bool", TOKEN_BOOL},
     {"void", TOKEN_VOID},     {"mut", TOKEN_MUT},
-};
+}; /**< List of all supported keywords. */
+
+static constexpr int BASE =
+    10; /**< The base number of the decimal number system. */
 
 Token Lexer::build_token_with_value(const TokenType& type) const {
   return {type, current_context_, source_.get_position()};
@@ -68,12 +71,12 @@ opt_token_t Lexer::try_tokenize_number() {
       return build_fraction(value);
     }
     int digit = advance() - '0';
-    if (value > (INT_MAX - digit) / 10) {
+    if (value > (INT_MAX - digit) / BASE) {
       throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
                        "Int literal exceeds maximum value (" +
                            std::to_string(INT_MAX) + ")");
     }
-    value *= 10;
+    value *= BASE;
     value += digit;
   }
   return build_token_with_value(TOKEN_INT_VAL, value);
@@ -88,13 +91,13 @@ Token Lexer::build_fraction(int value) {
   int exponent = 0;
   while (std::isdigit(source_.peek())) {
     int digit = advance() - '0';
-    if (value > (INT_MAX - digit) / 10 || exponent == 10) {
+    if (value > (INT_MAX - digit) / BASE || exponent == BASE) {
       throw LexerError(build_token_with_value(TOKEN_UNKNOWN),
                        "Float literal exceeds range (" +
                            std::to_string(INT_MAX) + ".0, 0." +
                            std::to_string(INT_MAX) + ")");
     }
-    value *= 10;
+    value *= BASE;
     value += digit;
     ++exponent;
   }
@@ -103,7 +106,7 @@ Token Lexer::build_fraction(int value) {
                      "Expected digit after '.'");
   }
   return build_token_with_value(
-      TOKEN_FLOAT_VAL, static_cast<float>(value * std::pow(10, -exponent)));
+      TOKEN_FLOAT_VAL, static_cast<float>(value * std::pow(BASE, -exponent)));
 }
 
 opt_token_t Lexer::try_tokenize_identifier() {

@@ -4,23 +4,23 @@
 
 ## Przygotowanie środowiska
 
-### Linux (Ubuntu 22.04)
+### Windows + WSL / cd bLinux (Ubuntu 22.04)
 Wymagania: `CMake >= 3.22`, `kompilator zgodny ze standardem C++20 (rekomendowany Clang-14)`, `Python >= 3.6`,  `Clang-Tidy`
 
 Opcjonalnie: `Clang-Format`, `Doxygen Graphviz`
 
-1. Pobieranie zależności potrzebnych do kompliacji `CMake`, `Python3`, `Clang`:
+1. Pobieranie zależności potrzebnych do kompliacji `CMake`, `Python`, `Clang`:
 `sudo apt install cmake python3 python3.10-venv clang-14 clang-tidy`
 2. Klonowanie repozytorium: `git clone https://gitlab-stud.elka.pw.edu.pl/TKOM_24L_WW/Maciej_Kozlowski/tkom-boalang.git`
 3. Instalacja i konfiguracja `Conan`, pierwszy build:
-   `chmod +x configure.sh build.sh && ./configure.sh` (skrypty jako argument pozycyjny moga przyjac argument Debug (domyslnie) lub Release)
+   `chmod +x configure.sh build.sh && ./configure.sh` (skrypty jako argument pozycyjny mogą przyjąć Debug (domyślnie) lub Release)
 4. Opcjonalnie:
    - formatowanie kodu `sudo apt install clang-format && cd build && make format` (w projekcie użyty jest styl Google)
    - generowanie dokumentacji `sudo apt install doxygen graphviz && cd build && make docs`
 
 ## Sposób uruchamiania
 
-### Linux (Ubuntu 22.04)
+### Windows + WSL / Linux (Ubuntu 22.04)
 1. Kompilacja: `./build.sh`
 2. Uruchamianie: `./build/src/boalang <ścieżka_do_pliku>` lub `./build/src/boalang --cmd "<kod>"`
 

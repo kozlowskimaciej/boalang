@@ -32,6 +32,8 @@ class Source {
   explicit Source(stream_ptr stream) : stream_(std::move(stream)) {}
   Source(const Source&) = delete;
   Source& operator=(const Source&) = delete;
+  Source(Source&&) = delete;
+  Source& operator=(Source&&) = delete;
   virtual ~Source() = default;
 
   [[nodiscard]] const Position& get_position() const { return position_; }

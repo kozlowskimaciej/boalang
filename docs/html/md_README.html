@@ -69,34 +69,30 @@ $(function() {
 <h1><a class="anchor" id="autotoc_md1"></a>
 Przygotowanie środowiska</h1>
 <h2><a class="anchor" id="autotoc_md2"></a>
-Linux (Ubuntu 22.04)</h2>
-<p>Wymagania: <code>CMake &gt;= 3.22</code>, <code>kompilator zgodny ze standardem C++20 (rekomendowany Clang-14)</code>, <code>Python &gt;= 3.6</code>,</p>
-<p>Opcjonalnie: <code>Clang-Tidy-14</code>, <code>Clang-Format-14</code>, <code>Doxygen Graphviz</code></p>
+Windows + WSL / cd bLinux (Ubuntu 22.04)</h2>
+<p>Wymagania: <code>CMake &gt;= 3.22</code>, <code>kompilator zgodny ze standardem C++20 (rekomendowany Clang-14)</code>, <code>Python &gt;= 3.6</code>, <code>Clang-Tidy</code></p>
+<p>Opcjonalnie: <code>Clang-Format</code>, <code>Doxygen Graphviz</code></p>
 <ol type="1">
-<li>Pobieranie zależności potrzebnych do kompliacji <code>CMake</code>, <code>Python3</code>, <code>Clang</code>: <code>sudo apt install cmake python3 clang</code></li>
+<li>Pobieranie zależności potrzebnych do kompliacji <code>CMake</code>, <code>Python</code>, <code>Clang</code>: <code>sudo apt install cmake python3 python3.10-venv clang-14 clang-tidy</code></li>
 <li>Klonowanie repozytorium: <code>git clone <a href="https://gitlab-stud.elka.pw.edu.pl/TKOM_24L_WW/Maciej_Kozlowski/tkom-boalang.git">https://gitlab-stud.elka.pw.edu.pl/TKOM_24L_WW/Maciej_Kozlowski/tkom-boalang.git</a></code></li>
-<li>Instalacja i konfiguracja <code>Conan</code>, pierwszy build: <code>./configure.sh</code></li>
+<li>Instalacja i konfiguracja <code>Conan</code>, pierwszy build: <code>chmod +x configure.sh build.sh &amp;&amp; ./configure.sh</code> (skrypty jako argument pozycyjny mogą przyjąć Debug (domyślnie) lub Release)</li>
 <li>Opcjonalnie:<ul>
-<li>formatowanie kodu <code>make format</code> (w projekcie użyty jest styl Google)</li>
-<li>generowanie dokumentacji <code>make docs</code></li>
+<li>formatowanie kodu <code>sudo apt install clang-format &amp;&amp; cd build &amp;&amp; make format</code> (w projekcie użyty jest styl Google)</li>
+<li>generowanie dokumentacji <code>sudo apt install doxygen graphviz &amp;&amp; cd build &amp;&amp; make docs</code></li>
 </ul>
 </li>
 </ol>
-<h2><a class="anchor" id="autotoc_md3"></a>
-Windows 10</h2>
-<h1><a class="anchor" id="autotoc_md4"></a>
+<h1><a class="anchor" id="autotoc_md3"></a>
 Sposób uruchamiania</h1>
-<h2><a class="anchor" id="autotoc_md5"></a>
-Linux (Ubuntu 22.04)</h2>
+<h2><a class="anchor" id="autotoc_md4"></a>
+Windows + WSL / Linux (Ubuntu 22.04)</h2>
 <ol type="1">
 <li>Kompilacja: <code>./build.sh</code></li>
-<li>Uruchamianie: <code>./boa &lt;ścieżka_do_pliku&gt;</code> lub <code>./boa --cmd "&lt;kod&gt;"</code></li>
+<li>Uruchamianie: <code>./build/src/boalang &lt;ścieżka_do_pliku&gt;</code> lub <code>./build/src/boalang --cmd "&lt;kod&gt;"</code></li>
 </ol>
-<h2><a class="anchor" id="autotoc_md6"></a>
-Windows 10</h2>
-<h1><a class="anchor" id="autotoc_md7"></a>
+<h1><a class="anchor" id="autotoc_md5"></a>
 Zasady działania języka</h1>
-<h2><a class="anchor" id="autotoc_md8"></a>
+<h2><a class="anchor" id="autotoc_md6"></a>
 Konwersja typów</h2>
 <p>Język jest silnie typowany. Każda konwersja typu musi odbyć się jawnie przy użyciu operatora rzutowania <code>as</code>. W przypadku niepoprawnej konwersji rzucany jest wyjątek. Wyjątkiem są operacje logiczne, gdzie wartości domyślnie konwertowane są na <code>bool</code>.</p>
 <div class="fragment"><div class="line">Przy pomoca operatora `is` mamy możliwość badania typu.</div>
@@ -238,7 +234,7 @@ Konwersja typów</h2>
 </div><!-- PageDoc -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Apr 16 2024 17:02:53 for boalang by&#160;<a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1
+Generated on Fri Apr 19 2024 00:45:50 for boalang by&#160;<a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1
 </small></address>
 </body>
 </html>

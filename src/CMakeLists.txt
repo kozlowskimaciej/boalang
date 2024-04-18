@@ -1,3 +1,5 @@
+set(CMAKE_CXX_CLANG_TIDY clang-tidy;)
+
 file(GLOB TOKEN_FILES token/*.cpp token/*.hpp)
 file(GLOB SOURCE_FILES source/*.cpp source/*.hpp)
 file(GLOB LEXER_FILES lexer/*.cpp lexer/*.hpp)
