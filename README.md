@@ -4,7 +4,7 @@
 
 ## Przygotowanie środowiska
 
-### Windows + WSL / cd bLinux (Ubuntu 22.04)
+### Windows + WSL / Linux (Ubuntu 22.04)
 Wymagania: `CMake >= 3.22`, `kompilator zgodny ze standardem C++20 (rekomendowany Clang-14)`, `Python >= 3.6`,  `Clang-Tidy`
 
 Opcjonalnie: `Clang-Format`, `Doxygen Graphviz`
