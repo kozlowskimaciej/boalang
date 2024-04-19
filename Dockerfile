@@ -3,9 +3,8 @@ FROM ubuntu:22.04
 
 # Install necessary packages
 RUN apt-get update && apt-get install -y \
-    build-essential \
     clang-14 \
-    clang-tidy-14 \
+    clang-tidy \
     cmake \
     python3 \
     python3.10-venv

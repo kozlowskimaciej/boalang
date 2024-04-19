@@ -17,6 +17,7 @@ Opcjonalnie: `Clang-Format`, `Doxygen Graphviz`
 4. Opcjonalnie:
    - formatowanie kodu `sudo apt install clang-format && cd build && make format` (w projekcie użyty jest styl Google)
    - generowanie dokumentacji `sudo apt install doxygen graphviz && cd build && make docs`
+   - uruchamianie testów `cd build && make test`
 
 ## Sposób uruchamiania
 
