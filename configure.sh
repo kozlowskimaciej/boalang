@@ -2,7 +2,7 @@
 
 [ ! -d "venv" ] && python3 -m venv venv
 source venv/bin/activate
-pip install -U conan
+pip install -r ./requirements.txt
 
 BUILD_TYPE=${1:-Debug}
 
