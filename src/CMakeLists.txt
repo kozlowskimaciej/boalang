@@ -3,6 +3,7 @@ set(CMAKE_CXX_CLANG_TIDY clang-tidy;)
 file(GLOB TOKEN_FILES token/*.cpp token/*.hpp)
 file(GLOB SOURCE_FILES source/*.cpp source/*.hpp)
 file(GLOB LEXER_FILES lexer/*.cpp lexer/*.hpp)
+file(GLOB PARSER_FILES parser/*.cpp parser/*.hpp)
 
 find_package(magic_enum REQUIRED)
 find_package(argparse REQUIRED)
@@ -13,6 +14,7 @@ add_library(
         ${TOKEN_FILES}
         ${SOURCE_FILES}
         ${LEXER_FILES}
+        ${PARSER_FILES}
 )
 target_link_libraries(
         boalang_lib
