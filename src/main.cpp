@@ -4,7 +4,9 @@
 
 #include "argparse/argparse.hpp"
 #include "lexer/lexer.hpp"
+#include "parser/parser.hpp"
 #include "source/source.hpp"
+#include "ast/astprinter.hpp"
 
 void parse_args(int& argc, char* argv[], argparse::ArgumentParser& program) {
   program.add_argument("source");
@@ -27,18 +29,19 @@ int main(int argc, char* argv[]) {
   parse_args(argc, argv, program);
 
   std::unique_ptr<Source> src;
-  if (program.is_used("--cmd")) {
-    src = std::make_unique<StringSource>(program.get<std::string>("source"));
-  } else {
-    src = std::make_unique<FileSource>(program.get<std::string>("source"));
-  }
+// if (program.is_used("--cmd")) {
+//   src = std::make_unique<StringSource>(program.get<std::string>("source"));
+// } else {
+//   src = std::make_unique<FileSource>(program.get<std::string>("source"));
+// }
+
+//  src = std::make_unique<StringSource>("1 and 3");
+  src = std::make_unique<StringSource>("1 + 2 and 3");
 
   Lexer lexer(*src);
-  Token token = lexer.next_token();
-  while (token.get_type() != TokenType::TOKEN_ETX) {
-    std::cout << token << ' ';
-    token = lexer.next_token();
-  }
+  LexerCommentFilter filter(lexer);
+  Parser parser(filter);
+  ASTPrinter().print(parser.parse());
 
   return 0;
 }
