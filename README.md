@@ -229,10 +229,10 @@ assignment	=	identifier { "." identifier } "=" assignment
                 |	logic_or ;
 logic_or	=	logic_and { "or" logic_and } ;
 logic_and	=	equality { "and" equality } ;
-equality	=	comparison [ ( "!=" | "==" ) comparison ] ;
-comparison	=	term [ ( ">" | ">=" | "<" | "<=" ) term ] ;
-term		=	factor [ ( "-" | "+" ) factor ] ;
-factor		=	unary [ ( "/" | "*" ) unary ] ;
+equality	=	comparison { ( "!=" | "==" ) comparison } ;
+comparison	=	term { ( ">" | ">=" | "<" | "<=" ) term } ;
+term		=	factor { ( "-" | "+" ) factor } ;
+factor		=	unary { ( "/" | "*" ) unary } ;
 unary		=	("!" | "-" ) type_cast ;
 type_cast	=	call { ("as" | "is") type } ;
 call		=	identifier { "(" [ arguments ] ")" | "." identifier }

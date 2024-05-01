@@ -7,6 +7,7 @@
 
 #include <sstream>
 #include <vector>
+#include <optional>
 #include <memory>
 
 #include <expr/expr.hpp>
@@ -15,7 +16,7 @@ class ASTPrinter : public ExprVisitor {
  private:
   std::stringstream stream_;
 
-  void parenthesize(const std::string& name, std::initializer_list<const Expr*> exprs);
+  void parenthesize(std::initializer_list<const Expr*> exprs, std::optional<Token> token = std::nullopt);
   void print_memory_info(const std::string& class_name, const void* address);
 
  public:
