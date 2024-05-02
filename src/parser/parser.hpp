@@ -23,9 +23,10 @@ class Parser {
   std::unique_ptr<Expr> term();
   std::unique_ptr<Expr> factor();
   std::unique_ptr<Expr> unary();
-  //  std::unique_ptr<Expr> type_cast();
-  //  std::unique_ptr<Expr> call();
+  std::unique_ptr<Expr> type_cast();
+  std::unique_ptr<Expr> call();
   std::unique_ptr<Expr> primary();
+  std::unique_ptr<Expr> type();
 
   opt_token_t match(std::initializer_list<TokenType> types);
   Token advance();
@@ -41,12 +42,12 @@ class Parser {
 /**
  * @brief Represents a parser related error.
  */
-class ParserError : public std::runtime_error {
+class SyntaxError : public std::runtime_error {
   Token token_;
 
  public:
-  ParserError(const Token& token, const std::string& message)
-      : runtime_error("SyntaxError: Line " +
+  SyntaxError(const Token& token, const std::string& message)
+      : runtime_error("Line " +
                       std::to_string(token.get_position().line) + " column " +
                       std::to_string(token.get_position().column) + " at '" +
                       token.stringify() + "': " + message),

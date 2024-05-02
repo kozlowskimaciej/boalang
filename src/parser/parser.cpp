@@ -113,25 +113,34 @@ std::unique_ptr<Expr> Parser::factor() {
 std::unique_ptr<Expr> Parser::unary() {
   if (auto token =
           match({TokenType::TOKEN_EXCLAMATION, TokenType::TOKEN_MINUS})) {
-    std::unique_ptr<Expr> right = primary();
+    std::unique_ptr<Expr> right = type_cast();
     Token op_symbol = token.value();
     return std::make_unique<UnaryExpr>(op_symbol, std::move(right));
   }
 
+  return type_cast();
+}
+
+std::unique_ptr<Expr> Parser::type_cast() {
+  std::unique_ptr<Expr> expr = call();
+
+  while (auto token = match({TokenType::TOKEN_AS, TokenType::TOKEN_IS})) {
+    std::unique_ptr<Expr> right = type();
+    Token op_symbol = token.value();
+    expr = std::make_unique<CastExpr>(std::move(expr), op_symbol,
+                                        std::move(right));
+  }
+
+  return expr;
+}
+
+std::unique_ptr<Expr> Parser::call() {
   return primary();
 }
 
 std::unique_ptr<Expr> Parser::primary() {
-//  if (match({TokenType::TOKEN_FALSE})) {
-//    return std::make_unique<LiteralExpr>(false);
-//  }
-//  if (match({TokenType::TOKEN_TRUE})) {
-//    return std::make_unique<LiteralExpr>(true);
-//  }
-
   if (auto token = match({TokenType::TOKEN_FLOAT_VAL, TokenType::TOKEN_INT_VAL,
                           TokenType::TOKEN_STR_VAL, TokenType::TOKEN_TRUE, TokenType::TOKEN_FALSE})) {
-//    return std::make_unique<LiteralExpr>(token.value().get_value());
     return std::make_unique<LiteralExpr>(token.value());
   }
 
@@ -146,7 +155,16 @@ std::unique_ptr<Expr> Parser::primary() {
     return std::make_unique<GroupingExpr>(std::move(expr));
   }
 
-  throw ParserError(advance(), "Expected expression.");
+  throw SyntaxError(current_token_, "Expected expression.");
+}
+
+std::unique_ptr<Expr> Parser::type() {
+  if (auto token = match({TokenType::TOKEN_FLOAT, TokenType::TOKEN_INT,
+                          TokenType::TOKEN_STR, TokenType::TOKEN_BOOL, TokenType::TOKEN_IDENTIFIER})) {
+    return std::make_unique<TypeExpr>(token.value());
+  }
+
+  throw SyntaxError(current_token_, "Expected type.");
 }
 
 opt_token_t Parser::match(std::initializer_list<TokenType> types) {
@@ -167,5 +185,5 @@ Token Parser::consume(std::initializer_list<TokenType> types,
   if (auto token = match(types)) {
     return token.value();
   }
-  throw ParserError(current_token_, err_msg);
+  throw SyntaxError(current_token_, err_msg);
 }

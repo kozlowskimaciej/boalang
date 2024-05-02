@@ -76,7 +76,6 @@ class LogicalExpr : public Expr {
 
 class LiteralExpr : public Expr {
  public:
-//  const token_value_t literal;
   const Token literal;
 
   explicit LiteralExpr(Token literal) : literal(std::move(literal)){};
@@ -103,6 +102,32 @@ class VarExpr : public Expr {
       : identifier(std::move(identifier)){};
   void accept(ExprVisitor& expr_visitor) const override {
     expr_visitor.visit_var_expr(*this);
+  };
+};
+
+class CastExpr : public Expr {
+ public:
+  const std::unique_ptr<Expr> left;
+  const Token op_symbol;
+  const std::unique_ptr<Expr> type;
+
+  CastExpr(std::unique_ptr<Expr> left, Token op_symbol,
+      std::unique_ptr<Expr> type)
+  : left(std::move(left)),
+  op_symbol(std::move(op_symbol)),
+  type(std::move(type)){};
+  void accept(ExprVisitor& expr_visitor) const override {
+    expr_visitor.visit_cast_expr(*this);
+  };
+};
+
+class TypeExpr : public Expr {
+ public:
+  const Token type;
+
+  explicit TypeExpr(Token type) : type(std::move(type)){};
+  void accept(ExprVisitor& expr_visitor) const override {
+    expr_visitor.visit_type_expr(*this);
   };
 };
 

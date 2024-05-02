@@ -129,7 +129,7 @@ class LexerError : public std::runtime_error {
 
  public:
   LexerError(const Token& token, const std::string& message)
-      : runtime_error("LexerError: Line " +
+      : runtime_error("Line " +
                       std::to_string(token.get_position().line) + " column " +
                       std::to_string(token.get_position().column) + " at '" +
                       token.stringify() + "': " + message),

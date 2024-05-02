@@ -27,6 +27,10 @@ void ASTPrinter::print(const std::vector<std::unique_ptr<Expr>>& exprs) {
   std::cout << stream_.str();
 }
 
+void ASTPrinter::print_memory_info(const std::string& class_name, const void* address) {
+  stream_ << class_name << " @ " << std::hex << std::showbase << reinterpret_cast<std::uintptr_t>(address) << " ";
+}
+
 void ASTPrinter::visit_binary_expr(const BinaryExpr& expr) {
   print_memory_info("BinaryExpr", &expr);
   parenthesize(
@@ -76,6 +80,15 @@ void ASTPrinter::visit_assign_expr(const AssignExpr& expr) {
   );
 }
 
-void ASTPrinter::print_memory_info(const std::string& class_name, const void* address) {
-  stream_ << class_name << " @ " << std::hex << std::showbase << reinterpret_cast<std::uintptr_t>(address) << " ";
+void ASTPrinter::visit_cast_expr(const CastExpr &expr) {
+  print_memory_info("CastExpr", &expr);
+  parenthesize(
+      {expr.left.get(), expr.type.get()},
+      expr.op_symbol
+  );
+}
+
+void ASTPrinter::visit_type_expr(const TypeExpr &expr) {
+  print_memory_info("TypeExpr", &expr);
+  stream_ << "{" << expr.type << "}";
 }
