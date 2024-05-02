@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <utility>
+#include <vector>
 
 #include "exprvisitor.hpp"
 #include "token/token.hpp"
@@ -128,6 +129,16 @@ class TypeExpr : public Expr {
   explicit TypeExpr(Token type) : type(std::move(type)){};
   void accept(ExprVisitor& expr_visitor) const override {
     expr_visitor.visit_type_expr(*this);
+  };
+};
+
+class InitalizerListExpr : public Expr {
+ public:
+  const std::vector<std::unique_ptr<Expr>> list;
+
+  explicit InitalizerListExpr(std::vector<std::unique_ptr<Expr>> list) : list(std::move(list)){};
+  void accept(ExprVisitor& expr_visitor) const override {
+    expr_visitor.visit_initalizerlist_expr(*this);
   };
 };
 

@@ -155,6 +155,15 @@ std::unique_ptr<Expr> Parser::primary() {
     return std::make_unique<GroupingExpr>(std::move(expr));
   }
 
+  if (match({TokenType::TOKEN_LBRACE})) {
+    std::vector<std::unique_ptr<Expr>> exprs;
+    do {
+      exprs.push_back(expression());
+    } while(match({TokenType::TOKEN_COMMA}));
+    consume({TokenType::TOKEN_RBRACE}, "Excepted '}' after initializer list.");
+    return std::make_unique<InitalizerListExpr>(std::move(exprs));
+  }
+
   throw SyntaxError(current_token_, "Expected expression.");
 }
 

@@ -15,6 +15,7 @@ class LogicalExpr;
 class AssignExpr;
 class CastExpr;
 class TypeExpr;
+class InitalizerListExpr;
 
 class ExprVisitor {
  public:
@@ -29,6 +30,7 @@ class ExprVisitor {
   virtual void visit_assign_expr(const AssignExpr& expr) = 0;
   virtual void visit_cast_expr(const CastExpr& expr) = 0;
   virtual void visit_type_expr(const TypeExpr& expr) = 0;
+  virtual void visit_initalizerlist_expr(const InitalizerListExpr& expr) = 0;
 };
 
 #endif  // BOALANG_EXPRVISITOR_HPP

@@ -12,7 +12,7 @@ void ASTPrinter::parenthesize(std::initializer_list<const Expr*> exprs, std::opt
   for (const auto& expr : exprs) {
     stream_ << '\n';
     for (unsigned int i = 0; i < indent_; ++i) {
-      stream_ << '|';
+      stream_ << '>';
     }
     expr->accept(*this);
   }
@@ -48,7 +48,7 @@ void ASTPrinter::visit_grouping_expr(const GroupingExpr& expr) {
 
 void ASTPrinter::visit_literal_expr(const LiteralExpr& expr) {
   print_memory_info("LiteralExpr", &expr);
-  stream_ << "{" << expr.literal.stringify() << "}";
+  stream_ << expr.literal;
 }
 
 void ASTPrinter::visit_unary_expr(const UnaryExpr& expr) {
@@ -91,4 +91,11 @@ void ASTPrinter::visit_cast_expr(const CastExpr &expr) {
 void ASTPrinter::visit_type_expr(const TypeExpr &expr) {
   print_memory_info("TypeExpr", &expr);
   stream_ << "{" << expr.type << "}";
+}
+
+void ASTPrinter::visit_initalizerlist_expr(const InitalizerListExpr &expr) {
+  print_memory_info("InitalizerListExpr", &expr);
+  for (const auto& item : expr.list) {
+    parenthesize({item.get()});
+  }
 }
