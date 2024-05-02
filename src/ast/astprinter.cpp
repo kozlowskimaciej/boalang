@@ -8,12 +8,15 @@ void ASTPrinter::parenthesize(std::initializer_list<const Expr*> exprs, std::opt
     stream_ << token.value();
   }
 
-  stream_ << '(';
+  ++indent_;
   for (const auto& expr : exprs) {
+    stream_ << '\n';
+    for (unsigned int i = 0; i < indent_; ++i) {
+      stream_ << '|';
+    }
     expr->accept(*this);
-    stream_ << ", ";
   }
-  stream_ << ')';
+  --indent_;
 }
 
 void ASTPrinter::print(const std::vector<std::unique_ptr<Expr>>& exprs) {
@@ -60,7 +63,7 @@ void ASTPrinter::visit_var_expr(const VarExpr& expr) {
 void ASTPrinter::visit_logical_expr(const LogicalExpr& expr) {
   print_memory_info("LogicalExpr", &expr);
   parenthesize(
-      {expr.right.get(), expr.left.get()},
+      {expr.left.get(), expr.right.get()},
       expr.op_symbol
   );
 }

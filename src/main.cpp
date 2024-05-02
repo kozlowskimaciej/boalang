@@ -29,14 +29,11 @@ int main(int argc, char* argv[]) {
   parse_args(argc, argv, program);
 
   std::unique_ptr<Source> src;
-// if (program.is_used("--cmd")) {
-//   src = std::make_unique<StringSource>(program.get<std::string>("source"));
-// } else {
-//   src = std::make_unique<FileSource>(program.get<std::string>("source"));
-// }
-
-//  src = std::make_unique<StringSource>("1 and 3");
-  src = std::make_unique<StringSource>("1 + 2 and 3");
+ if (program.is_used("--cmd")) {
+   src = std::make_unique<StringSource>(program.get<std::string>("source"));
+ } else {
+   src = std::make_unique<FileSource>(program.get<std::string>("source"));
+ }
 
   Lexer lexer(*src);
   LexerCommentFilter filter(lexer);

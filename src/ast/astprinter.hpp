@@ -14,6 +14,7 @@
 
 class ASTPrinter : public ExprVisitor {
  private:
+  unsigned int indent_ = 0;
   std::stringstream stream_;
 
   void parenthesize(std::initializer_list<const Expr*> exprs, std::optional<Token> token = std::nullopt);

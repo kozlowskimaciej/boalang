@@ -164,8 +164,8 @@ Token Parser::advance() { return current_token_ = lexer_.next_token(); }
 
 Token Parser::consume(std::initializer_list<TokenType> types,
                       const std::string& err_msg) {
-  if (match(types)) {
-    return advance();
+  if (auto token = match(types)) {
+    return token.value();
   }
   throw ParserError(current_token_, err_msg);
 }
