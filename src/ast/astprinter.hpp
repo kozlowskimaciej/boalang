@@ -9,14 +9,12 @@
 #include <stmt/stmt.hpp>
 #include <memory>
 #include <optional>
-#include <sstream>
 #include <variant>
 #include <vector>
 
 class ASTPrinter : public ExprVisitor, public StmtVisitor {
  private:
   unsigned int indent_ = 0;
-  std::stringstream stream_;
 
   void parenthesize(std::initializer_list<std::variant<const Expr*, const Stmt*>> exprstmts,
                     std::optional<Token> token = std::nullopt);

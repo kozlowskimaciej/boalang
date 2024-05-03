@@ -5,17 +5,17 @@
 void ASTPrinter::parenthesize(std::initializer_list<std::variant<const Expr*, const Stmt*>> exprstmts,
                               std::optional<Token> token) {
   if (token) {
-    stream_ << token.value();
+    std::cout << token.value();
   }
 
   ++indent_;
   for (const auto& item : exprstmts) {
-    stream_ << '\n';
+    std::cout << '\n';
     for (unsigned int i = 0; i < indent_; ++i) {
       if (i < indent_ - 1) {
-        stream_ << '-';
+        std::cout << '-';
       } else {
-        stream_ << '>';
+        std::cout << '>';
       }
     }
 
@@ -28,12 +28,11 @@ void ASTPrinter::parenthesize(std::initializer_list<std::variant<const Expr*, co
 
 void ASTPrinter::print(Program* program) {
   program->accept(*this);
-  std::cout << stream_.str();
 }
 
 void ASTPrinter::print_memory_info(const std::string& class_name,
                                    const void* address) {
-  stream_ << class_name << " @ " << std::hex << std::showbase
+  std::cout << class_name << " @ " << std::hex << std::showbase
           << reinterpret_cast<std::uintptr_t>(address) << " ";
 }
 
@@ -61,7 +60,7 @@ void ASTPrinter::visit_grouping_expr(const GroupingExpr& expr) {
 
 void ASTPrinter::visit_literal_expr(const LiteralExpr& expr) {
   print_memory_info("LiteralExpr", &expr);
-  stream_ << expr.literal;
+  std::cout << expr.literal;
 }
 
 void ASTPrinter::visit_unary_expr(const UnaryExpr& expr) {
@@ -71,7 +70,7 @@ void ASTPrinter::visit_unary_expr(const UnaryExpr& expr) {
 
 void ASTPrinter::visit_var_expr(const VarExpr& expr) {
   print_memory_info("VarExpr", &expr);
-  stream_ << "{" << expr.identifier << "}";
+  std::cout << "{" << expr.identifier << "}";
 }
 
 void ASTPrinter::visit_logical_expr(const LogicalExpr& expr) {
@@ -86,7 +85,7 @@ void ASTPrinter::visit_cast_expr(const CastExpr& expr) {
 
 void ASTPrinter::visit_type_expr(const TypeExpr& expr) {
   print_memory_info("TypeExpr", &expr);
-  stream_ << expr.type;
+  std::cout << expr.type;
 }
 
 void ASTPrinter::visit_initalizerlist_expr(const InitalizerListExpr& expr) {
@@ -98,9 +97,9 @@ void ASTPrinter::visit_initalizerlist_expr(const InitalizerListExpr& expr) {
 
 void ASTPrinter::visit_call_expr(const CallExpr& expr) {
   print_memory_info("CallExpr", &expr);
-  stream_ << "\nCallee:";
+  std::cout << "\nCallee:";
   parenthesize({expr.callee.get()});
-  stream_ << "\nArguments:";
+  std::cout << "\nArguments:";
   for (const auto& arg : expr.arguments) {
     parenthesize({arg.get()});
   }
@@ -110,7 +109,7 @@ void ASTPrinter::visit_fieldaccess_expr(const FieldAccessExpr& expr) {
   if (expr.parent_struct) {
     expr.parent_struct->accept(*this);
   }
-  stream_ << ' ';
+  std::cout << ' ';
   print_memory_info("FieldAccessExpr", &expr);
-  stream_ << expr.field_name;
+  std::cout << expr.field_name;
 }
