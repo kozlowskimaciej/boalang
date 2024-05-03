@@ -1,16 +1,15 @@
 #include "astprinter.hpp"
 
-#include <iomanip>  // for std::hex
 #include <iostream>
 
-void ASTPrinter::parenthesize(std::initializer_list<const Expr*> exprs,
+void ASTPrinter::parenthesize(std::initializer_list<std::variant<const Expr*, const Stmt*>> exprstmts,
                               std::optional<Token> token) {
   if (token) {
     stream_ << token.value();
   }
 
   ++indent_;
-  for (const auto& expr : exprs) {
+  for (const auto& item : exprstmts) {
     stream_ << '\n';
     for (unsigned int i = 0; i < indent_; ++i) {
       if (i < indent_ - 1) {
@@ -19,16 +18,16 @@ void ASTPrinter::parenthesize(std::initializer_list<const Expr*> exprs,
         stream_ << '>';
       }
     }
-    expr->accept(*this);
+
+    std::visit([this](auto& member) {
+      member->accept(*this);
+    }, item);
   }
   --indent_;
 }
 
-void ASTPrinter::print(const std::vector<std::unique_ptr<Expr>>& exprs) {
-  for (const auto& expr : exprs) {
-    expr->accept(*this);
-    stream_ << '\n';
-  }
+void ASTPrinter::print(Program* program) {
+  program->accept(*this);
   std::cout << stream_.str();
 }
 
@@ -36,6 +35,18 @@ void ASTPrinter::print_memory_info(const std::string& class_name,
                                    const void* address) {
   stream_ << class_name << " @ " << std::hex << std::showbase
           << reinterpret_cast<std::uintptr_t>(address) << " ";
+}
+
+void ASTPrinter::visit_program_stmt(const Program &stmt) {
+  print_memory_info("Program", &stmt);
+  for (const auto& item : stmt.statements) {
+    parenthesize({item.get()});
+  }
+}
+
+void ASTPrinter::visit_print_stmt(const PrintStmt &stmt) {
+  print_memory_info("PrintStmt", &stmt);
+  parenthesize({stmt.expr.get()});
 }
 
 void ASTPrinter::visit_binary_expr(const BinaryExpr& expr) {

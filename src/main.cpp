@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
   Lexer lexer(*src);
   LexerCommentFilter filter(lexer);
   Parser parser(filter);
-  ASTPrinter().print(parser.parse());
+  ASTPrinter().print(parser.parse().get());
 
   return 0;
 }

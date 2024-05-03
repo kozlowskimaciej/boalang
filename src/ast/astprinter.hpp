@@ -6,22 +6,28 @@
 #define BOALANG_ASTPRINTER_HPP
 
 #include <expr/expr.hpp>
+#include <stmt/stmt.hpp>
 #include <memory>
 #include <optional>
 #include <sstream>
+#include <variant>
 #include <vector>
 
-class ASTPrinter : public ExprVisitor {
+class ASTPrinter : public ExprVisitor, public StmtVisitor {
  private:
   unsigned int indent_ = 0;
   std::stringstream stream_;
 
-  void parenthesize(std::initializer_list<const Expr*> exprs,
+  void parenthesize(std::initializer_list<std::variant<const Expr*, const Stmt*>> exprstmts,
                     std::optional<Token> token = std::nullopt);
   void print_memory_info(const std::string& class_name, const void* address);
 
  public:
-  void print(const std::vector<std::unique_ptr<Expr>>& exprs);
+  void print(Program* program);
+
+  void visit_program_stmt(const Program& stmt) override;
+  void visit_print_stmt(const PrintStmt& stmt) override;
+
   void visit_binary_expr(const BinaryExpr& expr) override;
   void visit_grouping_expr(const GroupingExpr& expr) override;
   void visit_literal_expr(const LiteralExpr& expr) override;

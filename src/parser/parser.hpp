@@ -6,6 +6,7 @@
 #define BOALANG_PARSER_HPP
 
 #include <expr/expr.hpp>
+#include <stmt/stmt.hpp>
 #include <lexer/lexer.hpp>
 #include <memory>
 #include <vector>
@@ -16,6 +17,10 @@ constexpr unsigned int MAX_ARGUMENTS =
 class Parser {
   ILexer& lexer_;
   Token current_token_;
+
+  std::unique_ptr<Stmt> declaration();
+  std::unique_ptr<Stmt> statement();
+  std::unique_ptr<Stmt> print_stmt();
 
   std::unique_ptr<Expr> expression();
   std::unique_ptr<Expr> logic_or();
@@ -42,7 +47,7 @@ class Parser {
  public:
   explicit Parser(ILexer& lexer)
       : lexer_(lexer), current_token_(lexer.next_token()){};
-  std::vector<std::unique_ptr<Expr>> parse();
+  std::unique_ptr<Program> parse();
 };
 
 /**

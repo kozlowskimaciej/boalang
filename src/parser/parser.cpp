@@ -2,12 +2,42 @@
 
 #include <algorithm>
 
-std::vector<std::unique_ptr<Expr>> Parser::parse() {
-  std::vector<std::unique_ptr<Expr>> statements;
+// RULE program = { declaration } ;
+std::unique_ptr<Program> Parser::parse() {
+  std::vector<std::unique_ptr<Stmt>> statements;
   while (current_token_.get_type() != TokenType::TOKEN_ETX) {
-    statements.push_back(expression());
+    statements.push_back(declaration());
   }
-  return statements;
+  return std::make_unique<Program>(std::move(statements));
+}
+
+// RULE declaration	= assign_or_decl
+//                  | struct_decl
+//                  | variant_decl
+//                  | statement ;
+std::unique_ptr<Stmt> Parser::declaration() {
+  return statement();
+}
+
+// RULE statement = if_stmt
+//                | while_stmt
+//                | return_stmt
+//                | print_stmt
+//                | inspect_stmt
+//                | block ;
+std::unique_ptr<Stmt> Parser::statement() {
+  if (check({TokenType::TOKEN_PRINT})) {
+    return print_stmt();
+  }
+  throw SyntaxError(current_token_, "Expected statement.");
+}
+
+// RULE print_stmt = "print" expression ";" ;
+std::unique_ptr<Stmt> Parser::print_stmt() {
+  consume({TokenType::TOKEN_PRINT}, "Expected 'print' for print statement.");
+  std::unique_ptr<Expr> expr = expression();
+  consume({TokenType::TOKEN_SEMICOLON}, "Expected ';' after printed expression.");
+  return std::make_unique<PrintStmt>(std::move(expr));
 }
 
 // RULE expression = logic_or ;
@@ -41,7 +71,7 @@ std::unique_ptr<Expr> Parser::logic_and() {
   return expr;
 }
 
-// RULE equality	= comparison { ( "!=" | "==" ) comparison } ;
+// RULE equality = comparison { ( "!=" | "==" ) comparison } ;
 std::unique_ptr<Expr> Parser::equality() {
   std::unique_ptr<Expr> expr = comparison();
 
