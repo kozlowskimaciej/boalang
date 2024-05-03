@@ -12,7 +12,11 @@ void ASTPrinter::parenthesize(std::initializer_list<const Expr*> exprs, std::opt
   for (const auto& expr : exprs) {
     stream_ << '\n';
     for (unsigned int i = 0; i < indent_; ++i) {
-      stream_ << '>';
+      if (i < indent_ - 1) {
+        stream_ << '-';
+      } else {
+        stream_ << '>';
+      }
     }
     expr->accept(*this);
   }
