@@ -21,7 +21,7 @@ std::unique_ptr<Expr> Parser::logic_or() {
     std::unique_ptr<Expr> right = logic_and();
     Token op_symbol = token.value();
     expr = std::make_unique<LogicalExpr>(std::move(expr), op_symbol,
-                                          std::move(right));
+                                         std::move(right));
   }
 
   return expr;
@@ -35,7 +35,7 @@ std::unique_ptr<Expr> Parser::logic_and() {
     std::unique_ptr<Expr> right = equality();
     Token op_symbol = token.value();
     expr = std::make_unique<LogicalExpr>(std::move(expr), op_symbol,
-                                          std::move(right));
+                                         std::move(right));
   }
 
   return expr;
@@ -50,7 +50,7 @@ std::unique_ptr<Expr> Parser::equality() {
     std::unique_ptr<Expr> right = comparison();
     Token op_symbol = token.value();
     expr = std::make_unique<BinaryExpr>(std::move(expr), op_symbol,
-                                         std::move(right));
+                                        std::move(right));
   }
 
   return expr;
@@ -66,7 +66,7 @@ std::unique_ptr<Expr> Parser::comparison() {
     std::unique_ptr<Expr> right = term();
     Token op_symbol = token.value();
     expr = std::make_unique<BinaryExpr>(std::move(expr), op_symbol,
-                                         std::move(right));
+                                        std::move(right));
   }
 
   return expr;
@@ -80,7 +80,7 @@ std::unique_ptr<Expr> Parser::term() {
     std::unique_ptr<Expr> right = factor();
     Token op_symbol = token.value();
     expr = std::make_unique<BinaryExpr>(std::move(expr), op_symbol,
-                                         std::move(right));
+                                        std::move(right));
   }
 
   return expr;
@@ -94,7 +94,7 @@ std::unique_ptr<Expr> Parser::factor() {
     std::unique_ptr<Expr> right = unary();
     Token op_symbol = token.value();
     expr = std::make_unique<BinaryExpr>(std::move(expr), op_symbol,
-                                         std::move(right));
+                                        std::move(right));
   }
 
   return expr;
@@ -120,7 +120,7 @@ std::unique_ptr<Expr> Parser::type_cast() {
     std::unique_ptr<Expr> right = type();
     Token op_symbol = token.value();
     expr = std::make_unique<CastExpr>(std::move(expr), op_symbol,
-                                        std::move(right));
+                                      std::move(right));
   }
 
   return expr;
@@ -132,7 +132,8 @@ std::unique_ptr<Expr> Parser::call() {
 
   if (match({TokenType::TOKEN_LPAREN})) {
     auto args = arguments();
-    consume({TokenType::TOKEN_RPAREN}, "Excepted ')' after function arguments.");
+    consume({TokenType::TOKEN_RPAREN},
+            "Excepted ')' after function arguments.");
     expr = std::make_unique<CallExpr>(std::move(expr), std::move(args));
   } else if (check({TokenType::TOKEN_DOT})) {
     expr = field_access(std::move(expr));
@@ -141,10 +142,12 @@ std::unique_ptr<Expr> Parser::call() {
   return expr;
 }
 
-// RULE primary = string | int_val | float_val | bool_values | identifier | "(" expression ")" | "{" arguments "}" ;
+// RULE primary = string | int_val | float_val | bool_values | identifier | "("
+// expression ")" | "{" arguments "}" ;
 std::unique_ptr<Expr> Parser::primary() {
   if (auto token = match({TokenType::TOKEN_FLOAT_VAL, TokenType::TOKEN_INT_VAL,
-                          TokenType::TOKEN_STR_VAL, TokenType::TOKEN_TRUE, TokenType::TOKEN_FALSE})) {
+                          TokenType::TOKEN_STR_VAL, TokenType::TOKEN_TRUE,
+                          TokenType::TOKEN_FALSE})) {
     return std::make_unique<LiteralExpr>(token.value());
   }
 
@@ -171,7 +174,8 @@ std::unique_ptr<Expr> Parser::primary() {
 // RULE type = "bool" | "str" | "int" | "float" | identifier ;
 std::unique_ptr<Expr> Parser::type() {
   if (auto token = match({TokenType::TOKEN_FLOAT, TokenType::TOKEN_INT,
-                          TokenType::TOKEN_STR, TokenType::TOKEN_BOOL, TokenType::TOKEN_IDENTIFIER})) {
+                          TokenType::TOKEN_STR, TokenType::TOKEN_BOOL,
+                          TokenType::TOKEN_IDENTIFIER})) {
     return std::make_unique<TypeExpr>(token.value());
   }
 
@@ -183,18 +187,23 @@ std::vector<std::unique_ptr<Expr>> Parser::arguments() {
   std::vector<std::unique_ptr<Expr>> args;
   do {
     if (args.size() > MAX_ARGUMENTS) {
-      throw SyntaxError(current_token_, "Maximum amount (" + std::to_string(MAX_ARGUMENTS) + ") of arguments exceeded.");
+      throw SyntaxError(current_token_, "Maximum amount (" +
+                                            std::to_string(MAX_ARGUMENTS) +
+                                            ") of arguments exceeded.");
     }
     args.push_back(expression());
-  } while(match({TokenType::TOKEN_COMMA}));
+  } while (match({TokenType::TOKEN_COMMA}));
   return args;
 }
 
 // RULE field_access = { "." identifier } ;
-std::unique_ptr<Expr> Parser::field_access(std::unique_ptr<Expr> parent_struct) {
-  while (match({TOKEN_DOT})){
-    auto id = consume({TokenType::TOKEN_IDENTIFIER}, "Expected identifier after '.' for accessing field.");
-    parent_struct = std::make_unique<FieldAccessExpr>(std::move(parent_struct), id);
+std::unique_ptr<Expr> Parser::field_access(
+    std::unique_ptr<Expr> parent_struct) {
+  while (match({TOKEN_DOT})) {
+    auto id = consume({TokenType::TOKEN_IDENTIFIER},
+                      "Expected identifier after '.' for accessing field.");
+    parent_struct =
+        std::make_unique<FieldAccessExpr>(std::move(parent_struct), id);
   }
   return parent_struct;
 }
@@ -221,5 +230,7 @@ Token Parser::consume(std::initializer_list<TokenType> types,
 }
 
 bool Parser::check(std::initializer_list<TokenType> types) {
-  return std::ranges::any_of(types, [&](const auto& type) { return current_token_.get_type() == type; });
+  return std::ranges::any_of(types, [&](const auto& type) {
+    return current_token_.get_type() == type;
+  });
 }

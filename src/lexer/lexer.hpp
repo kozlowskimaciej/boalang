@@ -129,10 +129,9 @@ class LexerError : public std::runtime_error {
 
  public:
   LexerError(const Token& token, const std::string& message)
-      : runtime_error("Line " +
-                      std::to_string(token.get_position().line) + " column " +
-                      std::to_string(token.get_position().column) + " at '" +
-                      token.stringify() + "': " + message),
+      : runtime_error("Line " + std::to_string(token.get_position().line) +
+                      " column " + std::to_string(token.get_position().column) +
+                      " at '" + token.stringify() + "': " + message),
         token_(token){};
 
   [[nodiscard]] const Token& get_token() const { return token_; }

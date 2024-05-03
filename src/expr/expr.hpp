@@ -12,7 +12,6 @@
 #include "exprvisitor.hpp"
 #include "token/token.hpp"
 
-
 class Expr {
  public:
   virtual ~Expr() = default;
@@ -101,10 +100,10 @@ class CastExpr : public Expr {
   const std::unique_ptr<Expr> type;
 
   CastExpr(std::unique_ptr<Expr> left, Token op_symbol,
-      std::unique_ptr<Expr> type)
-  : left(std::move(left)),
-  op_symbol(std::move(op_symbol)),
-  type(std::move(type)){};
+           std::unique_ptr<Expr> type)
+      : left(std::move(left)),
+        op_symbol(std::move(op_symbol)),
+        type(std::move(type)){};
   void accept(ExprVisitor& expr_visitor) const override {
     expr_visitor.visit_cast_expr(*this);
   };
@@ -124,7 +123,8 @@ class InitalizerListExpr : public Expr {
  public:
   const std::vector<std::unique_ptr<Expr>> list;
 
-  explicit InitalizerListExpr(std::vector<std::unique_ptr<Expr>> list) : list(std::move(list)){};
+  explicit InitalizerListExpr(std::vector<std::unique_ptr<Expr>> list)
+      : list(std::move(list)){};
   void accept(ExprVisitor& expr_visitor) const override {
     expr_visitor.visit_initalizerlist_expr(*this);
   };
@@ -135,8 +135,9 @@ class CallExpr : public Expr {
   const std::unique_ptr<Expr> callee;
   const std::vector<std::unique_ptr<Expr>> arguments;
 
-  explicit CallExpr(std::unique_ptr<Expr> callee, std::vector<std::unique_ptr<Expr>> arguments)
-  : callee(std::move(callee)), arguments(std::move(arguments)){};
+  explicit CallExpr(std::unique_ptr<Expr> callee,
+                    std::vector<std::unique_ptr<Expr>> arguments)
+      : callee(std::move(callee)), arguments(std::move(arguments)){};
   void accept(ExprVisitor& expr_visitor) const override {
     expr_visitor.visit_call_expr(*this);
   };
@@ -147,8 +148,10 @@ class FieldAccessExpr : public Expr {
   const std::unique_ptr<Expr> parent_struct;
   const Token field_name;
 
-  explicit FieldAccessExpr(std::unique_ptr<Expr> parent_struct, Token field_name)
-      : parent_struct(std::move(parent_struct)), field_name(std::move(field_name)){};
+  explicit FieldAccessExpr(std::unique_ptr<Expr> parent_struct,
+                           Token field_name)
+      : parent_struct(std::move(parent_struct)),
+        field_name(std::move(field_name)){};
   void accept(ExprVisitor& expr_visitor) const override {
     expr_visitor.visit_fieldaccess_expr(*this);
   };

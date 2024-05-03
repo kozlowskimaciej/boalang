@@ -3,10 +3,10 @@
 #include <string>
 
 #include "argparse/argparse.hpp"
+#include "ast/astprinter.hpp"
 #include "lexer/lexer.hpp"
 #include "parser/parser.hpp"
 #include "source/source.hpp"
-#include "ast/astprinter.hpp"
 
 void parse_args(int& argc, char* argv[], argparse::ArgumentParser& program) {
   program.add_argument("source");
@@ -29,11 +29,11 @@ int main(int argc, char* argv[]) {
   parse_args(argc, argv, program);
 
   std::unique_ptr<Source> src;
- if (program.is_used("--cmd")) {
-   src = std::make_unique<StringSource>(program.get<std::string>("source"));
- } else {
-   src = std::make_unique<FileSource>(program.get<std::string>("source"));
- }
+  if (program.is_used("--cmd")) {
+    src = std::make_unique<StringSource>(program.get<std::string>("source"));
+  } else {
+    src = std::make_unique<FileSource>(program.get<std::string>("source"));
+  }
 
   Lexer lexer(*src);
   LexerCommentFilter filter(lexer);

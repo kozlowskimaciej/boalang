@@ -10,7 +10,8 @@
 #include <memory>
 #include <vector>
 
-constexpr unsigned int MAX_ARGUMENTS = 256; /**< Maximum identifier length supported by lexer. */
+constexpr unsigned int MAX_ARGUMENTS =
+    256; /**< Maximum identifier length supported by lexer. */
 
 class Parser {
   ILexer& lexer_;
@@ -52,10 +53,9 @@ class SyntaxError : public std::runtime_error {
 
  public:
   SyntaxError(const Token& token, const std::string& message)
-      : runtime_error("Line " +
-                      std::to_string(token.get_position().line) + " column " +
-                      std::to_string(token.get_position().column) + " at '" +
-                      token.stringify() + "': " + message),
+      : runtime_error("Line " + std::to_string(token.get_position().line) +
+                      " column " + std::to_string(token.get_position().column) +
+                      " at '" + token.stringify() + "': " + message),
         token_(token){};
 
   [[nodiscard]] const Token& get_token() const { return token_; }

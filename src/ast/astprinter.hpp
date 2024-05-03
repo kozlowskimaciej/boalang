@@ -5,19 +5,19 @@
 #ifndef BOALANG_ASTPRINTER_HPP
 #define BOALANG_ASTPRINTER_HPP
 
+#include <expr/expr.hpp>
+#include <memory>
+#include <optional>
 #include <sstream>
 #include <vector>
-#include <optional>
-#include <memory>
-
-#include <expr/expr.hpp>
 
 class ASTPrinter : public ExprVisitor {
  private:
   unsigned int indent_ = 0;
   std::stringstream stream_;
 
-  void parenthesize(std::initializer_list<const Expr*> exprs, std::optional<Token> token = std::nullopt);
+  void parenthesize(std::initializer_list<const Expr*> exprs,
+                    std::optional<Token> token = std::nullopt);
   void print_memory_info(const std::string& class_name, const void* address);
 
  public:
