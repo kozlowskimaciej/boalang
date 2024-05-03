@@ -191,13 +191,18 @@ Długość identyfikatorów i zakres wartości zmiennych `int` i `float` ogranic
 
 ```
 program		=	{ declaration } ;
-declaration	=	var_decl
-                |	func_decl
+declaration	=	assign_or_decl
                 |	struct_decl
                 |       variant_decl
                 |       statement ;
 
-var_decl	=	[ "mut" ] type identifier "=" expression ";" ;
+assign_or_decl  =       var_decl
+                |       func_decl
+                |       assign ;  
+
+assign	        =	identifier { "." identifier } "=" expression ";" ;
+
+var_decl        =	[ "mut" ] type identifier "=" expression ";" ;
 
 func_decl	=	( type | "void" ) identifier "(" [ func_params ] ")" block ;
 func_params     =	type identifier { "," type identifier } ;
@@ -208,14 +213,12 @@ struct_field    =       [ "mut" ] type identifier ";" ;
 variant_decl    =       "variant" identifier "{" variant_params "}" ";" ;
 variant_params  =       type { "," type } ;
 
-statement 	=	expr_stmt
-                |	if_stmt
+statement 	=	if_stmt
                 |	while_stmt
                 |	return_stmt
                 |	print_stmt
                 |       inspect_stmt
                 |	block ;
-expr_stmt	=	expression ";" ;
 if_stmt		=	"if" "(" expression ")" statement [ "else" statement ] ;
 while_stmt	=	"while" "(" expression ")" statement ;
 return_stmt	=	"return" [ expression ] ";" ;
@@ -224,9 +227,7 @@ inspect_stmt    =       "inspect" expression "{" { type [ identifier ] "=" ">" s
 
 block		=	"{" { declaration } "}" ;
 
-expression	=	assignment ;
-assignment	=	identifier { "." identifier } "=" assignment
-                |	logic_or ;
+expression	=	logic_or ;
 logic_or	=	logic_and { "or" logic_and } ;
 logic_and	=	equality { "and" equality } ;
 equality	=	comparison { ( "!=" | "==" ) comparison } ;
@@ -235,8 +236,7 @@ term		=	factor { ( "-" | "+" ) factor } ;
 factor		=	unary { ( "/" | "*" ) unary } ;
 unary		=	("!" | "-" ) type_cast ;
 type_cast	=	call { ("as" | "is") type } ;
-call		=	identifier { "(" [ arguments ] ")" | "." identifier }
-                |       primary ;
+call		=	primary { "(" [ arguments ] ")" | "." identifier };
 primary		=	string | int_val | float_val | bool_values | identifier | "(" expression ")" | "{" arguments "}" ;
 arguments       =       expression { "," expression } ;
 
