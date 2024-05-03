@@ -86,7 +86,7 @@ void ASTPrinter::visit_cast_expr(const CastExpr &expr) {
 
 void ASTPrinter::visit_type_expr(const TypeExpr &expr) {
   print_memory_info("TypeExpr", &expr);
-  stream_ << "{" << expr.type << "}";
+  stream_ << expr.type;
 }
 
 void ASTPrinter::visit_initalizerlist_expr(const InitalizerListExpr &expr) {
