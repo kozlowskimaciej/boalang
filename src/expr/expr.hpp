@@ -19,18 +19,6 @@ class Expr {
   virtual void accept(ExprVisitor& visitor) const = 0;
 };
 
-class AssignExpr : public Expr {
- public:
-  const Token name;
-  const std::unique_ptr<Expr> value;
-
-  AssignExpr(Token name, std::unique_ptr<Expr> value)
-      : name(std::move(name)), value(std::move(value)){};
-  void accept(ExprVisitor& expr_visitor) const override {
-    expr_visitor.visit_assign_expr(*this);
-  };
-};
-
 class BinaryExpr : public Expr {
  public:
   const std::unique_ptr<Expr> left;
@@ -139,6 +127,30 @@ class InitalizerListExpr : public Expr {
   explicit InitalizerListExpr(std::vector<std::unique_ptr<Expr>> list) : list(std::move(list)){};
   void accept(ExprVisitor& expr_visitor) const override {
     expr_visitor.visit_initalizerlist_expr(*this);
+  };
+};
+
+class CallExpr : public Expr {
+ public:
+  const std::unique_ptr<Expr> callee;
+  const std::vector<std::unique_ptr<Expr>> arguments;
+
+  explicit CallExpr(std::unique_ptr<Expr> callee, std::vector<std::unique_ptr<Expr>> arguments)
+  : callee(std::move(callee)), arguments(std::move(arguments)){};
+  void accept(ExprVisitor& expr_visitor) const override {
+    expr_visitor.visit_call_expr(*this);
+  };
+};
+
+class FieldAccessExpr : public Expr {
+ public:
+  const std::unique_ptr<Expr> parent_struct;
+  const Token field_name;
+
+  explicit FieldAccessExpr(std::unique_ptr<Expr> parent_struct, Token field_name)
+      : parent_struct(std::move(parent_struct)), field_name(std::move(field_name)){};
+  void accept(ExprVisitor& expr_visitor) const override {
+    expr_visitor.visit_fieldaccess_expr(*this);
   };
 };
 

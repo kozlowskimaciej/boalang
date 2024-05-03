@@ -76,14 +76,6 @@ void ASTPrinter::visit_logical_expr(const LogicalExpr& expr) {
   );
 }
 
-void ASTPrinter::visit_assign_expr(const AssignExpr& expr) {
-  print_memory_info("AssignExpr", &expr);
-  parenthesize(
-      {expr.value.get()},
-      expr.name
-  );
-}
-
 void ASTPrinter::visit_cast_expr(const CastExpr &expr) {
   print_memory_info("CastExpr", &expr);
   parenthesize(
@@ -102,4 +94,23 @@ void ASTPrinter::visit_initalizerlist_expr(const InitalizerListExpr &expr) {
   for (const auto& item : expr.list) {
     parenthesize({item.get()});
   }
+}
+
+void ASTPrinter::visit_call_expr(const CallExpr &expr) {
+  print_memory_info("CallExpr", &expr);
+  stream_ << "\nCallee:";
+  parenthesize({expr.callee.get()});
+  stream_ << "\nArguments:";
+  for (const auto& arg : expr.arguments) {
+    parenthesize({arg.get()});
+  }
+}
+
+void ASTPrinter::visit_fieldaccess_expr(const FieldAccessExpr &expr) {
+  if (expr.parent_struct) {
+    expr.parent_struct->accept(*this);
+  }
+  stream_ << ' ';
+  print_memory_info("FieldAccessExpr", &expr);
+  stream_ << expr.field_name;
 }

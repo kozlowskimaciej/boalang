@@ -200,7 +200,7 @@ assign_or_decl  =       var_decl
                 |       func_decl
                 |       assign ;  
 
-assign	        =	identifier { "." identifier } "=" expression ";" ;
+assign	        =	identifier [ field_access ] "=" expression ";" ;
 
 var_decl        =	[ "mut" ] type identifier "=" expression ";" ;
 
@@ -236,9 +236,11 @@ term		=	factor { ( "-" | "+" ) factor } ;
 factor		=	unary { ( "/" | "*" ) unary } ;
 unary		=	("!" | "-" ) type_cast ;
 type_cast	=	call { ("as" | "is") type } ;
-call		=	primary { "(" [ arguments ] ")" | "." identifier };
+call		=	primary "(" [ arguments ] ")" | field_access ;
 primary		=	string | int_val | float_val | bool_values | identifier | "(" expression ")" | "{" arguments "}" ;
+
 arguments       =       expression { "," expression } ;
+field_access    =       { "." identifier } ;
 
 bool_value	=	"true" | "false" ;
 type		=	"bool" | "str" | "int" | "float" | identifier ;

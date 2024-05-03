@@ -1,5 +1,7 @@
 #include "parser.hpp"
 
+#include <algorithm>
+
 std::vector<std::unique_ptr<Expr>> Parser::parse() {
   std::vector<std::unique_ptr<Expr>> statements;
   while (current_token_.get_type() != TokenType::TOKEN_ETX) {
@@ -8,27 +10,10 @@ std::vector<std::unique_ptr<Expr>> Parser::parse() {
   return statements;
 }
 
-std::unique_ptr<Expr> Parser::expression() { return assignment(); }
+// RULE expression = logic_or ;
+std::unique_ptr<Expr> Parser::expression() { return logic_or(); }
 
-std::unique_ptr<Expr> Parser::assignment() {
-  return logic_or();
-  //  std::unique_ptr<Expr> expr = logic_or();
-  //
-  //  if (match({TOKEN_EQUAL})) {
-  //    Token equals = previous();
-  //    Expr* value = assignment();
-  //
-  //    if (VarExpr* var_expr = dynamic_cast<VarExpr*>(expr)) {
-  //      Token name = var_expr->name;
-  //      return new AssignExpr(name, value);
-  //    }
-  //
-  //    logic_error(equals, "Invalid assignment target.");
-  //  }
-  //
-  //  return expr;
-}
-
+// RULE logic_or = logic_and { "or" logic_and } ;
 std::unique_ptr<Expr> Parser::logic_or() {
   std::unique_ptr<Expr> expr = logic_and();
 
@@ -42,6 +27,7 @@ std::unique_ptr<Expr> Parser::logic_or() {
   return expr;
 }
 
+// RULE logic_and = equality { "and" equality } ;
 std::unique_ptr<Expr> Parser::logic_and() {
   std::unique_ptr<Expr> expr = equality();
 
@@ -55,6 +41,7 @@ std::unique_ptr<Expr> Parser::logic_and() {
   return expr;
 }
 
+// RULE equality	= comparison { ( "!=" | "==" ) comparison } ;
 std::unique_ptr<Expr> Parser::equality() {
   std::unique_ptr<Expr> expr = comparison();
 
@@ -69,6 +56,7 @@ std::unique_ptr<Expr> Parser::equality() {
   return expr;
 }
 
+// RULE comparison = term { ( ">" | ">=" | "<" | "<=" ) term } ;
 std::unique_ptr<Expr> Parser::comparison() {
   std::unique_ptr<Expr> expr = term();
 
@@ -84,6 +72,7 @@ std::unique_ptr<Expr> Parser::comparison() {
   return expr;
 }
 
+// RULE term = factor { ( "-" | "+" ) factor } ;
 std::unique_ptr<Expr> Parser::term() {
   std::unique_ptr<Expr> expr = factor();
 
@@ -97,6 +86,7 @@ std::unique_ptr<Expr> Parser::term() {
   return expr;
 }
 
+// RULE factor = unary { ( "/" | "*" ) unary } ;
 std::unique_ptr<Expr> Parser::factor() {
   std::unique_ptr<Expr> expr = unary();
 
@@ -110,6 +100,7 @@ std::unique_ptr<Expr> Parser::factor() {
   return expr;
 }
 
+// RULE unary = ("!" | "-" ) type_cast ;
 std::unique_ptr<Expr> Parser::unary() {
   if (auto token =
           match({TokenType::TOKEN_EXCLAMATION, TokenType::TOKEN_MINUS})) {
@@ -121,6 +112,7 @@ std::unique_ptr<Expr> Parser::unary() {
   return type_cast();
 }
 
+// RULE type_cast = call { ("as" | "is") type } ;
 std::unique_ptr<Expr> Parser::type_cast() {
   std::unique_ptr<Expr> expr = call();
 
@@ -134,10 +126,22 @@ std::unique_ptr<Expr> Parser::type_cast() {
   return expr;
 }
 
+// RULE call = primary { "(" [ arguments ] ")" | "." identifier };
 std::unique_ptr<Expr> Parser::call() {
-  return primary();
+  std::unique_ptr<Expr> expr = primary();
+
+  if (match({TokenType::TOKEN_LPAREN})) {
+    auto args = arguments();
+    consume({TokenType::TOKEN_RPAREN}, "Excepted ')' after function arguments.");
+    expr = std::make_unique<CallExpr>(std::move(expr), std::move(args));
+  } else if (check({TokenType::TOKEN_DOT})) {
+    expr = field_access(std::move(expr));
+  }
+
+  return expr;
 }
 
+// RULE primary = string | int_val | float_val | bool_values | identifier | "(" expression ")" | "{" arguments "}" ;
 std::unique_ptr<Expr> Parser::primary() {
   if (auto token = match({TokenType::TOKEN_FLOAT_VAL, TokenType::TOKEN_INT_VAL,
                           TokenType::TOKEN_STR_VAL, TokenType::TOKEN_TRUE, TokenType::TOKEN_FALSE})) {
@@ -156,10 +160,7 @@ std::unique_ptr<Expr> Parser::primary() {
   }
 
   if (match({TokenType::TOKEN_LBRACE})) {
-    std::vector<std::unique_ptr<Expr>> exprs;
-    do {
-      exprs.push_back(expression());
-    } while(match({TokenType::TOKEN_COMMA}));
+    auto exprs = arguments();
     consume({TokenType::TOKEN_RBRACE}, "Excepted '}' after initializer list.");
     return std::make_unique<InitalizerListExpr>(std::move(exprs));
   }
@@ -167,6 +168,7 @@ std::unique_ptr<Expr> Parser::primary() {
   throw SyntaxError(current_token_, "Expected expression.");
 }
 
+// RULE type = "bool" | "str" | "int" | "float" | identifier ;
 std::unique_ptr<Expr> Parser::type() {
   if (auto token = match({TokenType::TOKEN_FLOAT, TokenType::TOKEN_INT,
                           TokenType::TOKEN_STR, TokenType::TOKEN_BOOL, TokenType::TOKEN_IDENTIFIER})) {
@@ -174,6 +176,27 @@ std::unique_ptr<Expr> Parser::type() {
   }
 
   throw SyntaxError(current_token_, "Expected type.");
+}
+
+// RULE arguments = expression { "," expression } ;
+std::vector<std::unique_ptr<Expr>> Parser::arguments() {
+  std::vector<std::unique_ptr<Expr>> args;
+  do {
+    if (args.size() > MAX_ARGUMENTS) {
+      throw SyntaxError(current_token_, "Maximum amount (" + std::to_string(MAX_ARGUMENTS) + ") of arguments exceeded.");
+    }
+    args.push_back(expression());
+  } while(match({TokenType::TOKEN_COMMA}));
+  return args;
+}
+
+// RULE field_access = { "." identifier } ;
+std::unique_ptr<Expr> Parser::field_access(std::unique_ptr<Expr> parent_struct) {
+  while (match({TOKEN_DOT})){
+    auto id = consume({TokenType::TOKEN_IDENTIFIER}, "Expected identifier after '.' for accessing field.");
+    parent_struct = std::make_unique<FieldAccessExpr>(std::move(parent_struct), id);
+  }
+  return parent_struct;
 }
 
 opt_token_t Parser::match(std::initializer_list<TokenType> types) {
@@ -195,4 +218,8 @@ Token Parser::consume(std::initializer_list<TokenType> types,
     return token.value();
   }
   throw SyntaxError(current_token_, err_msg);
+}
+
+bool Parser::check(std::initializer_list<TokenType> types) {
+  return std::ranges::any_of(types, [&](const auto& type) { return current_token_.get_type() == type; });
 }

@@ -28,10 +28,11 @@ class ASTPrinter : public ExprVisitor {
   void visit_unary_expr(const UnaryExpr& expr) override;
   void visit_var_expr(const VarExpr& expr) override;
   void visit_logical_expr(const LogicalExpr& expr) override;
-  void visit_assign_expr(const AssignExpr& expr) override;
   void visit_cast_expr(const CastExpr& expr) override;
   void visit_type_expr(const TypeExpr& expr) override;
   void visit_initalizerlist_expr(const InitalizerListExpr& expr) override;
+  void visit_call_expr(const CallExpr& expr) override;
+  void visit_fieldaccess_expr(const FieldAccessExpr& expr) override;
 };
 
 #endif  // BOALANG_ASTPRINTER_HPP

@@ -10,12 +10,13 @@
 #include <memory>
 #include <vector>
 
+constexpr unsigned int MAX_ARGUMENTS = 256; /**< Maximum identifier length supported by lexer. */
+
 class Parser {
   ILexer& lexer_;
   Token current_token_;
 
   std::unique_ptr<Expr> expression();
-  std::unique_ptr<Expr> assignment();
   std::unique_ptr<Expr> logic_or();
   std::unique_ptr<Expr> logic_and();
   std::unique_ptr<Expr> equality();
@@ -26,12 +27,16 @@ class Parser {
   std::unique_ptr<Expr> type_cast();
   std::unique_ptr<Expr> call();
   std::unique_ptr<Expr> primary();
+
+  std::vector<std::unique_ptr<Expr>> arguments();
+  std::unique_ptr<Expr> field_access(std::unique_ptr<Expr> parent_struct);
   std::unique_ptr<Expr> type();
 
   opt_token_t match(std::initializer_list<TokenType> types);
   Token advance();
   Token consume(std::initializer_list<TokenType> types,
                 const std::string& err_msg);
+  bool check(std::initializer_list<TokenType> types);
 
  public:
   explicit Parser(ILexer& lexer)
