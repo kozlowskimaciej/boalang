@@ -218,14 +218,14 @@ statement 	=	if_stmt
                 |	return_stmt
                 |	print_stmt
                 |       inspect_stmt
-                |	block ;
+                |	block_stmt ;
 if_stmt		=	"if" "(" expression ")" statement [ "else" statement ] ;
 while_stmt	=	"while" "(" expression ")" statement ;
 return_stmt	=	"return" [ expression ] ";" ;
 print_stmt	=	"print" expression ";" ;
 inspect_stmt    =       "inspect" expression "{" { type [ identifier ] "=" ">" statement } [ "default" "=" ">" statement ] "}" ;
 
-block		=	"{" { declaration } "}" ;
+block_stmt	=	"{" { declaration } "}" ;
 
 expression	=	logic_or ;
 logic_or	=	logic_and { "or" logic_and } ;

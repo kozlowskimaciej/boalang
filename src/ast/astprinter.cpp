@@ -43,6 +43,32 @@ void ASTPrinter::visit_program_stmt(const Program &stmt) {
   }
 }
 
+void ASTPrinter::visit_if_stmt(const IfStmt &stmt) {
+  print_memory_info("IfStmt", &stmt);
+  std::cout << "\nCondition:";
+  parenthesize({stmt.condition.get()});
+  std::cout << "\nThen branch:";
+  parenthesize({stmt.then_branch.get()});
+  if (stmt.else_branch) {
+    std::cout << "\nElse branch:";
+    parenthesize({stmt.else_branch.get()});
+  }
+}
+
+void ASTPrinter::visit_block_stmt(const BlockStmt &stmt) {
+  print_memory_info("BlockStmt", &stmt);
+  for (const auto& item : stmt.statements) {
+    parenthesize({item.get()});
+  }
+}
+void ASTPrinter::visit_while_stmt(const WhileStmt &stmt) {
+  print_memory_info("WhileStmt", &stmt);
+  std::cout << "\nCondition:";
+  parenthesize({stmt.condition.get()});
+  std::cout << "\nBody:";
+  parenthesize({stmt.body.get()});
+}
+
 void ASTPrinter::visit_print_stmt(const PrintStmt &stmt) {
   print_memory_info("PrintStmt", &stmt);
   parenthesize({stmt.expr.get()});

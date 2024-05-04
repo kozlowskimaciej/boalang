@@ -5,7 +5,7 @@
 // RULE program = { declaration } ;
 std::unique_ptr<Program> Parser::parse() {
   std::vector<std::unique_ptr<Stmt>> statements;
-  while (current_token_.get_type() != TokenType::TOKEN_ETX) {
+  while (!check({TokenType::TOKEN_ETX})) {
     statements.push_back(declaration());
   }
   return std::make_unique<Program>(std::move(statements));
@@ -24,20 +24,65 @@ std::unique_ptr<Stmt> Parser::declaration() {
 //                | return_stmt
 //                | print_stmt
 //                | inspect_stmt
-//                | block ;
+//                | block_stmt ;
 std::unique_ptr<Stmt> Parser::statement() {
-  if (check({TokenType::TOKEN_PRINT})) {
-    return print_stmt();
+  switch(current_token_.get_type()) {
+    case TokenType::TOKEN_PRINT:
+      return print_stmt();
+    case TokenType::TOKEN_IF:
+      return if_stmt();
+    case TokenType::TOKEN_LBRACE:
+      return block_stmt();
+    case TokenType::TOKEN_WHILE:
+      return while_stmt();
+    default:
+      throw SyntaxError(current_token_, "Expected statement.");
   }
-  throw SyntaxError(current_token_, "Expected statement.");
 }
 
 // RULE print_stmt = "print" expression ";" ;
-std::unique_ptr<Stmt> Parser::print_stmt() {
+std::unique_ptr<PrintStmt> Parser::print_stmt() {
   consume({TokenType::TOKEN_PRINT}, "Expected 'print' for print statement.");
   std::unique_ptr<Expr> expr = expression();
   consume({TokenType::TOKEN_SEMICOLON}, "Expected ';' after printed expression.");
   return std::make_unique<PrintStmt>(std::move(expr));
+}
+
+// RULE if_stmt = "if" "(" expression ")" statement [ "else" statement ] ;
+std::unique_ptr<IfStmt> Parser::if_stmt() {
+  consume({TokenType::TOKEN_IF}, "Expected 'if' keyword for if statement.");
+  consume({TokenType::TOKEN_LPAREN}, "Expected '(' after 'if'.");
+  std::unique_ptr<Expr> condition = expression();
+  consume({TokenType::TOKEN_RPAREN}, "Expected ')' after if condition.");
+  std::unique_ptr<Stmt> then_branch = statement();
+  std::unique_ptr<Stmt> else_branch;
+  if (match({TokenType::TOKEN_ELSE})) {
+    else_branch = statement();
+  }
+  return std::make_unique<IfStmt>(std::move(condition), std::move(then_branch), std::move(else_branch));
+}
+
+// RULE block = "{" { declaration } "}" ;
+std::unique_ptr<BlockStmt> Parser::block_stmt() {
+  consume({TokenType::TOKEN_LBRACE}, "Expected '{' before block statement.");
+  std::vector<std::unique_ptr<Stmt>> statements;
+  while(!check({TokenType::TOKEN_RBRACE, TokenType::TOKEN_ETX})) {
+    statements.push_back(declaration());
+  }
+  consume({TokenType::TOKEN_RBRACE}, "Expected '}' after block statement.");
+  return std::make_unique<BlockStmt>(std::move(statements));
+}
+
+
+// RULE while_stmt = "while" "(" expression ")" statement ;
+std::unique_ptr<WhileStmt> Parser::while_stmt() {
+  consume({TokenType::TOKEN_WHILE}, "Expected 'while' keyword for while statement.");
+  consume({TokenType::TOKEN_LPAREN}, "Expected '(' after 'while'.");
+  std::unique_ptr<Expr> condition = expression();
+  consume({TokenType::TOKEN_RPAREN}, "Expected ')' after while condition.");
+  std::unique_ptr<Stmt> body = statement();
+
+  return std::make_unique<WhileStmt>(std::move(condition), std::move(body));
 }
 
 // RULE expression = logic_or ;

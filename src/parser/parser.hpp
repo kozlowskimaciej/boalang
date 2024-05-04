@@ -20,7 +20,10 @@ class Parser {
 
   std::unique_ptr<Stmt> declaration();
   std::unique_ptr<Stmt> statement();
-  std::unique_ptr<Stmt> print_stmt();
+  std::unique_ptr<PrintStmt> print_stmt();
+  std::unique_ptr<IfStmt> if_stmt();
+  std::unique_ptr<BlockStmt> block_stmt();
+  std::unique_ptr<WhileStmt> while_stmt();
 
   std::unique_ptr<Expr> expression();
   std::unique_ptr<Expr> logic_or();

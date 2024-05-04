@@ -18,13 +18,16 @@ class ASTPrinter : public ExprVisitor, public StmtVisitor {
 
   void parenthesize(std::initializer_list<std::variant<const Expr*, const Stmt*>> exprstmts,
                     std::optional<Token> token = std::nullopt);
-  void print_memory_info(const std::string& class_name, const void* address);
+  static void print_memory_info(const std::string& class_name, const void* address);
 
  public:
   void print(Program* program);
 
   void visit_program_stmt(const Program& stmt) override;
   void visit_print_stmt(const PrintStmt& stmt) override;
+  void visit_if_stmt(const IfStmt& stmt) override;
+  void visit_block_stmt(const BlockStmt& stmt) override;
+  void visit_while_stmt(const WhileStmt& stmt) override;
 
   void visit_binary_expr(const BinaryExpr& expr) override;
   void visit_grouping_expr(const GroupingExpr& expr) override;
