@@ -19,6 +19,8 @@ class Parser {
   Token current_token_;
 
   std::unique_ptr<Stmt> declaration();
+  std::unique_ptr<Stmt> assign_or_decl();
+  std::unique_ptr<Stmt> var_decl();
   std::unique_ptr<Stmt> statement();
   std::unique_ptr<PrintStmt> print_stmt();
   std::unique_ptr<IfStmt> if_stmt();

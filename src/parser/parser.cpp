@@ -16,7 +16,41 @@ std::unique_ptr<Program> Parser::parse() {
 //                  | variant_decl
 //                  | statement ;
 std::unique_ptr<Stmt> Parser::declaration() {
-  return statement();
+  switch(current_token_.get_type()) {
+    case TOKEN_IDENTIFIER:
+    case TOKEN_MUT:
+    case TOKEN_VOID:
+    case TOKEN_BOOL:
+    case TOKEN_STR:
+    case TOKEN_INT:
+    case TOKEN_FLOAT:
+      return assign_or_decl();
+    default:
+      return statement();
+  }
+}
+
+// RULE assign_or_decl = var_decl
+//                     | func_decl
+//                     | assign
+//                     | call ;
+std::unique_ptr<Stmt> Parser::assign_or_decl() {
+  if (check({TOKEN_MUT})) {
+    // var_decl
+  } else if (check({TOKEN_VOID})) {
+    // func_decl
+  } else if (check({TOKEN_IDENTIFIER})) {
+    // assign, var_decl, func_decl, call
+  }
+
+  // expect type - func_decl, var_decl
+}
+
+std::unique_ptr<Stmt> Parser::var_decl() {
+  bool is_mut = false;
+  if (match({TOKEN_MUT})) {
+    is_mut = true;
+  }
 }
 
 // RULE statement = if_stmt

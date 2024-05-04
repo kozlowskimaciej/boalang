@@ -70,4 +70,19 @@ class WhileStmt : public Stmt {
   };
 };
 
+class VarDeclStmt : public Stmt {
+ public:
+  const Token type;
+  const std::string identifier;
+  const std::unique_ptr<Expr> initializer;
+  const bool mut;
+
+  VarDeclStmt(Token type, std::string identifier, std::unique_ptr<Expr> initializer, bool mut = false)
+      : type(std::move(type)), identifier(std::move(identifier)), initializer(std::move(initializer)), mut(mut) {};
+  void accept(StmtVisitor& stmt_visitor) const override {
+    stmt_visitor.visit_vardecl_stmt(*this);
+  };
+};
+
+
 #endif  // BOALANG_STMT_HPP

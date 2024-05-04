@@ -11,6 +11,7 @@ class PrintStmt;
 class IfStmt;
 class BlockStmt;
 class WhileStmt;
+class VarDeclStmt;
 
 class StmtVisitor {
  public:
@@ -21,6 +22,7 @@ class StmtVisitor {
   virtual void visit_if_stmt(const IfStmt& stmt) = 0;
   virtual void visit_block_stmt(const BlockStmt& stmt) = 0;
   virtual void visit_while_stmt(const WhileStmt& stmt) = 0;
+  virtual void visit_vardecl_stmt(const VarDeclStmt& stmt) = 0;
 };
 
 #endif  // BOALANG_STMTVISITOR_HPP

@@ -191,20 +191,27 @@ Długość identyfikatorów i zakres wartości zmiennych `int` i `float` ogranic
 
 ```
 program		=	{ declaration } ;
-declaration	=	assign_or_decl
+declaration	=	assign_call_decl
                 |	struct_decl
                 |       variant_decl
                 |       statement ;
 
-assign_or_decl  =       var_decl
-                |       func_decl
-                |       assign ;  
+assign_call_decl=       mut_var_decl
+                |       void_func_decl
+                |       var_func_decl
+                |       assign_call;  
 
-assign	        =	identifier [ field_access ] "=" expression ";" ;
+assign_call     =       identifier ( assign | call )
+assign	        =	[ field_access ] "=" expression ";" ;
+call            =       "(" [ arguments ] ");" ;
 
-var_decl        =	[ "mut" ] type identifier "=" expression ";" ;
+var_func_decl   =       type identifier ( var_decl | func_decl )
+mut_var_decl    =	"mut" type identifier var_decl ;
+void_func_decl	=	"void" identifier func_decl ;
 
-func_decl	=	( type | "void" ) identifier "(" [ func_params ] ")" block ;
+var_decl        =       "=" expression ";" ;
+func_decl	=	"(" [ func_params ] ")" block ;
+
 func_params     =	type identifier { "," type identifier } ;
 
 struct_decl 	=	"struct" identifier "{" { struct_field } "}" ;
@@ -223,7 +230,7 @@ if_stmt		=	"if" "(" expression ")" statement [ "else" statement ] ;
 while_stmt	=	"while" "(" expression ")" statement ;
 return_stmt	=	"return" [ expression ] ";" ;
 print_stmt	=	"print" expression ";" ;
-inspect_stmt    =       "inspect" expression "{" { type [ identifier ] "=" ">" statement } [ "default" "=" ">" statement ] "}" ;
+inspect_stmt    =       "inspect" expression "{" { type [ identifier ] "=>" statement } [ "default" "=>" statement ] "}" ;
 
 block_stmt	=	"{" { declaration } "}" ;
 
