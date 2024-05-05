@@ -17,6 +17,9 @@ class StructDeclStmt;
 class VariantDeclStmt;
 class AssignStmt;
 class CallStmt;
+class FuncParamStmt;
+class FuncStmt;
+class ReturnStmt;
 
 class StmtVisitor {
  public:
@@ -33,6 +36,9 @@ class StmtVisitor {
   virtual void visit_variantdecl_stmt(const VariantDeclStmt& stmt) = 0;
   virtual void visit_assign_stmt(const AssignStmt& stmt) = 0;
   virtual void visit_call_stmt(const CallStmt& stmt) = 0;
+  virtual void visit_funcparam_stmt(const FuncParamStmt& stmt) = 0;
+  virtual void visit_func_stmt(const FuncStmt& stmt) = 0;
+  virtual void visit_return_stmt(const ReturnStmt& stmt) = 0;
 };
 
 #endif  // BOALANG_STMTVISITOR_HPP

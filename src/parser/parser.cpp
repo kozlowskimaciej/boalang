@@ -43,8 +43,7 @@ std::unique_ptr<Stmt> Parser::assign_call_decl() {
     return mut_var_decl();
   }
   if (check({TOKEN_VOID})) {
-    // void_func_decl
-    throw SyntaxError(current_token_, "UNIMPLEMENTED.");
+    return void_func_decl();
   }
   if (auto token = match({TOKEN_IDENTIFIER})) {
     // assign_call ( field_access ./=/( ), var_func_decl (identifier) )
@@ -99,8 +98,42 @@ std::unique_ptr<Stmt> Parser::var_func_decl(Token type) {
   if (check({TOKEN_EQUAL})) {
     return var_decl(std::move(type), identifier.stringify(), false);
   } else {
-    throw SyntaxError(current_token_, "UNIMPLEMENTED.");
+    return func_decl(type, identifier.stringify());
   }
+}
+
+// RULE void_func_decl = "void" identifier func_decl ;
+std::unique_ptr<FuncStmt> Parser::void_func_decl() {
+  Token return_type = consume({TOKEN_VOID}, "Expected 'void'.");
+  Token identifier =
+      consume({TOKEN_IDENTIFIER},
+              "Expected identifier after type.");
+  return func_decl(return_type, identifier.stringify());
+}
+
+// RULE func_decl = "(" [ func_params ] ")" block ;
+std::unique_ptr<FuncStmt> Parser::func_decl(const Token& return_type, const std::string& identifier) {
+  consume({TOKEN_LPAREN},
+          "Excepted '(' before function parameters.");
+  std::vector<std::unique_ptr<FuncParamStmt>> params;
+  if (!check({TOKEN_RPAREN})) {
+    params = func_params();
+  }
+  consume({TOKEN_RPAREN},
+          "Excepted ')' after function parameters.");
+  auto body = block_stmt();
+  return std::make_unique<FuncStmt>(identifier, return_type, std::move(params), std::move(body));
+}
+
+// RULE func_params = type identifier { "," type identifier } ;
+std::vector<std::unique_ptr<FuncParamStmt>> Parser::func_params() {
+  std::vector<std::unique_ptr<FuncParamStmt>> params;
+  do {
+    Token param_type = type();
+    Token param_id = consume({TOKEN_IDENTIFIER}, "Expected identifier after type.");
+    params.push_back(std::make_unique<FuncParamStmt>(param_type, param_id.stringify()));
+  } while (match({TOKEN_COMMA}));
+  return params;
 }
 
 // RULE mut_var_decl = "mut" type identifier var_decl ;

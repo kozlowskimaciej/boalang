@@ -151,10 +151,46 @@ class CallStmt : public Stmt {
   const std::string identifier;
   const std::vector<std::unique_ptr<Expr>> arguments;
 
-  CallStmt(std::string identifier, std::vector<std::unique_ptr<Expr>> arguments = {})
+  explicit CallStmt(std::string identifier, std::vector<std::unique_ptr<Expr>> arguments = {})
       : identifier(std::move(identifier)), arguments(std::move(arguments)) {};
   void accept(StmtVisitor& stmt_visitor) const override {
     stmt_visitor.visit_call_stmt(*this);
+  }
+};
+
+class FuncParamStmt : public Stmt {
+ public:
+  const Token type;
+  const std::string identifier;
+
+  FuncParamStmt(Token type, std::string identifier)
+  : type(std::move(type)), identifier(std::move(identifier)) {};
+  void accept(StmtVisitor& stmt_visitor) const override {
+    stmt_visitor.visit_funcparam_stmt(*this);
+  }
+};
+
+class FuncStmt : public Stmt {
+ public:
+  const std::string identifier;
+  const Token return_type;
+  const std::vector<std::unique_ptr<FuncParamStmt>> params;
+  const std::unique_ptr<BlockStmt> body;
+
+  FuncStmt(std::string identifier, Token return_type, std::vector<std::unique_ptr<FuncParamStmt>> params, std::unique_ptr<BlockStmt> body)
+      : identifier(std::move(identifier)), return_type(std::move(return_type)), params(std::move(params)), body(std::move(body)) {};
+  void accept(StmtVisitor& stmt_visitor) const override {
+    stmt_visitor.visit_func_stmt(*this);
+  }
+};
+
+class ReturnStmt : public Stmt {
+ public:
+  const std::unique_ptr<Expr> value;
+
+  ReturnStmt(std::unique_ptr<Expr> value) : value(std::move(value)) {};
+  void accept(StmtVisitor& stmt_visitor) const override {
+    stmt_visitor.visit_return_stmt(*this);
   }
 };
 
