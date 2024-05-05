@@ -39,6 +39,8 @@ class ASTPrinter : public ExprVisitor, public StmtVisitor {
   void visit_funcparam_stmt(const FuncParamStmt& stmt) override;
   void visit_func_stmt(const FuncStmt& stmt) override;
   void visit_return_stmt(const ReturnStmt& stmt) override;
+  void visit_lambdafunc_stmt(const LambdaFuncStmt& stmt) override;
+  void visit_inspect_stmt(const InspectStmt& stmt) override;
 
   void visit_binary_expr(const BinaryExpr& expr) override;
   void visit_grouping_expr(const GroupingExpr& expr) override;

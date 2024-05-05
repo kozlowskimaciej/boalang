@@ -16,6 +16,7 @@ static const std::initializer_list<std::pair<std::string, TokenType>> keywords{
     {"int", TOKEN_INT},       {"float", TOKEN_FLOAT},
     {"str", TOKEN_STR},       {"bool", TOKEN_BOOL},
     {"void", TOKEN_VOID},     {"mut", TOKEN_MUT},
+    {"default", TOKEN_DEFAULT},
 }; /**< List of all supported keywords. */
 
 static constexpr int BASE =

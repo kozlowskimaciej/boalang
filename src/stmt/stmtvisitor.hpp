@@ -20,6 +20,8 @@ class CallStmt;
 class FuncParamStmt;
 class FuncStmt;
 class ReturnStmt;
+class LambdaFuncStmt;
+class InspectStmt;
 
 class StmtVisitor {
  public:
@@ -39,6 +41,8 @@ class StmtVisitor {
   virtual void visit_funcparam_stmt(const FuncParamStmt& stmt) = 0;
   virtual void visit_func_stmt(const FuncStmt& stmt) = 0;
   virtual void visit_return_stmt(const ReturnStmt& stmt) = 0;
+  virtual void visit_lambdafunc_stmt(const LambdaFuncStmt& stmt) = 0;
+  virtual void visit_inspect_stmt(const InspectStmt& stmt) = 0;
 };
 
 #endif  // BOALANG_STMTVISITOR_HPP

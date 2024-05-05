@@ -95,10 +95,10 @@ Zmienne mogą być przykrywane jedynie w podrzędnych scope'ach.
 int a = 5;
 {
     int a = 10;
-    a == 10;  // PRAWDA   
+    print a == 10;  // PRAWDA   
 }
-a == 10;  // FAŁSZ
-a == 5;  // PRAWDA
+print a == 10;  // FAŁSZ
+print a == 5;  // PRAWDA
 
 float a = 1.0; // BŁĄD, ZMIENNA 'a' JUŻ ISTNIEJE
 ```
@@ -230,7 +230,8 @@ if_stmt		=	"if" "(" expression ")" statement [ "else" statement ] ;
 while_stmt	=	"while" "(" expression ")" statement ;
 return_stmt	=	"return" [ expression ] ";" ;
 print_stmt	=	"print" expression ";" ;
-inspect_stmt    =       "inspect" expression "{" { type [ identifier ] "=>" statement } [ "default" "=>" statement ] "}" ;
+inspect_stmt    =       "inspect" expression "{" { lambda_func } [ "default" "=>" statement ] "}" ;
+lambda_func     =       type identifier "=>" statement
 
 block_stmt	=	"{" { declaration } "}" ;
 
@@ -339,7 +340,7 @@ Numeric fib(Numeric n) {
     } else {
         float val = n as float;
         if (val <= 1.0) {
-            return n
+            return n;
         }
         return fib((n - 1.0) as Numeric) + fib((n - 2.0) as Numeric);
     }

@@ -5,7 +5,7 @@
 // RULE program = { declaration } ;
 std::unique_ptr<Program> Parser::parse() {
   std::vector<std::unique_ptr<Stmt>> statements;
-  while (!check({TokenType::TOKEN_ETX})) {
+  while (!check({TOKEN_ETX})) {
     statements.push_back(declaration());
   }
   return std::make_unique<Program>(std::move(statements));
@@ -77,29 +77,28 @@ std::unique_ptr<AssignStmt> Parser::assign_stmt(std::unique_ptr<VarExpr> var) {
 
 // RULE call_stmt = "(" [ arguments ] ");" ;
 std::unique_ptr<CallStmt> Parser::call_stmt(const Token &identifier) {
-  consume({TokenType::TOKEN_LPAREN},
+  consume({TOKEN_LPAREN},
           "Excepted '(' before function arguments.");
   if (match({TOKEN_RPAREN})) {
     return std::make_unique<CallStmt>(identifier.stringify());
   }
 
   auto args = arguments();
-  consume({TokenType::TOKEN_RPAREN},
+  consume({TOKEN_RPAREN},
           "Excepted ')' after function arguments.");
   consume({TOKEN_SEMICOLON}, "Expected ';' after expression.");
   return std::make_unique<CallStmt>(identifier.stringify(), std::move(args));
 }
 
 // RULE var_func_decl = type identifier ( var_decl | func_decl )
-std::unique_ptr<Stmt> Parser::var_func_decl(Token type) {
+std::unique_ptr<Stmt> Parser::var_func_decl(const Token& type) {
   Token identifier =
       consume({TOKEN_IDENTIFIER},
               "Expected identifier after type.");
   if (check({TOKEN_EQUAL})) {
-    return var_decl(std::move(type), identifier.stringify(), false);
-  } else {
-    return func_decl(type, identifier.stringify());
+    return var_decl(type, identifier.stringify(), false);
   }
+  return func_decl(type, identifier.stringify());
 }
 
 // RULE void_func_decl = "void" identifier func_decl ;
@@ -147,13 +146,13 @@ std::unique_ptr<VarDeclStmt> Parser::mut_var_decl() {
 }
 
 // RULE var_decl = "=" expression ";" ;
-std::unique_ptr<VarDeclStmt> Parser::var_decl(Token type,
-                                              std::string identifier,
+std::unique_ptr<VarDeclStmt> Parser::var_decl(const Token& type,
+                                              const std::string& identifier,
                                               bool mut) {
   consume({TOKEN_EQUAL}, "Expected '=' for assign statement");
   std::unique_ptr<Expr> expr = expression();
   consume({TOKEN_SEMICOLON}, "Expected ';' after assignment.");
-  return std::make_unique<VarDeclStmt>(std::move(type), std::move(identifier),
+  return std::make_unique<VarDeclStmt>(type, identifier,
                                        std::move(expr), mut);
 }
 
@@ -163,7 +162,7 @@ std::unique_ptr<StructDeclStmt> Parser::struct_decl() {
   Token struct_id = consume({TOKEN_IDENTIFIER},"Expected identifier after 'struct'.");
   consume({TOKEN_LBRACE}, "Expected '{' after struct identifier.");
   std::vector<std::unique_ptr<StructFieldStmt>> fields;
-  while(!check({TOKEN_RBRACE, TOKEN_ETX})){
+  while(!check({TOKEN_RBRACE})){
     fields.push_back(struct_field());
   }
   consume({TOKEN_RBRACE}, "Expected '}' after fields.");
@@ -212,6 +211,10 @@ std::unique_ptr<Stmt> Parser::statement() {
       return block_stmt();
     case TOKEN_WHILE:
       return while_stmt();
+    case TOKEN_RETURN:
+      return return_stmt();
+    case TOKEN_INSPECT:
+      return inspect_stmt();
     default:
       throw SyntaxError(current_token_, "Expected statement.");
   }
@@ -222,7 +225,7 @@ std::unique_ptr<PrintStmt> Parser::print_stmt() {
   consume({TOKEN_PRINT}, "Expected 'print' for print statement.");
   std::unique_ptr<Expr> expr = expression();
   consume({TOKEN_SEMICOLON},
-          "Expected ';' after printed expression.");
+          "Expected ';' after expression.");
   return std::make_unique<PrintStmt>(std::move(expr));
 }
 
@@ -245,7 +248,7 @@ std::unique_ptr<IfStmt> Parser::if_stmt() {
 std::unique_ptr<BlockStmt> Parser::block_stmt() {
   consume({TOKEN_LBRACE}, "Expected '{' before block statement.");
   std::vector<std::unique_ptr<Stmt>> statements;
-  while (!check({TOKEN_RBRACE, TOKEN_ETX})) {
+  while (!check({TOKEN_RBRACE})) {
     statements.push_back(declaration());
   }
   consume({TOKEN_RBRACE}, "Expected '}' after block statement.");
@@ -262,6 +265,45 @@ std::unique_ptr<WhileStmt> Parser::while_stmt() {
   std::unique_ptr<Stmt> body = statement();
 
   return std::make_unique<WhileStmt>(std::move(condition), std::move(body));
+}
+
+// RULE return_stmt = "return" [ expression ] ";" ;
+std::unique_ptr<ReturnStmt> Parser::return_stmt() {
+  consume({TOKEN_RETURN},
+          "Expected 'return' keyword for return statement.");
+  std::unique_ptr<Expr> value = expression();
+  consume({TOKEN_SEMICOLON},
+          "Expected ';' after expression.");
+  return std::make_unique<ReturnStmt>(std::move(value));
+}
+
+// RULE inspect_stmt = "inspect" expression "{" { lambda_func } [ "default" "=>" statement ] "}" ;
+std::unique_ptr<InspectStmt> Parser::inspect_stmt() {
+  consume({TOKEN_INSPECT},
+          "Expected 'inspect' keyword for inspect statement.");
+  std::unique_ptr<Expr> inspected = expression();
+  consume({TOKEN_LBRACE}, "Expected '{' after expression.");
+  std::vector<std::unique_ptr<LambdaFuncStmt>> lambdas;
+  while(!check({TOKEN_DEFAULT, TOKEN_RBRACE})) {
+    lambdas.push_back(lambda_func());
+  }
+
+  std::unique_ptr<Stmt> default_lambda;
+  if (match({TOKEN_DEFAULT})) {
+    consume({TOKEN_ARROW}, "Expected '=>' after default lambda.");
+    default_lambda = statement();
+  }
+  consume({TOKEN_RBRACE}, "Expected '}' after inspect lambdas.");
+  return std::make_unique<InspectStmt>(std::move(inspected), std::move(lambdas), std::move(default_lambda));
+}
+
+// RULE lambda_func = type identifier "=>" statement
+std::unique_ptr<LambdaFuncStmt> Parser::lambda_func() {
+  Token lambda_type = type();
+  Token lambda_id = consume({TOKEN_IDENTIFIER},"Expected identifier after type.");
+  consume({TOKEN_ARROW}, "Expected '=>' after lambda identifier.");
+  std::unique_ptr<Stmt> lambda_body = statement();
+  return std::make_unique<LambdaFuncStmt>(lambda_type, lambda_id.stringify(), std::move(lambda_body));
 }
 
 // RULE expression = logic_or ;
@@ -486,7 +528,7 @@ Token Parser::consume(std::initializer_list<TokenType> types,
   throw SyntaxError(current_token_, err_msg);
 }
 
-bool Parser::check(std::initializer_list<TokenType> types) {
+bool Parser::check(std::initializer_list<TokenType> types) const {
   return std::ranges::any_of(types, [&](const auto& type) {
     return current_token_.get_type() == type;
   });

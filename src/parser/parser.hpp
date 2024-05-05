@@ -12,7 +12,7 @@
 #include <vector>
 
 constexpr unsigned int MAX_ARGUMENTS =
-    256; /**< Maximum identifier length supported by lexer. */
+    256; /**< Maximum number of function arguments supported by parser. */
 
 class Parser {
   ILexer& lexer_;
@@ -23,12 +23,12 @@ class Parser {
   std::unique_ptr<Stmt> assign_call(const Token& identifier);
   std::unique_ptr<AssignStmt> assign_stmt(std::unique_ptr<VarExpr> var);
   std::unique_ptr<CallStmt> call_stmt(const Token& identifier);
-  std::unique_ptr<Stmt> var_func_decl(Token type);
+  std::unique_ptr<Stmt> var_func_decl(const Token& type);
   std::unique_ptr<FuncStmt> void_func_decl();
   std::unique_ptr<FuncStmt> func_decl(const Token& return_type, const std::string& identifier);
   std::vector<std::unique_ptr<FuncParamStmt>> func_params();
   std::unique_ptr<VarDeclStmt> mut_var_decl();
-  std::unique_ptr<VarDeclStmt> var_decl(Token type, std::string identifier,
+  std::unique_ptr<VarDeclStmt> var_decl(const Token& type, const std::string& identifier,
                                         bool mut);
   std::unique_ptr<StructDeclStmt> struct_decl();
   std::unique_ptr<StructFieldStmt> struct_field();
@@ -39,6 +39,9 @@ class Parser {
   std::unique_ptr<IfStmt> if_stmt();
   std::unique_ptr<BlockStmt> block_stmt();
   std::unique_ptr<WhileStmt> while_stmt();
+  std::unique_ptr<ReturnStmt> return_stmt();
+  std::unique_ptr<InspectStmt> inspect_stmt();
+  std::unique_ptr<LambdaFuncStmt> lambda_func();
 
   std::unique_ptr<Expr> expression();
   std::unique_ptr<Expr> logic_or();
@@ -60,7 +63,7 @@ class Parser {
   Token advance();
   Token consume(std::initializer_list<TokenType> types,
                 const std::string& err_msg);
-  bool check(std::initializer_list<TokenType> types);
+  [[nodiscard]] bool check(std::initializer_list<TokenType> types) const;
 
  public:
   explicit Parser(ILexer& lexer)

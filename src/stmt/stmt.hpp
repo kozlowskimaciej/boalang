@@ -194,4 +194,30 @@ class ReturnStmt : public Stmt {
   }
 };
 
+class LambdaFuncStmt : public Stmt {
+ public:
+  const Token type;
+  const std::string identifier;
+  const std::unique_ptr<Stmt> body;
+
+  LambdaFuncStmt(Token type, std::string identifier, std::unique_ptr<Stmt> body)
+  : type(std::move(type)), identifier(std::move(identifier)), body(std::move(body)) {};
+  void accept(StmtVisitor& stmt_visitor) const override {
+    stmt_visitor.visit_lambdafunc_stmt(*this);
+  }
+};
+
+class InspectStmt : public Stmt {
+ public:
+  const std::unique_ptr<Expr> inspected;
+  const std::vector<std::unique_ptr<LambdaFuncStmt>> lambdas;
+  const std::unique_ptr<Stmt> default_lambda;
+
+  InspectStmt(std::unique_ptr<Expr> inspected, std::vector<std::unique_ptr<LambdaFuncStmt>> lambdas, std::unique_ptr<Stmt> default_lambda = nullptr)
+  : inspected(std::move(inspected)), lambdas(std::move(lambdas)), default_lambda(std::move(default_lambda)) {};
+  void accept(StmtVisitor& stmt_visitor) const override {
+    stmt_visitor.visit_inspect_stmt(*this);
+  }
+};
+
 #endif  // BOALANG_STMT_HPP

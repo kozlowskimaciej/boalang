@@ -115,6 +115,49 @@ void ASTPrinter::visit_call_stmt(const CallStmt &stmt) {
   }
 }
 
+void ASTPrinter::visit_funcparam_stmt(const FuncParamStmt &stmt) {
+  print_memory_info("FuncParamStmt", &stmt);
+  std::cout << stmt.type << " {" << stmt.identifier << "}";
+}
+
+void ASTPrinter::visit_func_stmt(const FuncStmt &stmt) {
+  print_memory_info("FuncStmt", &stmt);
+  std::cout << "[return type: " << stmt.return_type << "] {" << stmt.identifier << "}";
+  std::cout << "\nParams:";
+  for (const auto& param : stmt.params) {
+    parenthesize({param.get()});
+  }
+  std::cout << "\nBody:";
+  parenthesize({stmt.body.get()});
+
+}
+
+void ASTPrinter::visit_return_stmt(const ReturnStmt &stmt) {
+  print_memory_info("ReturnStmt", &stmt);
+  parenthesize({stmt.value.get()});
+}
+
+void ASTPrinter::visit_lambdafunc_stmt(const LambdaFuncStmt &stmt) {
+  print_memory_info("LambdaFuncStmt", &stmt);
+  std::cout << "[type: " << stmt.type << "] {" << stmt.identifier << "}";
+  std::cout << "\nBody:";
+  parenthesize({stmt.body.get()});
+}
+
+void ASTPrinter::visit_inspect_stmt(const InspectStmt &stmt) {
+  print_memory_info("InspectStmt", &stmt);
+  std::cout << "\nInspected:";
+  parenthesize({stmt.inspected.get()});
+  std::cout << "\nLambdas:";
+  for (const auto& lambda : stmt.lambdas) {
+    parenthesize({lambda.get()});
+  }
+  if (stmt.default_lambda) {
+    std::cout << "\nDefault:";
+    parenthesize({stmt.default_lambda.get()});
+  }
+}
+
 void ASTPrinter::visit_binary_expr(const BinaryExpr& expr) {
   print_memory_info("BinaryExpr", &expr);
   parenthesize({expr.left.get(), expr.right.get()}, expr.op_symbol);
