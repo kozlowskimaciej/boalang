@@ -78,6 +78,20 @@ void ASTPrinter::visit_vardecl_stmt(const VarDeclStmt& stmt) {
   parenthesize({stmt.initializer.get()});
 }
 
+void ASTPrinter::visit_assign_stmt(const AssignStmt &stmt) {
+  print_memory_info("AssignStmt", &stmt);
+  parenthesize({stmt.var.get(), stmt.value.get()});
+}
+
+void ASTPrinter::visit_call_stmt(const CallStmt &stmt) {
+  print_memory_info("CallStmt", &stmt);
+  std::cout << "\nCallee: " << stmt.identifier;
+  std::cout << "\nArguments:";
+  for (const auto& arg : stmt.arguments) {
+    parenthesize({arg.get()});
+  }
+}
+
 void ASTPrinter::visit_binary_expr(const BinaryExpr& expr) {
   print_memory_info("BinaryExpr", &expr);
   parenthesize({expr.left.get(), expr.right.get()}, expr.op_symbol);

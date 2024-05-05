@@ -21,6 +21,10 @@ std::string Token::stringify() const {
       value);
 }
 
+std::string Token::stringify_type() const {
+  return std::string(magic_enum::enum_name(type));
+}
+
 bool Token::has_value() const {
   return !std::holds_alternative<std::monostate>(value);
 }

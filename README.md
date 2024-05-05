@@ -201,9 +201,9 @@ assign_call_decl=       mut_var_decl
                 |       var_func_decl
                 |       assign_call;  
 
-assign_call     =       identifier ( assign | call )
-assign	        =	[ field_access ] "=" expression ";" ;
-call            =       "(" [ arguments ] ");" ;
+assign_call     =       identifier ( assign_stmt | call_stmt )
+assign_stmt     =	[ field_access ] "=" expression ";" ;
+call_stmt       =       "(" [ arguments ] ");" ;
 
 var_func_decl   =       type identifier ( var_decl | func_decl )
 mut_var_decl    =	"mut" type identifier var_decl ;

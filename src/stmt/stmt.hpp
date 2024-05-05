@@ -91,4 +91,28 @@ class VarDeclStmt : public Stmt {
   };
 };
 
+class AssignStmt : public Stmt {
+ public:
+  const std::unique_ptr<Expr> var;
+  const std::unique_ptr<Expr> value;
+
+  AssignStmt(std::unique_ptr<Expr> var, std::unique_ptr<Expr> value)
+    : var(std::move(var)), value(std::move(value)) {};
+  void accept(StmtVisitor& stmt_visitor) const override {
+    stmt_visitor.visit_assign_stmt(*this);
+  }
+};
+
+class CallStmt : public Stmt {
+ public:
+  const std::string identifier;
+  const std::vector<std::unique_ptr<Expr>> arguments;
+
+  CallStmt(std::string identifier, std::vector<std::unique_ptr<Expr>> arguments = {})
+      : identifier(std::move(identifier)), arguments(std::move(arguments)) {};
+  void accept(StmtVisitor& stmt_visitor) const override {
+    stmt_visitor.visit_call_stmt(*this);
+  }
+};
+
 #endif  // BOALANG_STMT_HPP

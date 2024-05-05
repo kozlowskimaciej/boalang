@@ -116,6 +116,7 @@ class Token {
    * @return token's value as a std::string
    */
   [[nodiscard]] std::string stringify() const;
+  [[nodiscard]] std::string stringify_type() const;
   [[nodiscard]] bool has_value() const;
 
   friend std::ostream& operator<<(std::ostream& os, const Token& token);

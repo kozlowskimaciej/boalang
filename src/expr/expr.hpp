@@ -125,7 +125,7 @@ class CallExpr : public Expr {
   const std::vector<std::unique_ptr<Expr>> arguments;
 
   explicit CallExpr(std::unique_ptr<Expr> callee,
-                    std::vector<std::unique_ptr<Expr>> arguments)
+                    std::vector<std::unique_ptr<Expr>> arguments = {})
       : callee(std::move(callee)), arguments(std::move(arguments)){};
   void accept(ExprVisitor& expr_visitor) const override {
     expr_visitor.visit_call_expr(*this);

@@ -43,22 +43,55 @@ std::unique_ptr<Stmt> Parser::assign_call_decl() {
     throw SyntaxError(current_token_, "UNIMPLEMENTED.");
   }
   if (auto token = match({TOKEN_IDENTIFIER})) {
-    // assign_call ( field_access ./=/( ), var_func_decl (identifier)
+    // assign_call ( field_access ./=/( ), var_func_decl (identifier) )
     if (check({TOKEN_IDENTIFIER})) {
       return var_func_decl(token.value());
     }
-    throw SyntaxError(current_token_, "UNIMPLEMENTED.");
+    return assign_call(token.value());
   }
 
   // expect type - var_func_decl
   return var_func_decl(type());
 }
 
+// RULE assign_call = identifier ( assign | call )
+std::unique_ptr<Stmt> Parser::assign_call(const Token& identifier) {
+  if (check({TOKEN_LPAREN})) {
+    return call_stmt(identifier);
+  }
+  auto id_expr = std::make_unique<VarExpr>(identifier.stringify());
+  return assign_stmt(std::move(id_expr));
+}
+
+// RULE assign = [ field_access ] "=" expression ";" ;
+std::unique_ptr<AssignStmt> Parser::assign_stmt(std::unique_ptr<VarExpr> var) {
+  auto field_var = field_access(std::move(var));
+  consume({TOKEN_EQUAL}, "Expected '=' after identifier.");
+  auto value = expression();
+  consume({TOKEN_SEMICOLON}, "Expected ';' after expression.");
+  return std::make_unique<AssignStmt>(std::move(field_var), std::move(value));
+}
+
+// RULE call_stmt = "(" [ arguments ] ");" ;
+std::unique_ptr<CallStmt> Parser::call_stmt(const Token &identifier) {
+  consume({TokenType::TOKEN_LPAREN},
+          "Excepted '(' before function arguments.");
+  if (match({TOKEN_RPAREN})) {
+    return std::make_unique<CallStmt>(identifier.stringify());
+  }
+
+  auto args = arguments();
+  consume({TokenType::TOKEN_RPAREN},
+          "Excepted ')' after function arguments.");
+  consume({TOKEN_SEMICOLON}, "Expected ';' after expression.");
+  return std::make_unique<CallStmt>(identifier.stringify(), std::move(args));
+}
+
 // RULE var_func_decl = type identifier ( var_decl | func_decl )
 std::unique_ptr<Stmt> Parser::var_func_decl(Token type) {
   Token identifier =
       consume({TOKEN_IDENTIFIER},
-              "Expected identifier after type in var func statement.");
+              "Expected identifier after type.");
   if (check({TOKEN_EQUAL})) {
     return var_decl(std::move(type), identifier.stringify(), false);
   } else {
@@ -68,11 +101,11 @@ std::unique_ptr<Stmt> Parser::var_func_decl(Token type) {
 
 // RULE mut_var_decl = "mut" type identifier var_decl ;
 std::unique_ptr<VarDeclStmt> Parser::mut_var_decl() {
-  consume({TOKEN_MUT}, "Expected 'mut' for mut var decl statement.");
+  consume({TOKEN_MUT}, "Expected 'mut'.");
   auto var_type = type();
   Token identifier =
       consume({TOKEN_IDENTIFIER},
-              "Expected identifier after type in mut var decl statement.");
+              "Expected identifier after type.");
   return var_decl(var_type, identifier.stringify(), true);
 }
 
@@ -82,7 +115,7 @@ std::unique_ptr<VarDeclStmt> Parser::var_decl(Token type,
                                               bool mut) {
   consume({TOKEN_EQUAL}, "Expected '=' for assign statement");
   std::unique_ptr<Expr> expr = expression();
-  consume({TokenType::TOKEN_SEMICOLON}, "Expected ';' after assign statement.");
+  consume({TokenType::TOKEN_SEMICOLON}, "Expected ';' after assignment.");
   return std::make_unique<VarDeclStmt>(std::move(type), std::move(identifier),
                                        std::move(expr), mut);
 }
@@ -122,7 +155,7 @@ std::unique_ptr<IfStmt> Parser::if_stmt() {
   consume({TokenType::TOKEN_IF}, "Expected 'if' keyword for if statement.");
   consume({TokenType::TOKEN_LPAREN}, "Expected '(' after 'if'.");
   std::unique_ptr<Expr> condition = expression();
-  consume({TokenType::TOKEN_RPAREN}, "Expected ')' after if condition.");
+  consume({TokenType::TOKEN_RPAREN}, "Expected ')' after condition.");
   std::unique_ptr<Stmt> then_branch = statement();
   std::unique_ptr<Stmt> else_branch;
   if (match({TokenType::TOKEN_ELSE})) {
@@ -274,10 +307,14 @@ std::unique_ptr<Expr> Parser::call() {
   std::unique_ptr<Expr> expr = primary();
 
   if (match({TokenType::TOKEN_LPAREN})) {
-    auto args = arguments();
-    consume({TokenType::TOKEN_RPAREN},
-            "Excepted ')' after function arguments.");
-    expr = std::make_unique<CallExpr>(std::move(expr), std::move(args));
+    if (match({TOKEN_RPAREN})) {
+      expr = std::make_unique<CallExpr>(std::move(expr));
+    } else {
+      auto args = arguments();
+      consume({TokenType::TOKEN_RPAREN},
+              "Excepted ')' after function arguments.");
+      expr = std::make_unique<CallExpr>(std::move(expr), std::move(args));
+    }
   } else if (check({TokenType::TOKEN_DOT})) {
     expr = field_access(std::move(expr));
   }
@@ -328,6 +365,7 @@ Token Parser::type() {
 // RULE arguments = expression { "," expression } ;
 std::vector<std::unique_ptr<Expr>> Parser::arguments() {
   std::vector<std::unique_ptr<Expr>> args;
+
   do {
     if (args.size() > MAX_ARGUMENTS) {
       throw SyntaxError(current_token_, "Maximum amount (" +
