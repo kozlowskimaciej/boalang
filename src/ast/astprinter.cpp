@@ -112,12 +112,8 @@ void ASTPrinter::visit_logical_expr(const LogicalExpr& expr) {
 
 void ASTPrinter::visit_cast_expr(const CastExpr& expr) {
   print_memory_info("CastExpr", &expr);
-  parenthesize({expr.left.get(), expr.type.get()}, expr.op_symbol);
-}
-
-void ASTPrinter::visit_type_expr(const TypeExpr& expr) {
-  print_memory_info("TypeExpr", &expr);
-  std::cout << expr.type;
+  std::cout << "[target type: " << expr.type << "] ";
+  parenthesize({expr.left.get()}, expr.op_symbol);
 }
 
 void ASTPrinter::visit_initalizerlist_expr(const InitalizerListExpr& expr) {

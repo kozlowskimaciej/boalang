@@ -13,7 +13,6 @@ class UnaryExpr;
 class VarExpr;
 class LogicalExpr;
 class CastExpr;
-class TypeExpr;
 class InitalizerListExpr;
 class CallExpr;
 class FieldAccessExpr;
@@ -29,7 +28,6 @@ class ExprVisitor {
   virtual void visit_var_expr(const VarExpr& expr) = 0;
   virtual void visit_logical_expr(const LogicalExpr& expr) = 0;
   virtual void visit_cast_expr(const CastExpr& expr) = 0;
-  virtual void visit_type_expr(const TypeExpr& expr) = 0;
   virtual void visit_initalizerlist_expr(const InitalizerListExpr& expr) = 0;
   virtual void visit_call_expr(const CallExpr& expr) = 0;
   virtual void visit_fieldaccess_expr(const FieldAccessExpr& expr) = 0;

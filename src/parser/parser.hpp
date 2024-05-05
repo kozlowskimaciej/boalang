@@ -43,7 +43,7 @@ class Parser {
 
   std::vector<std::unique_ptr<Expr>> arguments();
   std::unique_ptr<Expr> field_access(std::unique_ptr<Expr> parent_struct);
-  std::unique_ptr<TypeExpr> type();
+  Token type();
 
   opt_token_t match(std::initializer_list<TokenType> types);
   Token advance();

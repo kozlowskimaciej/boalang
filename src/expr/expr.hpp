@@ -97,25 +97,15 @@ class CastExpr : public Expr {
  public:
   const std::unique_ptr<Expr> left;
   const Token op_symbol;
-  const std::unique_ptr<Expr> type;
+  const Token type;
 
   CastExpr(std::unique_ptr<Expr> left, Token op_symbol,
-           std::unique_ptr<Expr> type)
+           Token type)
       : left(std::move(left)),
         op_symbol(std::move(op_symbol)),
         type(std::move(type)){};
   void accept(ExprVisitor& expr_visitor) const override {
     expr_visitor.visit_cast_expr(*this);
-  };
-};
-
-class TypeExpr : public Expr {
- public:
-  const Token type;
-
-  explicit TypeExpr(Token type) : type(std::move(type)){};
-  void accept(ExprVisitor& expr_visitor) const override {
-    expr_visitor.visit_type_expr(*this);
   };
 };
 

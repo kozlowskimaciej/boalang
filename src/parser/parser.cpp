@@ -51,8 +51,7 @@ std::unique_ptr<Stmt> Parser::assign_call_decl() {
   }
 
   // expect type - var_func_decl
-  auto var_type = type();
-  return var_func_decl(var_type->type);
+  return var_func_decl(type());
 }
 
 // RULE var_func_decl = type identifier ( var_decl | func_decl )
@@ -68,9 +67,9 @@ std::unique_ptr<Stmt> Parser::var_func_decl(Token type) {
 // RULE mut_var_decl = "mut" type identifier var_decl ;
 std::unique_ptr<VarDeclStmt> Parser::mut_var_decl() {
   consume({TOKEN_MUT}, "Expected 'mut' for mut var decl statement.");
-  std::unique_ptr<TypeExpr> var_type = type();
+  auto var_type = type();
   Token identifier = consume({TOKEN_IDENTIFIER}, "Expected identifier after type in mut var decl statement.");
-  return var_decl(var_type->type, identifier.stringify(), true);
+  return var_decl(var_type, identifier.stringify(), true);
 }
 
 // RULE var_decl = "=" expression ";" ;
@@ -254,10 +253,9 @@ std::unique_ptr<Expr> Parser::type_cast() {
   std::unique_ptr<Expr> expr = call();
 
   while (auto token = match({TokenType::TOKEN_AS, TokenType::TOKEN_IS})) {
-    std::unique_ptr<Expr> right = type();
     Token op_symbol = token.value();
     expr = std::make_unique<CastExpr>(std::move(expr), op_symbol,
-                                      std::move(right));
+                                      type());
   }
 
   return expr;
@@ -309,11 +307,11 @@ std::unique_ptr<Expr> Parser::primary() {
 }
 
 // RULE type = "bool" | "str" | "int" | "float" | identifier ;
-std::unique_ptr<TypeExpr> Parser::type() {
+Token Parser::type() {
   if (auto token = match({TokenType::TOKEN_FLOAT, TokenType::TOKEN_INT,
                           TokenType::TOKEN_STR, TokenType::TOKEN_BOOL,
                           TokenType::TOKEN_IDENTIFIER})) {
-    return std::make_unique<TypeExpr>(token.value());
+    return token.value();
   }
 
   throw SyntaxError(current_token_, "Expected type.");

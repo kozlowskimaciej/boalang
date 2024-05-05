@@ -1,3 +1,6 @@
+mut bool a = 123;
+b a = 1 as float;
+/*
 if (1) {
     print abc;
 } else {
@@ -5,3 +8,4 @@ if (1) {
         print def;
     }
 }
+*/
