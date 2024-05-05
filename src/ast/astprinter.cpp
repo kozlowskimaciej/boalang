@@ -81,19 +81,19 @@ void ASTPrinter::visit_vardecl_stmt(const VarDeclStmt& stmt) {
   parenthesize({stmt.initializer.get()});
 }
 
-void ASTPrinter::visit_structfield_stmt(const StructFieldStmt &stmt) {
+void ASTPrinter::visit_structfield_stmt(const StructFieldStmt& stmt) {
   print_memory_info("StructFieldStmt", &stmt);
   std::cout << (stmt.mut ? "mut" : "") << " " << stmt.type << " {"
             << stmt.identifier << "}";
 }
-void ASTPrinter::visit_structdecl_stmt(const StructDeclStmt &stmt) {
+void ASTPrinter::visit_structdecl_stmt(const StructDeclStmt& stmt) {
   print_memory_info("StructDeclStmt", &stmt);
   std::cout << "{" << stmt.identifier << "}";
   for (const auto& field : stmt.fields) {
     parenthesize({field.get()});
   }
 }
-void ASTPrinter::visit_variantdecl_stmt(const VariantDeclStmt &stmt) {
+void ASTPrinter::visit_variantdecl_stmt(const VariantDeclStmt& stmt) {
   print_memory_info("VariantDeclStmt", &stmt);
   std::cout << "{" << stmt.identifier << "} types:";
   for (const auto& param : stmt.params) {
@@ -101,12 +101,12 @@ void ASTPrinter::visit_variantdecl_stmt(const VariantDeclStmt &stmt) {
   }
 }
 
-void ASTPrinter::visit_assign_stmt(const AssignStmt &stmt) {
+void ASTPrinter::visit_assign_stmt(const AssignStmt& stmt) {
   print_memory_info("AssignStmt", &stmt);
   parenthesize({stmt.var.get(), stmt.value.get()});
 }
 
-void ASTPrinter::visit_call_stmt(const CallStmt &stmt) {
+void ASTPrinter::visit_call_stmt(const CallStmt& stmt) {
   print_memory_info("CallStmt", &stmt);
   std::cout << "\nCallee: {" << stmt.identifier << "}";
   std::cout << "\nArguments:";
@@ -115,36 +115,36 @@ void ASTPrinter::visit_call_stmt(const CallStmt &stmt) {
   }
 }
 
-void ASTPrinter::visit_funcparam_stmt(const FuncParamStmt &stmt) {
+void ASTPrinter::visit_funcparam_stmt(const FuncParamStmt& stmt) {
   print_memory_info("FuncParamStmt", &stmt);
   std::cout << stmt.type << " {" << stmt.identifier << "}";
 }
 
-void ASTPrinter::visit_func_stmt(const FuncStmt &stmt) {
+void ASTPrinter::visit_func_stmt(const FuncStmt& stmt) {
   print_memory_info("FuncStmt", &stmt);
-  std::cout << "[return type: " << stmt.return_type << "] {" << stmt.identifier << "}";
+  std::cout << "[return type: " << stmt.return_type << "] {" << stmt.identifier
+            << "}";
   std::cout << "\nParams:";
   for (const auto& param : stmt.params) {
     parenthesize({param.get()});
   }
   std::cout << "\nBody:";
   parenthesize({stmt.body.get()});
-
 }
 
-void ASTPrinter::visit_return_stmt(const ReturnStmt &stmt) {
+void ASTPrinter::visit_return_stmt(const ReturnStmt& stmt) {
   print_memory_info("ReturnStmt", &stmt);
   parenthesize({stmt.value.get()});
 }
 
-void ASTPrinter::visit_lambdafunc_stmt(const LambdaFuncStmt &stmt) {
+void ASTPrinter::visit_lambdafunc_stmt(const LambdaFuncStmt& stmt) {
   print_memory_info("LambdaFuncStmt", &stmt);
   std::cout << "[type: " << stmt.type << "] {" << stmt.identifier << "}";
   std::cout << "\nBody:";
   parenthesize({stmt.body.get()});
 }
 
-void ASTPrinter::visit_inspect_stmt(const InspectStmt &stmt) {
+void ASTPrinter::visit_inspect_stmt(const InspectStmt& stmt) {
   print_memory_info("InspectStmt", &stmt);
   std::cout << "\nInspected:";
   parenthesize({stmt.inspected.get()});

@@ -25,10 +25,12 @@ class Parser {
   std::unique_ptr<CallStmt> call_stmt(const Token& identifier);
   std::unique_ptr<Stmt> var_func_decl(const Token& type);
   std::unique_ptr<FuncStmt> void_func_decl();
-  std::unique_ptr<FuncStmt> func_decl(const Token& return_type, const std::string& identifier);
+  std::unique_ptr<FuncStmt> func_decl(const Token& return_type,
+                                      const std::string& identifier);
   std::vector<std::unique_ptr<FuncParamStmt>> func_params();
   std::unique_ptr<VarDeclStmt> mut_var_decl();
-  std::unique_ptr<VarDeclStmt> var_decl(const Token& type, const std::string& identifier,
+  std::unique_ptr<VarDeclStmt> var_decl(const Token& type,
+                                        const std::string& identifier,
                                         bool mut);
   std::unique_ptr<StructDeclStmt> struct_decl();
   std::unique_ptr<StructFieldStmt> struct_field();
@@ -81,7 +83,10 @@ class SyntaxError : public std::runtime_error {
   SyntaxError(const Token& token, const std::string& message)
       : runtime_error("Line " + std::to_string(token.get_position().line) +
                       " column " + std::to_string(token.get_position().column) +
-                      " at '" + (token.stringify().empty()?token.stringify_type():token.stringify()) + "': " + message),
+                      " at '" +
+                      (token.stringify().empty() ? token.stringify_type()
+                                                 : token.stringify()) +
+                      "': " + message),
         token_(token){};
 
   [[nodiscard]] const Token& get_token() const { return token_; }
