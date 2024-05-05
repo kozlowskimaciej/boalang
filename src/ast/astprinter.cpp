@@ -74,6 +74,12 @@ void ASTPrinter::visit_print_stmt(const PrintStmt &stmt) {
   parenthesize({stmt.expr.get()});
 }
 
+void ASTPrinter::visit_vardecl_stmt(const VarDeclStmt &stmt) {
+  print_memory_info("VarDeclStmt", &stmt);
+  std::cout << (stmt.mut?"mut":"") << " " << stmt.type << " " << stmt.identifier;
+  parenthesize({stmt.initializer.get()});
+}
+
 void ASTPrinter::visit_binary_expr(const BinaryExpr& expr) {
   print_memory_info("BinaryExpr", &expr);
   parenthesize({expr.left.get(), expr.right.get()}, expr.op_symbol);

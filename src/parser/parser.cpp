@@ -11,7 +11,7 @@ std::unique_ptr<Program> Parser::parse() {
   return std::make_unique<Program>(std::move(statements));
 }
 
-// RULE declaration	= assign_or_decl
+// RULE declaration	= assign_call_decl
 //                  | struct_decl
 //                  | variant_decl
 //                  | statement ;
@@ -24,33 +24,61 @@ std::unique_ptr<Stmt> Parser::declaration() {
     case TOKEN_STR:
     case TOKEN_INT:
     case TOKEN_FLOAT:
-      return assign_or_decl();
+      return assign_call_decl();
     default:
       return statement();
   }
 }
 
-// RULE assign_or_decl = var_decl
-//                     | func_decl
-//                     | assign
-//                     | call ;
-std::unique_ptr<Stmt> Parser::assign_or_decl() {
+// RULE assign_call_decl= mut_var_decl
+//                      | void_func_decl
+//                      | var_func_decl
+//                      | assign_call;
+std::unique_ptr<Stmt> Parser::assign_call_decl() {
   if (check({TOKEN_MUT})) {
-    // var_decl
-  } else if (check({TOKEN_VOID})) {
-    // func_decl
-  } else if (check({TOKEN_IDENTIFIER})) {
-    // assign, var_decl, func_decl, call
+    return mut_var_decl();
+  }
+  if (check({TOKEN_VOID})) {
+    // void_func_decl
+    throw SyntaxError(current_token_, "UNIMPLEMENTED.");
+  }
+  if (auto token = match({TOKEN_IDENTIFIER})) {
+    // assign_call ( field_access ./=/( ), var_func_decl (identifier)
+    if (check({TOKEN_IDENTIFIER})) {
+      return var_func_decl(token.value());
+    }
+    throw SyntaxError(current_token_, "UNIMPLEMENTED.");
   }
 
-  // expect type - func_decl, var_decl
+  // expect type - var_func_decl
+  auto var_type = type();
+  return var_func_decl(var_type->type);
 }
 
-std::unique_ptr<Stmt> Parser::var_decl() {
-  bool is_mut = false;
-  if (match({TOKEN_MUT})) {
-    is_mut = true;
+// RULE var_func_decl = type identifier ( var_decl | func_decl )
+std::unique_ptr<Stmt> Parser::var_func_decl(Token type) {
+  Token identifier = consume({TOKEN_IDENTIFIER}, "Expected identifier after type in var func statement.");
+  if (check({TOKEN_EQUAL})) {
+    return var_decl(std::move(type), identifier.stringify(), false);
+  } else {
+    throw SyntaxError(current_token_, "UNIMPLEMENTED.");
   }
+}
+
+// RULE mut_var_decl = "mut" type identifier var_decl ;
+std::unique_ptr<VarDeclStmt> Parser::mut_var_decl() {
+  consume({TOKEN_MUT}, "Expected 'mut' for mut var decl statement.");
+  std::unique_ptr<TypeExpr> var_type = type();
+  Token identifier = consume({TOKEN_IDENTIFIER}, "Expected identifier after type in mut var decl statement.");
+  return var_decl(var_type->type, identifier.stringify(), true);
+}
+
+// RULE var_decl = "=" expression ";" ;
+std::unique_ptr<VarDeclStmt> Parser::var_decl(Token type, std::string identifier, bool mut) {
+  consume({TOKEN_EQUAL}, "Expected '=' for assign statement");
+  std::unique_ptr<Expr> expr = expression();
+  consume({TokenType::TOKEN_SEMICOLON}, "Expected ';' after assign statement.");
+  return std::make_unique<VarDeclStmt>(std::move(type), std::move(identifier), std::move(expr), mut);
 }
 
 // RULE statement = if_stmt
@@ -281,7 +309,7 @@ std::unique_ptr<Expr> Parser::primary() {
 }
 
 // RULE type = "bool" | "str" | "int" | "float" | identifier ;
-std::unique_ptr<Expr> Parser::type() {
+std::unique_ptr<TypeExpr> Parser::type() {
   if (auto token = match({TokenType::TOKEN_FLOAT, TokenType::TOKEN_INT,
                           TokenType::TOKEN_STR, TokenType::TOKEN_BOOL,
                           TokenType::TOKEN_IDENTIFIER})) {

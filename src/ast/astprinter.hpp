@@ -28,6 +28,7 @@ class ASTPrinter : public ExprVisitor, public StmtVisitor {
   void visit_if_stmt(const IfStmt& stmt) override;
   void visit_block_stmt(const BlockStmt& stmt) override;
   void visit_while_stmt(const WhileStmt& stmt) override;
+  void visit_vardecl_stmt(const VarDeclStmt& stmt) override;
 
   void visit_binary_expr(const BinaryExpr& expr) override;
   void visit_grouping_expr(const GroupingExpr& expr) override;
