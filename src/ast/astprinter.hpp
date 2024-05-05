@@ -6,9 +6,9 @@
 #define BOALANG_ASTPRINTER_HPP
 
 #include <expr/expr.hpp>
-#include <stmt/stmt.hpp>
 #include <memory>
 #include <optional>
+#include <stmt/stmt.hpp>
 #include <variant>
 #include <vector>
 
@@ -16,9 +16,11 @@ class ASTPrinter : public ExprVisitor, public StmtVisitor {
  private:
   unsigned int indent_ = 0;
 
-  void parenthesize(std::initializer_list<std::variant<const Expr*, const Stmt*>> exprstmts,
-                    std::optional<Token> token = std::nullopt);
-  static void print_memory_info(const std::string& class_name, const void* address);
+  void parenthesize(
+      std::initializer_list<std::variant<const Expr*, const Stmt*>> exprstmts,
+      std::optional<Token> token = std::nullopt);
+  static void print_memory_info(const std::string& class_name,
+                                const void* address);
 
  public:
   void print(Program* program);

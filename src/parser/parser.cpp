@@ -16,7 +16,7 @@ std::unique_ptr<Program> Parser::parse() {
 //                  | variant_decl
 //                  | statement ;
 std::unique_ptr<Stmt> Parser::declaration() {
-  switch(current_token_.get_type()) {
+  switch (current_token_.get_type()) {
     case TOKEN_IDENTIFIER:
     case TOKEN_MUT:
     case TOKEN_VOID:
@@ -56,7 +56,9 @@ std::unique_ptr<Stmt> Parser::assign_call_decl() {
 
 // RULE var_func_decl = type identifier ( var_decl | func_decl )
 std::unique_ptr<Stmt> Parser::var_func_decl(Token type) {
-  Token identifier = consume({TOKEN_IDENTIFIER}, "Expected identifier after type in var func statement.");
+  Token identifier =
+      consume({TOKEN_IDENTIFIER},
+              "Expected identifier after type in var func statement.");
   if (check({TOKEN_EQUAL})) {
     return var_decl(std::move(type), identifier.stringify(), false);
   } else {
@@ -68,16 +70,21 @@ std::unique_ptr<Stmt> Parser::var_func_decl(Token type) {
 std::unique_ptr<VarDeclStmt> Parser::mut_var_decl() {
   consume({TOKEN_MUT}, "Expected 'mut' for mut var decl statement.");
   auto var_type = type();
-  Token identifier = consume({TOKEN_IDENTIFIER}, "Expected identifier after type in mut var decl statement.");
+  Token identifier =
+      consume({TOKEN_IDENTIFIER},
+              "Expected identifier after type in mut var decl statement.");
   return var_decl(var_type, identifier.stringify(), true);
 }
 
 // RULE var_decl = "=" expression ";" ;
-std::unique_ptr<VarDeclStmt> Parser::var_decl(Token type, std::string identifier, bool mut) {
+std::unique_ptr<VarDeclStmt> Parser::var_decl(Token type,
+                                              std::string identifier,
+                                              bool mut) {
   consume({TOKEN_EQUAL}, "Expected '=' for assign statement");
   std::unique_ptr<Expr> expr = expression();
   consume({TokenType::TOKEN_SEMICOLON}, "Expected ';' after assign statement.");
-  return std::make_unique<VarDeclStmt>(std::move(type), std::move(identifier), std::move(expr), mut);
+  return std::make_unique<VarDeclStmt>(std::move(type), std::move(identifier),
+                                       std::move(expr), mut);
 }
 
 // RULE statement = if_stmt
@@ -87,7 +94,7 @@ std::unique_ptr<VarDeclStmt> Parser::var_decl(Token type, std::string identifier
 //                | inspect_stmt
 //                | block_stmt ;
 std::unique_ptr<Stmt> Parser::statement() {
-  switch(current_token_.get_type()) {
+  switch (current_token_.get_type()) {
     case TokenType::TOKEN_PRINT:
       return print_stmt();
     case TokenType::TOKEN_IF:
@@ -105,7 +112,8 @@ std::unique_ptr<Stmt> Parser::statement() {
 std::unique_ptr<PrintStmt> Parser::print_stmt() {
   consume({TokenType::TOKEN_PRINT}, "Expected 'print' for print statement.");
   std::unique_ptr<Expr> expr = expression();
-  consume({TokenType::TOKEN_SEMICOLON}, "Expected ';' after printed expression.");
+  consume({TokenType::TOKEN_SEMICOLON},
+          "Expected ';' after printed expression.");
   return std::make_unique<PrintStmt>(std::move(expr));
 }
 
@@ -120,24 +128,25 @@ std::unique_ptr<IfStmt> Parser::if_stmt() {
   if (match({TokenType::TOKEN_ELSE})) {
     else_branch = statement();
   }
-  return std::make_unique<IfStmt>(std::move(condition), std::move(then_branch), std::move(else_branch));
+  return std::make_unique<IfStmt>(std::move(condition), std::move(then_branch),
+                                  std::move(else_branch));
 }
 
 // RULE block = "{" { declaration } "}" ;
 std::unique_ptr<BlockStmt> Parser::block_stmt() {
   consume({TokenType::TOKEN_LBRACE}, "Expected '{' before block statement.");
   std::vector<std::unique_ptr<Stmt>> statements;
-  while(!check({TokenType::TOKEN_RBRACE, TokenType::TOKEN_ETX})) {
+  while (!check({TokenType::TOKEN_RBRACE, TokenType::TOKEN_ETX})) {
     statements.push_back(declaration());
   }
   consume({TokenType::TOKEN_RBRACE}, "Expected '}' after block statement.");
   return std::make_unique<BlockStmt>(std::move(statements));
 }
 
-
 // RULE while_stmt = "while" "(" expression ")" statement ;
 std::unique_ptr<WhileStmt> Parser::while_stmt() {
-  consume({TokenType::TOKEN_WHILE}, "Expected 'while' keyword for while statement.");
+  consume({TokenType::TOKEN_WHILE},
+          "Expected 'while' keyword for while statement.");
   consume({TokenType::TOKEN_LPAREN}, "Expected '(' after 'while'.");
   std::unique_ptr<Expr> condition = expression();
   consume({TokenType::TOKEN_RPAREN}, "Expected ')' after while condition.");
@@ -254,8 +263,7 @@ std::unique_ptr<Expr> Parser::type_cast() {
 
   while (auto token = match({TokenType::TOKEN_AS, TokenType::TOKEN_IS})) {
     Token op_symbol = token.value();
-    expr = std::make_unique<CastExpr>(std::move(expr), op_symbol,
-                                      type());
+    expr = std::make_unique<CastExpr>(std::move(expr), op_symbol, type());
   }
 
   return expr;

@@ -2,8 +2,9 @@
 
 #include <iostream>
 
-void ASTPrinter::parenthesize(std::initializer_list<std::variant<const Expr*, const Stmt*>> exprstmts,
-                              std::optional<Token> token) {
+void ASTPrinter::parenthesize(
+    std::initializer_list<std::variant<const Expr*, const Stmt*>> exprstmts,
+    std::optional<Token> token) {
   if (token) {
     std::cout << token.value();
   }
@@ -19,31 +20,27 @@ void ASTPrinter::parenthesize(std::initializer_list<std::variant<const Expr*, co
       }
     }
 
-    std::visit([this](auto& member) {
-      member->accept(*this);
-    }, item);
+    std::visit([this](auto& member) { member->accept(*this); }, item);
   }
   --indent_;
 }
 
-void ASTPrinter::print(Program* program) {
-  program->accept(*this);
-}
+void ASTPrinter::print(Program* program) { program->accept(*this); }
 
 void ASTPrinter::print_memory_info(const std::string& class_name,
                                    const void* address) {
   std::cout << class_name << " @ " << std::hex << std::showbase
-          << reinterpret_cast<std::uintptr_t>(address) << " ";
+            << reinterpret_cast<std::uintptr_t>(address) << " ";
 }
 
-void ASTPrinter::visit_program_stmt(const Program &stmt) {
+void ASTPrinter::visit_program_stmt(const Program& stmt) {
   print_memory_info("Program", &stmt);
   for (const auto& item : stmt.statements) {
     parenthesize({item.get()});
   }
 }
 
-void ASTPrinter::visit_if_stmt(const IfStmt &stmt) {
+void ASTPrinter::visit_if_stmt(const IfStmt& stmt) {
   print_memory_info("IfStmt", &stmt);
   std::cout << "\nCondition:";
   parenthesize({stmt.condition.get()});
@@ -55,13 +52,13 @@ void ASTPrinter::visit_if_stmt(const IfStmt &stmt) {
   }
 }
 
-void ASTPrinter::visit_block_stmt(const BlockStmt &stmt) {
+void ASTPrinter::visit_block_stmt(const BlockStmt& stmt) {
   print_memory_info("BlockStmt", &stmt);
   for (const auto& item : stmt.statements) {
     parenthesize({item.get()});
   }
 }
-void ASTPrinter::visit_while_stmt(const WhileStmt &stmt) {
+void ASTPrinter::visit_while_stmt(const WhileStmt& stmt) {
   print_memory_info("WhileStmt", &stmt);
   std::cout << "\nCondition:";
   parenthesize({stmt.condition.get()});
@@ -69,14 +66,15 @@ void ASTPrinter::visit_while_stmt(const WhileStmt &stmt) {
   parenthesize({stmt.body.get()});
 }
 
-void ASTPrinter::visit_print_stmt(const PrintStmt &stmt) {
+void ASTPrinter::visit_print_stmt(const PrintStmt& stmt) {
   print_memory_info("PrintStmt", &stmt);
   parenthesize({stmt.expr.get()});
 }
 
-void ASTPrinter::visit_vardecl_stmt(const VarDeclStmt &stmt) {
+void ASTPrinter::visit_vardecl_stmt(const VarDeclStmt& stmt) {
   print_memory_info("VarDeclStmt", &stmt);
-  std::cout << (stmt.mut?"mut":"") << " " << stmt.type << " " << stmt.identifier;
+  std::cout << (stmt.mut ? "mut" : "") << " " << stmt.type << " "
+            << stmt.identifier;
   parenthesize({stmt.initializer.get()});
 }
 

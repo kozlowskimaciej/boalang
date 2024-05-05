@@ -6,9 +6,9 @@
 #define BOALANG_PARSER_HPP
 
 #include <expr/expr.hpp>
-#include <stmt/stmt.hpp>
 #include <lexer/lexer.hpp>
 #include <memory>
+#include <stmt/stmt.hpp>
 #include <vector>
 
 constexpr unsigned int MAX_ARGUMENTS =
@@ -22,7 +22,8 @@ class Parser {
   std::unique_ptr<Stmt> assign_call_decl();
   std::unique_ptr<Stmt> var_func_decl(Token type);
   std::unique_ptr<VarDeclStmt> mut_var_decl();
-  std::unique_ptr<VarDeclStmt> var_decl(Token type, std::string identifier, bool mut);
+  std::unique_ptr<VarDeclStmt> var_decl(Token type, std::string identifier,
+                                        bool mut);
   std::unique_ptr<Stmt> statement();
   std::unique_ptr<PrintStmt> print_stmt();
   std::unique_ptr<IfStmt> if_stmt();

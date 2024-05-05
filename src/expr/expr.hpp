@@ -99,8 +99,7 @@ class CastExpr : public Expr {
   const Token op_symbol;
   const Token type;
 
-  CastExpr(std::unique_ptr<Expr> left, Token op_symbol,
-           Token type)
+  CastExpr(std::unique_ptr<Expr> left, Token op_symbol, Token type)
       : left(std::move(left)),
         op_symbol(std::move(op_symbol)),
         type(std::move(type)){};
