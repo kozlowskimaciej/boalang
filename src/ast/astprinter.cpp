@@ -25,7 +25,10 @@ void ASTPrinter::parenthesize(
   --indent_;
 }
 
-void ASTPrinter::print(Program* program) { program->accept(*this); }
+void ASTPrinter::print(Program* program) {
+  program->accept(*this);
+  std::cout << '\n';
+}
 
 void ASTPrinter::print_memory_info(const std::string& class_name,
                                    const void* address) {
@@ -73,9 +76,29 @@ void ASTPrinter::visit_print_stmt(const PrintStmt& stmt) {
 
 void ASTPrinter::visit_vardecl_stmt(const VarDeclStmt& stmt) {
   print_memory_info("VarDeclStmt", &stmt);
-  std::cout << (stmt.mut ? "mut" : "") << " " << stmt.type << " "
-            << stmt.identifier;
+  std::cout << (stmt.mut ? "mut" : "") << " " << stmt.type << " {"
+            << stmt.identifier << "}";
   parenthesize({stmt.initializer.get()});
+}
+
+void ASTPrinter::visit_structfield_stmt(const StructFieldStmt &stmt) {
+  print_memory_info("StructFieldStmt", &stmt);
+  std::cout << (stmt.mut ? "mut" : "") << " " << stmt.type << " {"
+            << stmt.identifier << "}";
+}
+void ASTPrinter::visit_structdecl_stmt(const StructDeclStmt &stmt) {
+  print_memory_info("StructDeclStmt", &stmt);
+  std::cout << "{" << stmt.identifier << "}";
+  for (const auto& field : stmt.fields) {
+    parenthesize({field.get()});
+  }
+}
+void ASTPrinter::visit_variantdecl_stmt(const VariantDeclStmt &stmt) {
+  print_memory_info("VariantDeclStmt", &stmt);
+  std::cout << "{" << stmt.identifier << "} types:";
+  for (const auto& param : stmt.params) {
+    std::cout << " " << param;
+  }
 }
 
 void ASTPrinter::visit_assign_stmt(const AssignStmt &stmt) {
@@ -85,7 +108,7 @@ void ASTPrinter::visit_assign_stmt(const AssignStmt &stmt) {
 
 void ASTPrinter::visit_call_stmt(const CallStmt &stmt) {
   print_memory_info("CallStmt", &stmt);
-  std::cout << "\nCallee: " << stmt.identifier;
+  std::cout << "\nCallee: {" << stmt.identifier << "}";
   std::cout << "\nArguments:";
   for (const auto& arg : stmt.arguments) {
     parenthesize({arg.get()});

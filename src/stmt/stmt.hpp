@@ -91,6 +91,49 @@ class VarDeclStmt : public Stmt {
   };
 };
 
+class StructFieldStmt : public Stmt {
+ public:
+  const Token type;
+  const std::string identifier;
+  const bool mut;
+
+  StructFieldStmt(Token type, std::string identifier, bool mut = false)
+      : type(std::move(type)),
+        identifier(std::move(identifier)),
+        mut(mut){};
+  void accept(StmtVisitor& stmt_visitor) const override {
+    stmt_visitor.visit_structfield_stmt(*this);
+  };
+};
+
+class StructDeclStmt : public Stmt {
+ public:
+  const std::string identifier;
+  const std::vector<std::unique_ptr<StructFieldStmt>> fields;
+
+  StructDeclStmt(std::string identifier,
+                 std::vector<std::unique_ptr<StructFieldStmt>> fields)
+      : identifier(std::move(identifier)),
+        fields(std::move(fields)){};
+  void accept(StmtVisitor& stmt_visitor) const override {
+    stmt_visitor.visit_structdecl_stmt(*this);
+  };
+};
+
+class VariantDeclStmt : public Stmt {
+ public:
+  const std::string identifier;
+  const std::vector<Token> params;
+
+  VariantDeclStmt(std::string identifier,
+                  std::vector<Token> params)
+      : identifier(std::move(identifier)),
+        params(std::move(params)){};
+  void accept(StmtVisitor& stmt_visitor) const override {
+    stmt_visitor.visit_variantdecl_stmt(*this);
+  };
+};
+
 class AssignStmt : public Stmt {
  public:
   const std::unique_ptr<Expr> var;

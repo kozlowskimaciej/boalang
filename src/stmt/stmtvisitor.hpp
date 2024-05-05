@@ -12,6 +12,9 @@ class IfStmt;
 class BlockStmt;
 class WhileStmt;
 class VarDeclStmt;
+class StructFieldStmt;
+class StructDeclStmt;
+class VariantDeclStmt;
 class AssignStmt;
 class CallStmt;
 
@@ -25,6 +28,9 @@ class StmtVisitor {
   virtual void visit_block_stmt(const BlockStmt& stmt) = 0;
   virtual void visit_while_stmt(const WhileStmt& stmt) = 0;
   virtual void visit_vardecl_stmt(const VarDeclStmt& stmt) = 0;
+  virtual void visit_structfield_stmt(const StructFieldStmt& stmt) = 0;
+  virtual void visit_structdecl_stmt(const StructDeclStmt& stmt) = 0;
+  virtual void visit_variantdecl_stmt(const VariantDeclStmt& stmt) = 0;
   virtual void visit_assign_stmt(const AssignStmt& stmt) = 0;
   virtual void visit_call_stmt(const CallStmt& stmt) = 0;
 };

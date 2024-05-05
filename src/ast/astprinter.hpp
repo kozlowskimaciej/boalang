@@ -31,6 +31,9 @@ class ASTPrinter : public ExprVisitor, public StmtVisitor {
   void visit_block_stmt(const BlockStmt& stmt) override;
   void visit_while_stmt(const WhileStmt& stmt) override;
   void visit_vardecl_stmt(const VarDeclStmt& stmt) override;
+  void visit_structfield_stmt(const StructFieldStmt& stmt) override;
+  void visit_structdecl_stmt(const StructDeclStmt& stmt) override;
+  void visit_variantdecl_stmt(const VariantDeclStmt& stmt) override;
   void visit_assign_stmt(const AssignStmt& stmt) override;
   void visit_call_stmt(const CallStmt& stmt) override;
 

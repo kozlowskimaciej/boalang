@@ -27,6 +27,9 @@ class Parser {
   std::unique_ptr<VarDeclStmt> mut_var_decl();
   std::unique_ptr<VarDeclStmt> var_decl(Token type, std::string identifier,
                                         bool mut);
+  std::unique_ptr<StructDeclStmt> struct_decl();
+  std::unique_ptr<StructFieldStmt> struct_field();
+  std::unique_ptr<VariantDeclStmt> variant_decl();
 
   std::unique_ptr<Stmt> statement();
   std::unique_ptr<PrintStmt> print_stmt();
