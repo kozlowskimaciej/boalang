@@ -2,10 +2,8 @@
 
 #include "lexer/lexer.hpp"
 #include "token/token.hpp"
+#include "../utils.hpp"
 
-bool str_contains(const std::string& str, const std::string& str2) {
-  return str.find(str2) != std::string::npos;
-}
 
 TEST(LexerTokenizeTest, integer_valid) {
   StringSource source("2147483647");
