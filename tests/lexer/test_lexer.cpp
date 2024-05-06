@@ -1,9 +1,8 @@
 #include <gtest/gtest.h>
 
+#include "../utils.hpp"
 #include "lexer/lexer.hpp"
 #include "token/token.hpp"
-#include "../utils.hpp"
-
 
 TEST(LexerTokenizeTest, integer_valid) {
   StringSource source("2147483647");
