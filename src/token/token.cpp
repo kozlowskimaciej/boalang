@@ -15,6 +15,7 @@ std::string Token::stringify() const {
       overloaded{
           [](auto) { return std::string(); },
           [](int arg) { return std::to_string(arg); },
+          [](float arg) { return std::to_string(arg); },
           [](const std::string& arg) { return arg; },
           [](bool arg) { return std::string(arg ? "true" : "false"); },
       },
