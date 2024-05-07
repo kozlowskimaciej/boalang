@@ -84,9 +84,9 @@ class GroupingExpr : public Expr {
 
 class VarExpr : public Expr {
  public:
-  const std::string identifier;
+  const Token identifier;
 
-  explicit VarExpr(std::string identifier)
+  explicit VarExpr(Token identifier)
       : identifier(std::move(identifier)){};
   void accept(ExprVisitor& expr_visitor) const override {
     expr_visitor.visit_var_expr(*this);

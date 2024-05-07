@@ -183,7 +183,7 @@ TEST(ParserTest, print_primary_identifier) {
 
   auto expr = dynamic_cast<VarExpr*>(print_stmt->expr.get());
   EXPECT_TRUE(expr != nullptr);
-  EXPECT_EQ(expr->identifier, "id");
+  EXPECT_EQ(expr->identifier.stringify(), "id");
 }
 
 TEST(ParserTest, print_primary_grouping) {
@@ -246,7 +246,7 @@ TEST(ParserTest, print_call_function_no_args) {
 
   auto callee = dynamic_cast<VarExpr*>(call_expr->callee.get());
   EXPECT_TRUE(callee != nullptr);
-  EXPECT_EQ(callee->identifier, "foo");
+  EXPECT_EQ(callee->identifier.stringify(), "foo");
 }
 
 TEST(ParserTest, print_call_function_args) {
@@ -275,7 +275,7 @@ TEST(ParserTest, print_call_function_args) {
 
   auto callee = dynamic_cast<VarExpr*>(call_expr->callee.get());
   EXPECT_TRUE(callee != nullptr);
-  EXPECT_EQ(callee->identifier, "foo");
+  EXPECT_EQ(callee->identifier.stringify(), "foo");
 }
 
 TEST(ParserTest, print_call_function_args_over_limit) {
@@ -321,7 +321,7 @@ TEST(ParserTest, print_call_field_access) {
   auto parent_struct =
       dynamic_cast<VarExpr*>(fieldaccess_expr->parent_struct.get());
   EXPECT_TRUE(parent_struct != nullptr);
-  EXPECT_EQ(parent_struct->identifier, "a");
+  EXPECT_EQ(parent_struct->identifier.stringify(), "a");
 }
 
 class ParserTypeCastExprTest
@@ -344,7 +344,7 @@ TEST_P(ParserTypeCastExprTest, print_type_cast) {
 
   auto left = dynamic_cast<VarExpr*>(cast_expr->left.get());
   EXPECT_TRUE(left != nullptr);
-  EXPECT_EQ(left->identifier, "a");
+  EXPECT_EQ(left->identifier.stringify(), "a");
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -371,7 +371,7 @@ TEST_P(ParserUnaryExprTest, print_unary) {
 
   auto left = dynamic_cast<VarExpr*>(unary_expr->right.get());
   EXPECT_TRUE(left != nullptr);
-  EXPECT_EQ(left->identifier, "a");
+  EXPECT_EQ(left->identifier.stringify(), "a");
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -485,20 +485,20 @@ TEST(ParserTest, inspect_stmt) {
 
   auto inspected = dynamic_cast<VarExpr*>(inspect_stmt->inspected.get());
   EXPECT_TRUE(inspected != nullptr);
-  EXPECT_EQ(inspected->identifier, "variant_obj");
+  EXPECT_EQ(inspected->identifier.stringify(), "variant_obj");
 
   EXPECT_EQ(inspect_stmt->lambdas.size(), 2);
   auto lambda_stmt =
       dynamic_cast<LambdaFuncStmt*>(inspect_stmt->lambdas[0].get());
   EXPECT_TRUE(lambda_stmt != nullptr);
   EXPECT_EQ(lambda_stmt->type.get_type(), TokenType::TOKEN_INT);
-  EXPECT_EQ(lambda_stmt->identifier, "val");
+  EXPECT_EQ(lambda_stmt->identifier.stringify(), "val");
   EXPECT_TRUE(dynamic_cast<PrintStmt*>(lambda_stmt->body.get()) != nullptr);
 
   lambda_stmt = dynamic_cast<LambdaFuncStmt*>(inspect_stmt->lambdas[1].get());
   EXPECT_TRUE(lambda_stmt != nullptr);
   EXPECT_EQ(lambda_stmt->type.get_type(), TokenType::TOKEN_FLOAT);
-  EXPECT_EQ(lambda_stmt->identifier, "val");
+  EXPECT_EQ(lambda_stmt->identifier.stringify(), "val");
   EXPECT_TRUE(dynamic_cast<PrintStmt*>(lambda_stmt->body.get()) != nullptr);
 
   EXPECT_TRUE(dynamic_cast<PrintStmt*>(inspect_stmt->default_lambda.get()) !=
@@ -600,20 +600,20 @@ TEST(ParserTest, struct_decl_stmt) {
   auto struct_stmt =
       dynamic_cast<StructDeclStmt*>(program->statements[0].get());
   EXPECT_TRUE(struct_stmt != nullptr);
-  EXPECT_EQ(struct_stmt->identifier, "S");
+  EXPECT_EQ(struct_stmt->identifier.stringify(), "S");
 
   EXPECT_EQ(struct_stmt->fields.size(), 2);
   auto field = dynamic_cast<StructFieldStmt*>(struct_stmt->fields[0].get());
   EXPECT_TRUE(field != nullptr);
   EXPECT_EQ(field->mut, true);
   EXPECT_EQ(field->type.get_type(), TokenType::TOKEN_INT);
-  EXPECT_EQ(field->identifier, "a");
+  EXPECT_EQ(field->identifier.stringify(), "a");
 
   field = dynamic_cast<StructFieldStmt*>(struct_stmt->fields[1].get());
   EXPECT_TRUE(field != nullptr);
   EXPECT_EQ(field->mut, false);
   EXPECT_EQ(field->type.get_type(), TokenType::TOKEN_FLOAT);
-  EXPECT_EQ(field->identifier, "b");
+  EXPECT_EQ(field->identifier.stringify(), "b");
 }
 
 TEST(ParserTest, variant_decl_stmt) {
@@ -626,7 +626,7 @@ TEST(ParserTest, variant_decl_stmt) {
   auto variant_stmt =
       dynamic_cast<VariantDeclStmt*>(program->statements[0].get());
   EXPECT_TRUE(variant_stmt != nullptr);
-  EXPECT_EQ(variant_stmt->identifier, "V");
+  EXPECT_EQ(variant_stmt->identifier.stringify(), "V");
 
   EXPECT_EQ(variant_stmt->params.size(), 3);
   EXPECT_EQ(variant_stmt->params[0].get_type(), TokenType::TOKEN_INT);
@@ -647,7 +647,7 @@ TEST(ParserTest, assign_stmt) {
 
   auto var = dynamic_cast<VarExpr*>(assign_stmt->var.get());
   EXPECT_TRUE(var != nullptr);
-  EXPECT_EQ(var->identifier, "a");
+  EXPECT_EQ(var->identifier.stringify(), "a");
 
   EXPECT_TRUE(dynamic_cast<LiteralExpr*>(assign_stmt->value.get()) != nullptr);
 }
@@ -661,7 +661,7 @@ TEST(ParserTest, call_stmt) {
 
   auto call_stmt = dynamic_cast<CallStmt*>(program->statements[0].get());
   EXPECT_TRUE(call_stmt != nullptr);
-  EXPECT_EQ(call_stmt->identifier, "a");
+  EXPECT_EQ(call_stmt->identifier.stringify(), "a");
   EXPECT_EQ(call_stmt->arguments.size(), 1);
   EXPECT_TRUE(dynamic_cast<LiteralExpr*>(call_stmt->arguments[0].get()) !=
               nullptr);
@@ -677,7 +677,7 @@ TEST(ParserTest, call_stmt_no_args) {
   auto call_stmt = dynamic_cast<CallStmt*>(program->statements[0].get());
   EXPECT_TRUE(call_stmt != nullptr);
 
-  EXPECT_EQ(call_stmt->identifier, "a");
+  EXPECT_EQ(call_stmt->identifier.stringify(), "a");
   EXPECT_EQ(call_stmt->arguments.size(), 0);
 }
 
@@ -690,7 +690,7 @@ TEST(ParserTest, func_decl_stmt) {
 
   auto func_stmt = dynamic_cast<FuncStmt*>(program->statements[0].get());
   EXPECT_TRUE(func_stmt != nullptr);
-  EXPECT_EQ(func_stmt->identifier, "func");
+  EXPECT_EQ(func_stmt->identifier.stringify(), "func");
   EXPECT_EQ(func_stmt->return_type.get_type(), TokenType::TOKEN_VOID);
 
   auto& params = func_stmt->params;
@@ -698,7 +698,7 @@ TEST(ParserTest, func_decl_stmt) {
   auto param = dynamic_cast<FuncParamStmt*>(params[0].get());
   EXPECT_TRUE(param != nullptr);
   EXPECT_EQ(param->type.get_type(), TokenType::TOKEN_INT);
-  EXPECT_EQ(param->identifier, "a");
+  EXPECT_EQ(param->identifier.stringify(), "a");
 
   auto body = dynamic_cast<BlockStmt*>(func_stmt->body.get());
   EXPECT_TRUE(body != nullptr);

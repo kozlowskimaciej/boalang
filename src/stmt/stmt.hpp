@@ -76,11 +76,11 @@ class WhileStmt : public Stmt {
 class VarDeclStmt : public Stmt {
  public:
   const Token type;
-  const std::string identifier;
+  const Token identifier;
   const std::unique_ptr<Expr> initializer;
   const bool mut;
 
-  VarDeclStmt(Token type, std::string identifier,
+  VarDeclStmt(Token type, Token identifier,
               std::unique_ptr<Expr> initializer, bool mut = false)
       : type(std::move(type)),
         identifier(std::move(identifier)),
@@ -94,10 +94,10 @@ class VarDeclStmt : public Stmt {
 class StructFieldStmt : public Stmt {
  public:
   const Token type;
-  const std::string identifier;
+  const Token identifier;
   const bool mut;
 
-  StructFieldStmt(Token type, std::string identifier, bool mut = false)
+  StructFieldStmt(Token type, Token identifier, bool mut = false)
       : type(std::move(type)), identifier(std::move(identifier)), mut(mut){};
   void accept(StmtVisitor& stmt_visitor) const override {
     stmt_visitor.visit_structfield_stmt(*this);
@@ -106,10 +106,10 @@ class StructFieldStmt : public Stmt {
 
 class StructDeclStmt : public Stmt {
  public:
-  const std::string identifier;
+  const Token identifier;
   const std::vector<std::unique_ptr<StructFieldStmt>> fields;
 
-  StructDeclStmt(std::string identifier,
+  StructDeclStmt(Token identifier,
                  std::vector<std::unique_ptr<StructFieldStmt>> fields)
       : identifier(std::move(identifier)), fields(std::move(fields)){};
   void accept(StmtVisitor& stmt_visitor) const override {
@@ -119,10 +119,10 @@ class StructDeclStmt : public Stmt {
 
 class VariantDeclStmt : public Stmt {
  public:
-  const std::string identifier;
+  const Token identifier;
   const std::vector<Token> params;
 
-  VariantDeclStmt(std::string identifier, std::vector<Token> params)
+  VariantDeclStmt(Token identifier, std::vector<Token> params)
       : identifier(std::move(identifier)), params(std::move(params)){};
   void accept(StmtVisitor& stmt_visitor) const override {
     stmt_visitor.visit_variantdecl_stmt(*this);
@@ -143,10 +143,10 @@ class AssignStmt : public Stmt {
 
 class CallStmt : public Stmt {
  public:
-  const std::string identifier;
+  const Token identifier;
   const std::vector<std::unique_ptr<Expr>> arguments;
 
-  explicit CallStmt(std::string identifier,
+  explicit CallStmt(Token identifier,
                     std::vector<std::unique_ptr<Expr>> arguments = {})
       : identifier(std::move(identifier)), arguments(std::move(arguments)){};
   void accept(StmtVisitor& stmt_visitor) const override {
@@ -157,9 +157,9 @@ class CallStmt : public Stmt {
 class FuncParamStmt : public Stmt {
  public:
   const Token type;
-  const std::string identifier;
+  const Token identifier;
 
-  FuncParamStmt(Token type, std::string identifier)
+  FuncParamStmt(Token type, Token identifier)
       : type(std::move(type)), identifier(std::move(identifier)){};
   void accept(StmtVisitor& stmt_visitor) const override {
     stmt_visitor.visit_funcparam_stmt(*this);
@@ -168,12 +168,12 @@ class FuncParamStmt : public Stmt {
 
 class FuncStmt : public Stmt {
  public:
-  const std::string identifier;
+  const Token identifier;
   const Token return_type;
   const std::vector<std::unique_ptr<FuncParamStmt>> params;
   const std::unique_ptr<BlockStmt> body;
 
-  FuncStmt(std::string identifier, Token return_type,
+  FuncStmt(Token identifier, Token return_type,
            std::vector<std::unique_ptr<FuncParamStmt>> params,
            std::unique_ptr<BlockStmt> body)
       : identifier(std::move(identifier)),
@@ -198,10 +198,10 @@ class ReturnStmt : public Stmt {
 class LambdaFuncStmt : public Stmt {
  public:
   const Token type;
-  const std::string identifier;
+  const Token identifier;
   const std::unique_ptr<Stmt> body;
 
-  LambdaFuncStmt(Token type, std::string identifier, std::unique_ptr<Stmt> body)
+  LambdaFuncStmt(Token type, Token identifier, std::unique_ptr<Stmt> body)
       : type(std::move(type)),
         identifier(std::move(identifier)),
         body(std::move(body)){};
