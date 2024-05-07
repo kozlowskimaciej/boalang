@@ -313,7 +313,7 @@ while (a < 5) {
 /*
     LOGICAL OPERATORS
 */
-a = 1
+a = 1;
 mut bool b = false;
 b = a as bool;  // true
 b = not a;  // false
