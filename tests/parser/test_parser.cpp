@@ -5,8 +5,8 @@
 
 TEST(ParserErrorTest, missing_semicolon) {
   StringSource source("if (true) print \"true\" else print \"false\";");
-Lexer lexer(source);
-Parser parser(lexer);
+  Lexer lexer(source);
+  Parser parser(lexer);
   EXPECT_THROW(
       {
         try {
@@ -22,8 +22,8 @@ Parser parser(lexer);
 
 TEST(ParserErrorTest, missing_semicolon_etx) {
   StringSource source("print \"Hello World\"");
-Lexer lexer(source);
-Parser parser(lexer);
+  Lexer lexer(source);
+  Parser parser(lexer);
   EXPECT_THROW(
       {
         try {
@@ -39,8 +39,8 @@ Parser parser(lexer);
 
 TEST(ParserErrorTest, comparison_instead_of_assignment) {
   StringSource source("a == 2;");
-Lexer lexer(source);
-Parser parser(lexer);
+  Lexer lexer(source);
+  Parser parser(lexer);
   EXPECT_THROW(
       {
         try {
@@ -56,8 +56,8 @@ Parser parser(lexer);
 
 TEST(ParserErrorTest, invalid_func_call) {
   StringSource source("a(1, 2 3);");
-Lexer lexer(source);
-Parser parser(lexer);
+  Lexer lexer(source);
+  Parser parser(lexer);
   EXPECT_THROW(
       {
         try {
@@ -75,8 +75,8 @@ Parser parser(lexer);
 
 TEST(ParserErrorTest, if_condition_not_closed) {
   StringSource source("if(true print true;");
-Lexer lexer(source);
-Parser parser(lexer);
+  Lexer lexer(source);
+  Parser parser(lexer);
   EXPECT_THROW(
       {
         try {
@@ -92,8 +92,8 @@ Parser parser(lexer);
 
 TEST(ParserErrorTest, block_stmt_not_closed) {
   StringSource source("{ print true;");
-Lexer lexer(source);
-Parser parser(lexer);
+  Lexer lexer(source);
+  Parser parser(lexer);
   EXPECT_THROW(
       {
         try {

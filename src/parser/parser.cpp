@@ -128,8 +128,7 @@ std::vector<std::unique_ptr<FuncParamStmt>> Parser::func_params() {
     Token param_type = type();
     Token param_id =
         consume({TOKEN_IDENTIFIER}, "Expected identifier after type.");
-    params.push_back(
-        std::make_unique<FuncParamStmt>(param_type, param_id));
+    params.push_back(std::make_unique<FuncParamStmt>(param_type, param_id));
   } while (match({TOKEN_COMMA}));
   return params;
 }
@@ -164,8 +163,7 @@ std::unique_ptr<StructDeclStmt> Parser::struct_decl() {
     fields.push_back(struct_field());
   }
   consume({TOKEN_RBRACE}, "Expected '}' after fields.");
-  return std::make_unique<StructDeclStmt>(struct_id,
-                                          std::move(fields));
+  return std::make_unique<StructDeclStmt>(struct_id, std::move(fields));
 }
 
 // RULE struct_field = [ "mut" ] type identifier ";" ;
@@ -178,8 +176,7 @@ std::unique_ptr<StructFieldStmt> Parser::struct_field() {
   Token field_id =
       consume({TOKEN_IDENTIFIER}, "Expected identifier after type.");
   consume({TOKEN_SEMICOLON}, "Expected ';' after statement.");
-  return std::make_unique<StructFieldStmt>(field_type, field_id,
-                                           is_mut);
+  return std::make_unique<StructFieldStmt>(field_type, field_id, is_mut);
 }
 
 // RULE variant_decl = "variant" identifier "{" type { "," type } "}" ";" ;

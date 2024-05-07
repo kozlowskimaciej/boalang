@@ -80,8 +80,8 @@ class VarDeclStmt : public Stmt {
   const std::unique_ptr<Expr> initializer;
   const bool mut;
 
-  VarDeclStmt(Token type, Token identifier,
-              std::unique_ptr<Expr> initializer, bool mut = false)
+  VarDeclStmt(Token type, Token identifier, std::unique_ptr<Expr> initializer,
+              bool mut = false)
       : type(std::move(type)),
         identifier(std::move(identifier)),
         initializer(std::move(initializer)),

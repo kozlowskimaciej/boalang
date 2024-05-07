@@ -86,8 +86,7 @@ class VarExpr : public Expr {
  public:
   const Token identifier;
 
-  explicit VarExpr(Token identifier)
-      : identifier(std::move(identifier)){};
+  explicit VarExpr(Token identifier) : identifier(std::move(identifier)){};
   void accept(ExprVisitor& expr_visitor) const override {
     expr_visitor.visit_var_expr(*this);
   };
