@@ -270,7 +270,10 @@ std::unique_ptr<WhileStmt> Parser::while_stmt() {
 // RULE return_stmt = "return" [ expression ] ";" ;
 std::unique_ptr<ReturnStmt> Parser::return_stmt() {
   consume({TOKEN_RETURN}, "Expected 'return' keyword for return statement.");
-  std::unique_ptr<Expr> value = expression();
+  std::unique_ptr<Expr> value;
+  if (!check({TOKEN_SEMICOLON})) {
+    value = expression();
+  }
   consume({TOKEN_SEMICOLON}, "Expected ';' after expression.");
   return std::make_unique<ReturnStmt>(std::move(value));
 }
