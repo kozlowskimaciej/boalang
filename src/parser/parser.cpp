@@ -69,7 +69,7 @@ std::unique_ptr<Stmt> Parser::assign_call(const Token& identifier) {
 // RULE assign = [ field_access ] "=" expression ";" ;
 std::unique_ptr<AssignStmt> Parser::assign_stmt(std::unique_ptr<VarExpr> var) {
   auto field_var = field_access(std::move(var));
-  consume({TOKEN_EQUAL}, "Expected '=' after identifier.");
+  consume({TOKEN_EQUAL}, "Expected expression after '='.");
   auto value = expression();
   consume({TOKEN_SEMICOLON}, "Expected ';' after expression.");
   return std::make_unique<AssignStmt>(std::move(field_var), std::move(value));
@@ -79,12 +79,13 @@ std::unique_ptr<AssignStmt> Parser::assign_stmt(std::unique_ptr<VarExpr> var) {
 std::unique_ptr<CallStmt> Parser::call_stmt(const Token& identifier) {
   consume({TOKEN_LPAREN}, "Excepted '(' before function arguments.");
   if (match({TOKEN_RPAREN})) {
+    consume({TOKEN_SEMICOLON}, "Expected ';' after statement.");
     return std::make_unique<CallStmt>(identifier.stringify());
   }
 
   auto args = arguments();
   consume({TOKEN_RPAREN}, "Excepted ')' after function arguments.");
-  consume({TOKEN_SEMICOLON}, "Expected ';' after expression.");
+  consume({TOKEN_SEMICOLON}, "Expected ';' after statement.");
   return std::make_unique<CallStmt>(identifier.stringify(), std::move(args));
 }
 
@@ -159,7 +160,7 @@ std::unique_ptr<StructDeclStmt> Parser::struct_decl() {
       consume({TOKEN_IDENTIFIER}, "Expected identifier after 'struct'.");
   consume({TOKEN_LBRACE}, "Expected '{' after struct identifier.");
   std::vector<std::unique_ptr<StructFieldStmt>> fields;
-  while (!check({TOKEN_RBRACE})) {
+  while (!check({TOKEN_RBRACE, TOKEN_ETX})) {
     fields.push_back(struct_field());
   }
   consume({TOKEN_RBRACE}, "Expected '}' after fields.");
@@ -249,7 +250,7 @@ std::unique_ptr<IfStmt> Parser::if_stmt() {
 std::unique_ptr<BlockStmt> Parser::block_stmt() {
   consume({TOKEN_LBRACE}, "Expected '{' before block statement.");
   std::vector<std::unique_ptr<Stmt>> statements;
-  while (!check({TOKEN_RBRACE})) {
+  while (!check({TOKEN_RBRACE, TOKEN_ETX})) {
     statements.push_back(declaration());
   }
   consume({TOKEN_RBRACE}, "Expected '}' after block statement.");
@@ -285,7 +286,7 @@ std::unique_ptr<InspectStmt> Parser::inspect_stmt() {
   std::unique_ptr<Expr> inspected = expression();
   consume({TOKEN_LBRACE}, "Expected '{' after expression.");
   std::vector<std::unique_ptr<LambdaFuncStmt>> lambdas;
-  while (!check({TOKEN_DEFAULT, TOKEN_RBRACE})) {
+  while (!check({TOKEN_DEFAULT, TOKEN_RBRACE, TOKEN_ETX})) {
     lambdas.push_back(lambda_func());
   }
 

@@ -3,6 +3,111 @@
 #include "../utils.hpp"
 #include "parser/parser.hpp"
 
+TEST(ParserErrorTest, missing_semicolon) {
+  StringSource source("if (true) print \"true\" else print \"false\";");
+Lexer lexer(source);
+Parser parser(lexer);
+  EXPECT_THROW(
+      {
+        try {
+          parser.parse();
+        } catch (const SyntaxError& e) {
+          EXPECT_TRUE(str_contains(e.what(), "Expected ';' after expression."));
+          EXPECT_EQ(e.get_token().get_type(), TokenType::TOKEN_ELSE);
+          throw;
+        }
+      },
+      SyntaxError);
+}
+
+TEST(ParserErrorTest, missing_semicolon_etx) {
+  StringSource source("print \"Hello World\"");
+Lexer lexer(source);
+Parser parser(lexer);
+  EXPECT_THROW(
+      {
+        try {
+          parser.parse();
+        } catch (const SyntaxError& e) {
+          EXPECT_TRUE(str_contains(e.what(), "Expected ';' after expression."));
+          EXPECT_EQ(e.get_token().get_type(), TokenType::TOKEN_ETX);
+          throw;
+        }
+      },
+      SyntaxError);
+}
+
+TEST(ParserErrorTest, comparison_instead_of_assignment) {
+  StringSource source("a == 2;");
+Lexer lexer(source);
+Parser parser(lexer);
+  EXPECT_THROW(
+      {
+        try {
+          parser.parse();
+        } catch (const SyntaxError& e) {
+          EXPECT_TRUE(str_contains(e.what(), "Expected expression after '='."));
+          EXPECT_EQ(e.get_token().get_type(), TokenType::TOKEN_EQUAL_EQUAL);
+          throw;
+        }
+      },
+      SyntaxError);
+}
+
+TEST(ParserErrorTest, invalid_func_call) {
+  StringSource source("a(1, 2 3);");
+Lexer lexer(source);
+Parser parser(lexer);
+  EXPECT_THROW(
+      {
+        try {
+          parser.parse();
+        } catch (const SyntaxError& e) {
+          EXPECT_TRUE(
+              str_contains(e.what(), "Excepted ')' after function arguments."));
+          EXPECT_EQ(e.get_token().get_type(), TokenType::TOKEN_INT_VAL);
+          EXPECT_EQ(e.get_token().stringify(), "3");
+          throw;
+        }
+      },
+      SyntaxError);
+}
+
+TEST(ParserErrorTest, if_condition_not_closed) {
+  StringSource source("if(true print true;");
+Lexer lexer(source);
+Parser parser(lexer);
+  EXPECT_THROW(
+      {
+        try {
+          parser.parse();
+        } catch (const SyntaxError& e) {
+          EXPECT_TRUE(str_contains(e.what(), "Expected ')' after condition."));
+          EXPECT_EQ(e.get_token().get_type(), TokenType::TOKEN_PRINT);
+          throw;
+        }
+      },
+      SyntaxError);
+}
+
+TEST(ParserErrorTest, block_stmt_not_closed) {
+  StringSource source("{ print true;");
+Lexer lexer(source);
+Parser parser(lexer);
+  EXPECT_THROW(
+      {
+        try {
+          parser.parse();
+        } catch (const SyntaxError& e) {
+          EXPECT_TRUE(
+              str_contains(e.what(), "Expected '}' after block statement."));
+          EXPECT_EQ(e.get_token().get_type(), TokenType::TOKEN_ETX);
+          throw;
+        }
+      },
+      SyntaxError);
+}
+
 TEST(ParserTest, print_primary_str) {
   StringSource source("print \"Hello World\";");
   Lexer lexer(source);
@@ -182,7 +287,18 @@ TEST(ParserTest, print_call_function_args_over_limit) {
   StringSource source(code);
   Lexer lexer(source);
   Parser parser(lexer);
-  EXPECT_THROW({ parser.parse(); }, SyntaxError);
+  EXPECT_THROW(
+      {
+        try {
+          parser.parse();
+        } catch (const SyntaxError& e) {
+          EXPECT_TRUE(str_contains(
+              e.what(), "Maximum amount (256) of arguments exceeded."));
+          EXPECT_EQ(e.get_token().get_type(), TokenType::TOKEN_INT_VAL);
+          throw;
+        }
+      },
+      SyntaxError);
 }
 
 TEST(ParserTest, print_call_field_access) {
@@ -533,7 +649,7 @@ TEST(ParserTest, assign_stmt) {
   EXPECT_TRUE(var != nullptr);
   EXPECT_EQ(var->identifier, "a");
 
-  EXPECT_TRUE(dynamic_cast<LiteralExpr*>(assign_stmt->var.get()) != nullptr);
+  EXPECT_TRUE(dynamic_cast<LiteralExpr*>(assign_stmt->value.get()) != nullptr);
 }
 
 TEST(ParserTest, call_stmt) {
@@ -566,7 +682,7 @@ TEST(ParserTest, call_stmt_no_args) {
 }
 
 TEST(ParserTest, func_decl_stmt) {
-  StringSource source("void func(int a) { print a; };");
+  StringSource source("void func(int a) { print a; }");
   Lexer lexer(source);
   Parser parser(lexer);
   auto program = parser.parse();
@@ -576,5 +692,16 @@ TEST(ParserTest, func_decl_stmt) {
   EXPECT_TRUE(func_stmt != nullptr);
   EXPECT_EQ(func_stmt->identifier, "func");
   EXPECT_EQ(func_stmt->return_type.get_type(), TokenType::TOKEN_VOID);
-  EXPECT_EQ(func_stmt->params.size(), 1);
+
+  auto& params = func_stmt->params;
+  EXPECT_EQ(params.size(), 1);
+  auto param = dynamic_cast<FuncParamStmt*>(params[0].get());
+  EXPECT_TRUE(param != nullptr);
+  EXPECT_EQ(param->type.get_type(), TokenType::TOKEN_INT);
+  EXPECT_EQ(param->identifier, "a");
+
+  auto body = dynamic_cast<BlockStmt*>(func_stmt->body.get());
+  EXPECT_TRUE(body != nullptr);
+  EXPECT_EQ(body->statements.size(), 1);
+  EXPECT_TRUE(dynamic_cast<PrintStmt*>(body->statements[0].get()) != nullptr);
 }
