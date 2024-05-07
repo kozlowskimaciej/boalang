@@ -5,7 +5,12 @@
 #ifndef BOALANG_STMT_HPP
 #define BOALANG_STMT_HPP
 
-#include "stmtvisitor.hpp"
+#include <memory>
+#include <vector>
+
+#include "expr/expr.hpp"
+
+class StmtVisitor;
 
 class Stmt {
  public:
@@ -19,9 +24,7 @@ class Program : public Stmt {
 
   explicit Program(std::vector<std::unique_ptr<Stmt>> statements)
       : statements(std::move(statements)){};
-  void accept(StmtVisitor& stmt_visitor) const override {
-    stmt_visitor.visit_program_stmt(*this);
-  };
+  void accept(StmtVisitor& stmt_visitor) const override;
 };
 
 class PrintStmt : public Stmt {
@@ -29,9 +32,7 @@ class PrintStmt : public Stmt {
   const std::unique_ptr<Expr> expr;
 
   explicit PrintStmt(std::unique_ptr<Expr> expr) : expr(std::move(expr)){};
-  void accept(StmtVisitor& stmt_visitor) const override {
-    stmt_visitor.visit_print_stmt(*this);
-  };
+  void accept(StmtVisitor& stmt_visitor) const override;
 };
 
 class IfStmt : public Stmt {
@@ -45,9 +46,7 @@ class IfStmt : public Stmt {
       : condition(std::move(condition)),
         then_branch(std::move(then_branch)),
         else_branch(std::move(else_branch)){};
-  void accept(StmtVisitor& stmt_visitor) const override {
-    stmt_visitor.visit_if_stmt(*this);
-  };
+  void accept(StmtVisitor& stmt_visitor) const override;
 };
 
 class BlockStmt : public Stmt {
@@ -56,9 +55,7 @@ class BlockStmt : public Stmt {
 
   explicit BlockStmt(std::vector<std::unique_ptr<Stmt>> statements)
       : statements(std::move(statements)){};
-  void accept(StmtVisitor& stmt_visitor) const override {
-    stmt_visitor.visit_block_stmt(*this);
-  };
+  void accept(StmtVisitor& stmt_visitor) const override;
 };
 
 class WhileStmt : public Stmt {
@@ -68,9 +65,7 @@ class WhileStmt : public Stmt {
 
   WhileStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> body)
       : condition(std::move(condition)), body(std::move(body)){};
-  void accept(StmtVisitor& stmt_visitor) const override {
-    stmt_visitor.visit_while_stmt(*this);
-  };
+  void accept(StmtVisitor& stmt_visitor) const override;
 };
 
 class VarDeclStmt : public Stmt {
@@ -86,9 +81,7 @@ class VarDeclStmt : public Stmt {
         identifier(std::move(identifier)),
         initializer(std::move(initializer)),
         mut(mut){};
-  void accept(StmtVisitor& stmt_visitor) const override {
-    stmt_visitor.visit_vardecl_stmt(*this);
-  };
+  void accept(StmtVisitor& stmt_visitor) const override;
 };
 
 class StructFieldStmt : public Stmt {
@@ -99,9 +92,7 @@ class StructFieldStmt : public Stmt {
 
   StructFieldStmt(Token type, Token identifier, bool mut = false)
       : type(std::move(type)), identifier(std::move(identifier)), mut(mut){};
-  void accept(StmtVisitor& stmt_visitor) const override {
-    stmt_visitor.visit_structfield_stmt(*this);
-  };
+  void accept(StmtVisitor& stmt_visitor) const override;
 };
 
 class StructDeclStmt : public Stmt {
@@ -112,9 +103,7 @@ class StructDeclStmt : public Stmt {
   StructDeclStmt(Token identifier,
                  std::vector<std::unique_ptr<StructFieldStmt>> fields)
       : identifier(std::move(identifier)), fields(std::move(fields)){};
-  void accept(StmtVisitor& stmt_visitor) const override {
-    stmt_visitor.visit_structdecl_stmt(*this);
-  };
+  void accept(StmtVisitor& stmt_visitor) const override;
 };
 
 class VariantDeclStmt : public Stmt {
@@ -124,9 +113,7 @@ class VariantDeclStmt : public Stmt {
 
   VariantDeclStmt(Token identifier, std::vector<Token> params)
       : identifier(std::move(identifier)), params(std::move(params)){};
-  void accept(StmtVisitor& stmt_visitor) const override {
-    stmt_visitor.visit_variantdecl_stmt(*this);
-  };
+  void accept(StmtVisitor& stmt_visitor) const override;
 };
 
 class AssignStmt : public Stmt {
@@ -136,9 +123,7 @@ class AssignStmt : public Stmt {
 
   AssignStmt(std::unique_ptr<Expr> var, std::unique_ptr<Expr> value)
       : var(std::move(var)), value(std::move(value)){};
-  void accept(StmtVisitor& stmt_visitor) const override {
-    stmt_visitor.visit_assign_stmt(*this);
-  }
+  void accept(StmtVisitor& stmt_visitor) const override;
 };
 
 class CallStmt : public Stmt {
@@ -149,9 +134,7 @@ class CallStmt : public Stmt {
   explicit CallStmt(Token identifier,
                     std::vector<std::unique_ptr<Expr>> arguments = {})
       : identifier(std::move(identifier)), arguments(std::move(arguments)){};
-  void accept(StmtVisitor& stmt_visitor) const override {
-    stmt_visitor.visit_call_stmt(*this);
-  }
+  void accept(StmtVisitor& stmt_visitor) const override;
 };
 
 class FuncParamStmt : public Stmt {
@@ -161,9 +144,7 @@ class FuncParamStmt : public Stmt {
 
   FuncParamStmt(Token type, Token identifier)
       : type(std::move(type)), identifier(std::move(identifier)){};
-  void accept(StmtVisitor& stmt_visitor) const override {
-    stmt_visitor.visit_funcparam_stmt(*this);
-  }
+  void accept(StmtVisitor& stmt_visitor) const override;
 };
 
 class FuncStmt : public Stmt {
@@ -180,9 +161,7 @@ class FuncStmt : public Stmt {
         return_type(std::move(return_type)),
         params(std::move(params)),
         body(std::move(body)){};
-  void accept(StmtVisitor& stmt_visitor) const override {
-    stmt_visitor.visit_func_stmt(*this);
-  }
+  void accept(StmtVisitor& stmt_visitor) const override;
 };
 
 class ReturnStmt : public Stmt {
@@ -190,9 +169,7 @@ class ReturnStmt : public Stmt {
   const std::unique_ptr<Expr> value;
 
   ReturnStmt(std::unique_ptr<Expr> value) : value(std::move(value)){};
-  void accept(StmtVisitor& stmt_visitor) const override {
-    stmt_visitor.visit_return_stmt(*this);
-  }
+  void accept(StmtVisitor& stmt_visitor) const override;
 };
 
 class LambdaFuncStmt : public Stmt {
@@ -205,9 +182,7 @@ class LambdaFuncStmt : public Stmt {
       : type(std::move(type)),
         identifier(std::move(identifier)),
         body(std::move(body)){};
-  void accept(StmtVisitor& stmt_visitor) const override {
-    stmt_visitor.visit_lambdafunc_stmt(*this);
-  }
+  void accept(StmtVisitor& stmt_visitor) const override;
 };
 
 class InspectStmt : public Stmt {
@@ -222,9 +197,29 @@ class InspectStmt : public Stmt {
       : inspected(std::move(inspected)),
         lambdas(std::move(lambdas)),
         default_lambda(std::move(default_lambda)){};
-  void accept(StmtVisitor& stmt_visitor) const override {
-    stmt_visitor.visit_inspect_stmt(*this);
-  }
+  void accept(StmtVisitor& stmt_visitor) const override;
+};
+
+class StmtVisitor {
+ public:
+  virtual ~StmtVisitor() = default;
+
+  virtual void visit_program_stmt(const Program& stmt) = 0;
+  virtual void visit_print_stmt(const PrintStmt& stmt) = 0;
+  virtual void visit_if_stmt(const IfStmt& stmt) = 0;
+  virtual void visit_block_stmt(const BlockStmt& stmt) = 0;
+  virtual void visit_while_stmt(const WhileStmt& stmt) = 0;
+  virtual void visit_vardecl_stmt(const VarDeclStmt& stmt) = 0;
+  virtual void visit_structfield_stmt(const StructFieldStmt& stmt) = 0;
+  virtual void visit_structdecl_stmt(const StructDeclStmt& stmt) = 0;
+  virtual void visit_variantdecl_stmt(const VariantDeclStmt& stmt) = 0;
+  virtual void visit_assign_stmt(const AssignStmt& stmt) = 0;
+  virtual void visit_call_stmt(const CallStmt& stmt) = 0;
+  virtual void visit_funcparam_stmt(const FuncParamStmt& stmt) = 0;
+  virtual void visit_func_stmt(const FuncStmt& stmt) = 0;
+  virtual void visit_return_stmt(const ReturnStmt& stmt) = 0;
+  virtual void visit_lambdafunc_stmt(const LambdaFuncStmt& stmt) = 0;
+  virtual void visit_inspect_stmt(const InspectStmt& stmt) = 0;
 };
 
 #endif  // BOALANG_STMT_HPP

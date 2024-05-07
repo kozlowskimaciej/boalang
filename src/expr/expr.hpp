@@ -9,8 +9,9 @@
 #include <utility>
 #include <vector>
 
-#include "exprvisitor.hpp"
 #include "token/token.hpp"
+
+class ExprVisitor;
 
 class Expr {
  public:
@@ -29,9 +30,7 @@ class BinaryExpr : public Expr {
       : left(std::move(left)),
         op_symbol(std::move(op_symbol)),
         right(std::move(right)){};
-  void accept(ExprVisitor& expr_visitor) const override {
-    expr_visitor.visit_binary_expr(*this);
-  };
+  void accept(ExprVisitor& expr_visitor) const override;
 };
 
 class UnaryExpr : public Expr {
@@ -41,9 +40,7 @@ class UnaryExpr : public Expr {
 
   UnaryExpr(Token op_symbol, std::unique_ptr<Expr> right)
       : op_symbol(std::move(op_symbol)), right(std::move(right)){};
-  void accept(ExprVisitor& expr_visitor) const override {
-    expr_visitor.visit_unary_expr(*this);
-  };
+  void accept(ExprVisitor& expr_visitor) const override;
 };
 
 class LogicalExpr : public Expr {
@@ -57,9 +54,7 @@ class LogicalExpr : public Expr {
       : left(std::move(left)),
         op_symbol(std::move(op_symbol)),
         right(std::move(right)){};
-  void accept(ExprVisitor& expr_visitor) const override {
-    expr_visitor.visit_logical_expr(*this);
-  };
+  void accept(ExprVisitor& expr_visitor) const override;
 };
 
 class LiteralExpr : public Expr {
@@ -67,9 +62,7 @@ class LiteralExpr : public Expr {
   const Token literal;
 
   explicit LiteralExpr(Token literal) : literal(std::move(literal)){};
-  void accept(ExprVisitor& expr_visitor) const override {
-    expr_visitor.visit_literal_expr(*this);
-  };
+  void accept(ExprVisitor& expr_visitor) const override;
 };
 
 class GroupingExpr : public Expr {
@@ -77,9 +70,7 @@ class GroupingExpr : public Expr {
   const std::unique_ptr<Expr> expr;
 
   explicit GroupingExpr(std::unique_ptr<Expr> expr) : expr(std::move(expr)){};
-  void accept(ExprVisitor& expr_visitor) const override {
-    expr_visitor.visit_grouping_expr(*this);
-  };
+  void accept(ExprVisitor& expr_visitor) const override;
 };
 
 class VarExpr : public Expr {
@@ -87,9 +78,7 @@ class VarExpr : public Expr {
   const Token identifier;
 
   explicit VarExpr(Token identifier) : identifier(std::move(identifier)){};
-  void accept(ExprVisitor& expr_visitor) const override {
-    expr_visitor.visit_var_expr(*this);
-  };
+  void accept(ExprVisitor& expr_visitor) const override;
 };
 
 class CastExpr : public Expr {
@@ -102,9 +91,7 @@ class CastExpr : public Expr {
       : left(std::move(left)),
         op_symbol(std::move(op_symbol)),
         type(std::move(type)){};
-  void accept(ExprVisitor& expr_visitor) const override {
-    expr_visitor.visit_cast_expr(*this);
-  };
+  void accept(ExprVisitor& expr_visitor) const override;
 };
 
 class InitalizerListExpr : public Expr {
@@ -113,9 +100,7 @@ class InitalizerListExpr : public Expr {
 
   explicit InitalizerListExpr(std::vector<std::unique_ptr<Expr>> list)
       : list(std::move(list)){};
-  void accept(ExprVisitor& expr_visitor) const override {
-    expr_visitor.visit_initalizerlist_expr(*this);
-  };
+  void accept(ExprVisitor& expr_visitor) const override;
 };
 
 class CallExpr : public Expr {
@@ -126,9 +111,7 @@ class CallExpr : public Expr {
   explicit CallExpr(std::unique_ptr<Expr> callee,
                     std::vector<std::unique_ptr<Expr>> arguments = {})
       : callee(std::move(callee)), arguments(std::move(arguments)){};
-  void accept(ExprVisitor& expr_visitor) const override {
-    expr_visitor.visit_call_expr(*this);
-  };
+  void accept(ExprVisitor& expr_visitor) const override;
 };
 
 class FieldAccessExpr : public Expr {
@@ -140,9 +123,23 @@ class FieldAccessExpr : public Expr {
                            Token field_name)
       : parent_struct(std::move(parent_struct)),
         field_name(std::move(field_name)){};
-  void accept(ExprVisitor& expr_visitor) const override {
-    expr_visitor.visit_fieldaccess_expr(*this);
-  };
+  void accept(ExprVisitor& expr_visitor) const override;
+};
+
+class ExprVisitor {
+ public:
+  virtual ~ExprVisitor() = default;
+
+  virtual void visit_binary_expr(const BinaryExpr& expr) = 0;
+  virtual void visit_grouping_expr(const GroupingExpr& expr) = 0;
+  virtual void visit_literal_expr(const LiteralExpr& expr) = 0;
+  virtual void visit_unary_expr(const UnaryExpr& expr) = 0;
+  virtual void visit_var_expr(const VarExpr& expr) = 0;
+  virtual void visit_logical_expr(const LogicalExpr& expr) = 0;
+  virtual void visit_cast_expr(const CastExpr& expr) = 0;
+  virtual void visit_initalizerlist_expr(const InitalizerListExpr& expr) = 0;
+  virtual void visit_call_expr(const CallExpr& expr) = 0;
+  virtual void visit_fieldaccess_expr(const FieldAccessExpr& expr) = 0;
 };
 
 #endif  // BOALANG_EXPR_HPP
