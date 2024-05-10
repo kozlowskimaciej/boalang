@@ -15,32 +15,32 @@ class Parser {
   ILexer& lexer_;
   Token current_token_;
 
+  std::unique_ptr<Stmt> statement();
+  std::unique_ptr<IfStmt> if_stmt();
+  std::unique_ptr<WhileStmt> while_stmt();
+  std::unique_ptr<ReturnStmt> return_stmt();
+  std::unique_ptr<PrintStmt> print_stmt();
+  std::unique_ptr<InspectStmt> inspect_stmt();
+  std::unique_ptr<LambdaFuncStmt> lambda_func();
+  std::unique_ptr<BlockStmt> block_stmt();
   std::unique_ptr<Stmt> declaration();
+
   std::unique_ptr<Stmt> assign_call_decl();
-  std::unique_ptr<Stmt> assign_call(const Token& identifier);
-  std::unique_ptr<AssignStmt> assign_stmt(std::unique_ptr<Expr> var);
-  std::unique_ptr<CallStmt> call_stmt(const Token& identifier);
-  std::unique_ptr<Stmt> var_func_decl(const Token& type);
+  std::unique_ptr<VarDeclStmt> mut_var_decl();
   std::unique_ptr<FuncStmt> void_func_decl();
+  std::unique_ptr<Stmt> var_func_decl(const Token& type);
+  std::unique_ptr<VarDeclStmt> var_decl(const Token& type,
+                                        const Token& identifier, bool mut);
   std::unique_ptr<FuncStmt> func_decl(const Token& return_type,
                                       const Token& identifier);
   std::optional<std::vector<std::unique_ptr<FuncParamStmt>>> func_params();
-  std::unique_ptr<VarDeclStmt> mut_var_decl();
-  std::unique_ptr<VarDeclStmt> var_decl(const Token& type,
-                                        const Token& identifier, bool mut);
+  std::unique_ptr<Stmt> assign_call(const Token& identifier);
+  std::unique_ptr<AssignStmt> assign_stmt(std::unique_ptr<Expr> var);
+  std::unique_ptr<CallStmt> call_stmt(const Token& identifier);
   std::unique_ptr<StructDeclStmt> struct_decl();
   std::unique_ptr<StructFieldStmt> struct_field();
   std::unique_ptr<VariantDeclStmt> variant_decl();
   std::optional<std::vector<Token>> variant_params();
-
-  std::unique_ptr<Stmt> statement();
-  std::unique_ptr<PrintStmt> print_stmt();
-  std::unique_ptr<IfStmt> if_stmt();
-  std::unique_ptr<BlockStmt> block_stmt();
-  std::unique_ptr<WhileStmt> while_stmt();
-  std::unique_ptr<ReturnStmt> return_stmt();
-  std::unique_ptr<InspectStmt> inspect_stmt();
-  std::unique_ptr<LambdaFuncStmt> lambda_func();
 
   std::unique_ptr<Expr> expression();
   std::unique_ptr<Expr> logic_or();

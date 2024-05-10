@@ -205,6 +205,7 @@ return_stmt	=	"return" [ expression ] ";" ;
 print_stmt	=	"print" expression ";" ;
 inspect_stmt    =       "inspect" expression "{" { lambda_func } [ "default" "=>" statement ] "}" ;
 lambda_func     =       type identifier "=>" statement
+block_stmt	=	"{" { statement } "}" ;
 declaration	=	assign_call_decl
                 |	struct_decl
                 |       variant_decl;
@@ -215,10 +216,10 @@ assign_call_decl=       mut_var_decl
                 |       identifier assign_call;  
 
 assign_call     =       ( assign_stmt | call_stmt ) ;
-assign_stmt     =	[ field_access ] "=" expression ";" ;
+assign_stmt     =	[ "." field_access ] "=" expression ";" ;
 call_stmt       =       "(" [ arguments ] ");" ;
 
-var_func_decl   =       identifier ( var_decl | func_decl )
+var_func_decl   =       identifier ( var_decl | func_decl ) ;
 mut_var_decl    =	"mut" type identifier var_decl ;
 void_func_decl	=	"void" identifier func_decl ;
 
@@ -233,8 +234,6 @@ struct_field    =       [ "mut" ] type identifier ";" ;
 variant_decl    =       "variant" identifier "{" variant_params "}" ";" ;
 variant_params  =       type { "," type } ;
 
-block_stmt	=	"{" { statement } "}" ;
-
 expression	=	logic_or ;
 logic_or	=	logic_and { "or" logic_and } ;
 logic_and	=	equality { "and" equality } ;
@@ -242,9 +241,9 @@ equality	=	comparison { ( "!=" | "==" ) comparison } ;
 comparison	=	term { ( ">" | ">=" | "<" | "<=" ) term } ;
 term		=	factor { ( "-" | "+" ) factor } ;
 factor		=	unary { ( "/" | "*" ) unary } ;
-unary		=	("!" | "-" ) type_cast ;
+unary		=	[ "!" | "-" ] type_cast ;
 type_cast	=	call { ("as" | "is") type } ;
-call		=	primary "(" [ arguments ] ")" | field_access ;
+call		=	primary [ "(" [ arguments ] ")" | field_access ] ;
 primary		=	string | int_val | float_val | bool_values | identifier | "(" expression ")" | "{" arguments "}" ;
 
 arguments       =       expression { "," expression } ;
