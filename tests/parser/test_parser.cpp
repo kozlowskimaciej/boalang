@@ -12,7 +12,8 @@ TEST(ParserErrorTest, missing_semicolon) {
         try {
           parser.parse();
         } catch (const SyntaxError& e) {
-          EXPECT_TRUE(str_contains(e.what(), "Expected ';' after printed expression."));
+          EXPECT_TRUE(
+              str_contains(e.what(), "Expected ';' after printed expression."));
           EXPECT_EQ(e.get_token().get_type(), TokenType::TOKEN_ELSE);
           throw;
         }
@@ -46,7 +47,8 @@ TEST(ParserErrorTest, missing_semicolon_etx) {
         try {
           parser.parse();
         } catch (const SyntaxError& e) {
-          EXPECT_TRUE(str_contains(e.what(), "Expected ';' after printed expression."));
+          EXPECT_TRUE(
+              str_contains(e.what(), "Expected ';' after printed expression."));
           EXPECT_EQ(e.get_token().get_type(), TokenType::TOKEN_ETX);
           throw;
         }
@@ -63,7 +65,8 @@ TEST(ParserErrorTest, comparison_instead_of_assignment) {
         try {
           parser.parse();
         } catch (const SyntaxError& e) {
-          EXPECT_TRUE(str_contains(e.what(), "Expected assignment, call or declaration."));
+          EXPECT_TRUE(str_contains(
+              e.what(), "Expected assignment, call or declaration."));
           EXPECT_EQ(e.get_token().get_type(), TokenType::TOKEN_EQUAL_EQUAL);
           throw;
         }
