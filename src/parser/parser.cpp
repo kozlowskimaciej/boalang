@@ -45,19 +45,6 @@ std::unique_ptr<Stmt> Parser::statement() {
   return nullptr;
 }
 
-// RULE print_stmt = "print" expression ";" ;
-std::unique_ptr<PrintStmt> Parser::print_stmt() {
-  if (!match({TOKEN_PRINT})) {
-    return nullptr;
-  }
-  std::unique_ptr<Expr> expr = expression();
-  if (!expr) {
-    throw SyntaxError(current_token_, "Expected expression after 'print'.");
-  }
-  consume({TOKEN_SEMICOLON}, "Expected ';' after expression.");
-  return std::make_unique<PrintStmt>(std::move(expr));
-}
-
 // RULE if_stmt = "if" "(" expression ")" statement [ "else" statement ] ;
 std::unique_ptr<IfStmt> Parser::if_stmt() {
   if (!match({TOKEN_IF})) {
@@ -82,6 +69,19 @@ std::unique_ptr<IfStmt> Parser::if_stmt() {
   }
   return std::make_unique<IfStmt>(std::move(condition), std::move(then_branch),
                                   std::move(else_branch));
+}
+
+// RULE print_stmt = "print" expression ";" ;
+std::unique_ptr<PrintStmt> Parser::print_stmt() {
+  if (!match({TOKEN_PRINT})) {
+    return nullptr;
+  }
+  std::unique_ptr<Expr> expr = expression();
+  if (!expr) {
+    throw SyntaxError(current_token_, "Expected expression after 'print'.");
+  }
+  consume({TOKEN_SEMICOLON}, "Expected ';' after printed expression.");
+  return std::make_unique<PrintStmt>(std::move(expr));
 }
 
 // RULE block = "{" { declaration } "}" ;
@@ -128,7 +128,7 @@ std::unique_ptr<ReturnStmt> Parser::return_stmt() {
       throw SyntaxError(current_token_, "Expected expression after 'return'.");
     }
   }
-  consume({TOKEN_SEMICOLON}, "Expected ';' after expression.");
+  consume({TOKEN_SEMICOLON}, "Expected ';' after returned expression.");
   return std::make_unique<ReturnStmt>(std::move(value));
 }
 
@@ -142,7 +142,7 @@ std::unique_ptr<InspectStmt> Parser::inspect_stmt() {
   if (!inspected) {
     throw SyntaxError(current_token_, "Expected expression after 'inspect'.");
   }
-  consume({TOKEN_LBRACE}, "Expected '{' after expression.");
+  consume({TOKEN_LBRACE}, "Expected '{' after inspected expression.");
   std::vector<std::unique_ptr<LambdaFuncStmt>> lambdas;
   while (auto lambda = lambda_func()) {
     lambdas.push_back(std::move(lambda));
@@ -165,7 +165,7 @@ std::unique_ptr<LambdaFuncStmt> Parser::lambda_func() {
     return nullptr;
   }
   Token lambda_id =
-      consume({TOKEN_IDENTIFIER}, "Expected identifier after type.");
+      consume({TOKEN_IDENTIFIER}, "Expected identifier after lambda type.");
   consume({TOKEN_ARROW}, "Expected '=>' after lambda identifier.");
   std::unique_ptr<Stmt> lambda_body = statement();
   if (!lambda_body) {
@@ -257,7 +257,7 @@ std::unique_ptr<AssignStmt> Parser::assign_stmt(std::unique_ptr<Expr> var) {
   if (!value) {
     throw SyntaxError(current_token_, "Expected expression for assignment.");
   }
-  consume({TOKEN_SEMICOLON}, "Expected ';' after assignment expression.");
+  consume({TOKEN_SEMICOLON}, "Expected ';' after assignment.");
   return std::make_unique<AssignStmt>(std::move(var), std::move(value));
 }
 
@@ -301,7 +301,7 @@ std::unique_ptr<Stmt> Parser::var_func_decl(const Token& type) {
 std::unique_ptr<FuncStmt> Parser::void_func_decl() {
   if (auto return_type = match({TOKEN_VOID})) {
     Token identifier =
-        consume({TOKEN_IDENTIFIER}, "Expected identifier after type.");
+        consume({TOKEN_IDENTIFIER}, "Expected identifier after function return type.");
     return func_decl(return_type.value(), identifier);
   }
   return nullptr;
@@ -324,7 +324,7 @@ std::unique_ptr<FuncStmt> Parser::func_decl(const Token& return_type,
   consume({TOKEN_RPAREN}, "Excepted ')' after function parameters.");
   auto body = block_stmt();
   if (!body) {
-    throw SyntaxError(current_token_, "Expected block statement.");
+    throw SyntaxError(current_token_, "Expected block statement in function declaration.");
   }
   return std::make_unique<FuncStmt>(identifier, return_type, std::move(params),
                                     std::move(body));
@@ -345,7 +345,7 @@ std::optional<std::vector<std::unique_ptr<FuncParamStmt>>> Parser::func_params()
   while (match({TOKEN_COMMA})) {
     std::optional<Token> param_type = type();
     if (!param_type) {
-      throw SyntaxError(current_token_, "Expected type.");
+      throw SyntaxError(current_token_, "Expected function parameter type.");
     }
     Token param_id =
         consume({TOKEN_IDENTIFIER}, "Expected identifier after type.");
@@ -361,10 +361,10 @@ std::unique_ptr<VarDeclStmt> Parser::mut_var_decl() {
   }
   auto var_type = type();
   if (!var_type) {
-    throw SyntaxError(current_token_, "Expected type.");
+    throw SyntaxError(current_token_, "Expected variable type.");
   }
   Token identifier =
-      consume({TOKEN_IDENTIFIER}, "Expected identifier after type.");
+      consume({TOKEN_IDENTIFIER}, "Expected identifier after variable type.");
   return var_decl(var_type.value(), identifier, true);
 }
 
@@ -379,7 +379,7 @@ std::unique_ptr<VarDeclStmt> Parser::var_decl(const Token& type,
   if (!expr) {
     throw SyntaxError(current_token_, "Expected expression.");
   }
-  consume({TOKEN_SEMICOLON}, "Expected ';' after assignment.");
+  consume({TOKEN_SEMICOLON}, "Expected ';' after variable declaration.");
   return std::make_unique<VarDeclStmt>(type, identifier, std::move(expr), mut);
 }
 
@@ -395,7 +395,7 @@ std::unique_ptr<StructDeclStmt> Parser::struct_decl() {
   while (auto field = struct_field()) {
     fields.push_back(std::move(field));
   }
-  consume({TOKEN_RBRACE}, "Expected '}' after fields.");
+  consume({TOKEN_RBRACE}, "Expected '}' after struct declaration.");
   return std::make_unique<StructDeclStmt>(struct_id, std::move(fields));
 }
 
@@ -408,12 +408,12 @@ std::unique_ptr<StructFieldStmt> Parser::struct_field() {
   std::optional<Token> field_type = type();
   if (!field_type) {
     if (is_mut) {
-      throw SyntaxError(current_token_, "Expected type.");
+      throw SyntaxError(current_token_, "Expected struct field type.");
     }
     return nullptr;
   }
   Token field_id =
-      consume({TOKEN_IDENTIFIER}, "Expected identifier after type.");
+      consume({TOKEN_IDENTIFIER}, "Expected identifier after struct field type.");
   consume({TOKEN_SEMICOLON}, "Expected ';' after struct field.");
   return std::make_unique<StructFieldStmt>(field_type.value(), field_id, is_mut);
 }
@@ -424,15 +424,15 @@ std::unique_ptr<VariantDeclStmt> Parser::variant_decl() {
     return nullptr;
   }
   Token variant_id =
-      consume({TOKEN_IDENTIFIER}, "Expected identifier.");
-  consume({TOKEN_LBRACE}, "Expected '{'.");
+      consume({TOKEN_IDENTIFIER}, "Expected variant identifier.");
+  consume({TOKEN_LBRACE}, "Expected '{' after identifier.");
   std::vector<Token> params;
   if (auto variantparams = variant_params()) {
     params = variantparams.value();
   } else {
-    throw SyntaxError(current_token_, "Expected variant params.");
+    throw SyntaxError(current_token_, "Expected variant parameters.");
   }
-  consume({TOKEN_RBRACE}, "Expected '}'.");
+  consume({TOKEN_RBRACE}, "Expected '}' after variant parameters.");
   consume({TOKEN_SEMICOLON}, "Expected ';' after variant declaration.");
   return std::make_unique<VariantDeclStmt>(variant_id,
                                            std::move(params));
@@ -451,7 +451,7 @@ std::optional<std::vector<Token>> Parser::variant_params() {
   while (match({TOKEN_COMMA})) {
     auto type_token = type();
     if (!type_token) {
-      throw SyntaxError(current_token_, "Expected type.");
+      throw SyntaxError(current_token_, "Expected variant parameter type.");
     }
     params.push_back(type_token.value());
   };
@@ -649,7 +649,7 @@ std::unique_ptr<Expr> Parser::primary() {
   if (match({TOKEN_LBRACE})) {
     auto args = arguments();
     if (!args) {
-      throw SyntaxError(current_token_, "Expected arguments.");
+      throw SyntaxError(current_token_, "Expected arguments for initalizer list.");
     }
     consume({TOKEN_RBRACE}, "Excepted '}' after initializer list.");
     return std::make_unique<InitalizerListExpr>(std::move(args.value()));
