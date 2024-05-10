@@ -253,8 +253,8 @@ std::optional<std::vector<Token>> Parser::variant_params() {
 
 // RULE var_or_func = mut_var_decl
 //                  | void_func_decl
-//                  | type var_or_func_decl
-//                  | identifier assign_or_call;
+//                  | identifier assign_or_call
+//                  | type var_or_func_decl ;
 std::unique_ptr<Stmt> Parser::var_or_func() {
   std::vector<std::function<std::unique_ptr<Stmt>()>> declaration_handlers = {
       [this]() { return mut_var_decl(); },
@@ -282,6 +282,8 @@ std::unique_ptr<Stmt> Parser::var_or_func() {
     if (auto varfuncdecl = var_or_func_decl(decl_type.value())) {
       return varfuncdecl;
     }
+    throw SyntaxError(current_token_,
+                      "Expected variable or function declaration.");
   }
 
   return nullptr;
@@ -350,6 +352,8 @@ std::unique_ptr<Stmt> Parser::var_or_func_decl(const Token& type) {
     if (auto funcdecl = func_decl(type, identifier.value())) {
       return funcdecl;
     }
+    throw SyntaxError(current_token_,
+                      "Expected variable or function declaration.");
   }
   return nullptr;
 }

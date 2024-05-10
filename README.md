@@ -219,8 +219,8 @@ variant_params  =       type { "," type } ;
 
 var_or_func     =       mut_var_decl
                 |       void_func_decl
-                |       type var_or_func_decl
-                |       identifier assign_or_call;  
+                |       identifier assign_or_call
+                |       type var_or_func_decl ;
 
 assign_or_call  =       ( assign_stmt | call_stmt ) ;
 assign_stmt     =	[ "." field_access ] "=" expression ";" ;
