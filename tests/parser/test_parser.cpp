@@ -30,7 +30,7 @@ TEST(ParserErrorTest, missing_semicolon_2) {
           parser.parse();
         } catch (const SyntaxError& e) {
           EXPECT_TRUE(str_contains(e.what(), "Expected ';' after assignment."));
-          EXPECT_EQ(e.get_token().get_type(), TokenType::TOKEN_ELSE);
+          EXPECT_EQ(e.get_token().get_type(), TokenType::TOKEN_ETX);
           throw;
         }
       },
