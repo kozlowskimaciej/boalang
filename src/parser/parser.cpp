@@ -24,7 +24,9 @@ std::unique_ptr<Program> Parser::parse() {
 //                | print_stmt
 //                | inspect_stmt
 //                | block_stmt
-//                | declaration;
+//                |	struct_decl
+//                | variant_decl
+//                | var_or_func ;
 std::unique_ptr<Stmt> Parser::statement() {
   std::vector<std::function<std::unique_ptr<Stmt>()>> stmt_handlers = {
       [this]() { return if_stmt(); },
@@ -250,7 +252,7 @@ std::optional<std::vector<Token>> Parser::variant_params() {
       throw SyntaxError(current_token_, "Expected variant parameter type.");
     }
     params.push_back(type_token.value());
-  };
+  }
   return params;
 }
 
