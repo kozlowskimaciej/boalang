@@ -11,9 +11,6 @@
 #include <stmt/stmt.hpp>
 #include <vector>
 
-constexpr unsigned int MAX_ARGUMENTS =
-    256; /**< Maximum number of function arguments supported by parser. */
-
 class Parser {
   ILexer& lexer_;
   Token current_token_;

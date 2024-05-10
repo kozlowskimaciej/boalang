@@ -2,6 +2,9 @@
 
 #include <algorithm>
 
+constexpr unsigned int MAX_ARGUMENTS =
+    256; /**< Maximum number of function arguments supported by parser. */
+
 // RULE program = { declaration } ;
 std::unique_ptr<Program> Parser::parse() {
   std::vector<std::unique_ptr<Stmt>> statements;
