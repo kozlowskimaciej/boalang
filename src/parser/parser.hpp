@@ -18,7 +18,7 @@ class Parser {
   std::unique_ptr<Stmt> declaration();
   std::unique_ptr<Stmt> assign_call_decl();
   std::unique_ptr<Stmt> assign_call(const Token& identifier);
-  std::unique_ptr<AssignStmt> assign_stmt(std::unique_ptr<VarExpr> var);
+  std::unique_ptr<AssignStmt> assign_stmt(std::unique_ptr<Expr> var);
   std::unique_ptr<CallStmt> call_stmt(const Token& identifier);
   std::unique_ptr<Stmt> var_func_decl(const Token& type);
   std::unique_ptr<FuncStmt> void_func_decl();
@@ -31,6 +31,7 @@ class Parser {
   std::unique_ptr<StructDeclStmt> struct_decl();
   std::unique_ptr<StructFieldStmt> struct_field();
   std::unique_ptr<VariantDeclStmt> variant_decl();
+  std::vector<Token> variant_params();
 
   std::unique_ptr<Stmt> statement();
   std::unique_ptr<PrintStmt> print_stmt();
@@ -55,7 +56,7 @@ class Parser {
 
   std::vector<std::unique_ptr<Expr>> arguments();
   std::unique_ptr<Expr> field_access(std::unique_ptr<Expr> parent_struct);
-  Token type();
+  std::optional<Token> type();
 
   opt_token_t match(std::initializer_list<TokenType> types);
   Token advance();

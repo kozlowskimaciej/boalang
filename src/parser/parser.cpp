@@ -5,197 +5,17 @@
 constexpr unsigned int MAX_ARGUMENTS =
     256; /**< Maximum number of function arguments supported by parser. */
 
-// RULE program = { declaration } ;
+// RULE program = { statement } ;
 std::unique_ptr<Program> Parser::parse() {
   std::vector<std::unique_ptr<Stmt>> statements;
   while (!check({TOKEN_ETX})) {
-    statements.push_back(declaration());
+    if (auto stmt = statement()) {
+      statements.push_back(std::move(stmt));
+    } else {
+      throw SyntaxError(current_token_, "Expected statement or declaration.");
+    }
   }
   return std::make_unique<Program>(std::move(statements));
-}
-
-// RULE declaration	= assign_call_decl
-//                  | struct_decl
-//                  | variant_decl
-//                  | statement ;
-std::unique_ptr<Stmt> Parser::declaration() {
-  switch (current_token_.get_type()) {
-    case TOKEN_IDENTIFIER:
-    case TOKEN_MUT:
-    case TOKEN_VOID:
-    case TOKEN_BOOL:
-    case TOKEN_STR:
-    case TOKEN_INT:
-    case TOKEN_FLOAT:
-      return assign_call_decl();
-    case TOKEN_STRUCT:
-      return struct_decl();
-    case TOKEN_VARIANT:
-      return variant_decl();
-    default:
-      return statement();
-  }
-}
-
-// RULE assign_call_decl= mut_var_decl
-//                      | void_func_decl
-//                      | var_func_decl
-//                      | assign_call;
-std::unique_ptr<Stmt> Parser::assign_call_decl() {
-  if (check({TOKEN_MUT})) {
-    return mut_var_decl();
-  }
-  if (check({TOKEN_VOID})) {
-    return void_func_decl();
-  }
-  if (auto token = match({TOKEN_IDENTIFIER})) {
-    // assign_call ( field_access ./=/( ), var_func_decl (identifier) )
-    if (check({TOKEN_IDENTIFIER})) {
-      return var_func_decl(token.value());
-    }
-    return assign_call(token.value());
-  }
-
-  // expect type - var_func_decl
-  return var_func_decl(type());
-}
-
-// RULE assign_call = identifier ( assign | call )
-std::unique_ptr<Stmt> Parser::assign_call(const Token& identifier) {
-  if (check({TOKEN_LPAREN})) {
-    return call_stmt(identifier);
-  }
-  auto id_expr = std::make_unique<VarExpr>(identifier);
-  return assign_stmt(std::move(id_expr));
-}
-
-// RULE assign = [ field_access ] "=" expression ";" ;
-std::unique_ptr<AssignStmt> Parser::assign_stmt(std::unique_ptr<VarExpr> var) {
-  auto field_var = field_access(std::move(var));
-  consume({TOKEN_EQUAL}, "Expected expression after '='.");
-  auto value = expression();
-  consume({TOKEN_SEMICOLON}, "Expected ';' after expression.");
-  return std::make_unique<AssignStmt>(std::move(field_var), std::move(value));
-}
-
-// RULE call_stmt = "(" [ arguments ] ");" ;
-std::unique_ptr<CallStmt> Parser::call_stmt(const Token& identifier) {
-  consume({TOKEN_LPAREN}, "Excepted '(' before function arguments.");
-  if (match({TOKEN_RPAREN})) {
-    consume({TOKEN_SEMICOLON}, "Expected ';' after statement.");
-    return std::make_unique<CallStmt>(identifier);
-  }
-
-  auto args = arguments();
-  consume({TOKEN_RPAREN}, "Excepted ')' after function arguments.");
-  consume({TOKEN_SEMICOLON}, "Expected ';' after statement.");
-  return std::make_unique<CallStmt>(identifier, std::move(args));
-}
-
-// RULE var_func_decl = type identifier ( var_decl | func_decl )
-std::unique_ptr<Stmt> Parser::var_func_decl(const Token& type) {
-  Token identifier =
-      consume({TOKEN_IDENTIFIER}, "Expected identifier after type.");
-  if (check({TOKEN_EQUAL})) {
-    return var_decl(type, identifier, false);
-  }
-  return func_decl(type, identifier);
-}
-
-// RULE void_func_decl = "void" identifier func_decl ;
-std::unique_ptr<FuncStmt> Parser::void_func_decl() {
-  Token return_type = consume({TOKEN_VOID}, "Expected 'void'.");
-  Token identifier =
-      consume({TOKEN_IDENTIFIER}, "Expected identifier after type.");
-  return func_decl(return_type, identifier);
-}
-
-// RULE func_decl = "(" [ func_params ] ")" block ;
-std::unique_ptr<FuncStmt> Parser::func_decl(const Token& return_type,
-                                            const Token& identifier) {
-  consume({TOKEN_LPAREN}, "Excepted '(' before function parameters.");
-  std::vector<std::unique_ptr<FuncParamStmt>> params;
-  if (!check({TOKEN_RPAREN})) {
-    params = func_params();
-  }
-  consume({TOKEN_RPAREN}, "Excepted ')' after function parameters.");
-  auto body = block_stmt();
-  return std::make_unique<FuncStmt>(identifier, return_type, std::move(params),
-                                    std::move(body));
-}
-
-// RULE func_params = type identifier { "," type identifier } ;
-std::vector<std::unique_ptr<FuncParamStmt>> Parser::func_params() {
-  std::vector<std::unique_ptr<FuncParamStmt>> params;
-  do {
-    Token param_type = type();
-    Token param_id =
-        consume({TOKEN_IDENTIFIER}, "Expected identifier after type.");
-    params.push_back(std::make_unique<FuncParamStmt>(param_type, param_id));
-  } while (match({TOKEN_COMMA}));
-  return params;
-}
-
-// RULE mut_var_decl = "mut" type identifier var_decl ;
-std::unique_ptr<VarDeclStmt> Parser::mut_var_decl() {
-  consume({TOKEN_MUT}, "Expected 'mut'.");
-  auto var_type = type();
-  Token identifier =
-      consume({TOKEN_IDENTIFIER}, "Expected identifier after type.");
-  return var_decl(var_type, identifier, true);
-}
-
-// RULE var_decl = "=" expression ";" ;
-std::unique_ptr<VarDeclStmt> Parser::var_decl(const Token& type,
-                                              const Token& identifier,
-                                              bool mut) {
-  consume({TOKEN_EQUAL}, "Expected '=' for assign statement");
-  std::unique_ptr<Expr> expr = expression();
-  consume({TOKEN_SEMICOLON}, "Expected ';' after assignment.");
-  return std::make_unique<VarDeclStmt>(type, identifier, std::move(expr), mut);
-}
-
-// RULE struct_decl = "struct" identifier "{" { struct_field } "}" ;
-std::unique_ptr<StructDeclStmt> Parser::struct_decl() {
-  consume({TOKEN_STRUCT}, "Expected 'struct' for struct decl statement.");
-  Token struct_id =
-      consume({TOKEN_IDENTIFIER}, "Expected identifier after 'struct'.");
-  consume({TOKEN_LBRACE}, "Expected '{' after struct identifier.");
-  std::vector<std::unique_ptr<StructFieldStmt>> fields;
-  while (!check({TOKEN_RBRACE, TOKEN_ETX})) {
-    fields.push_back(struct_field());
-  }
-  consume({TOKEN_RBRACE}, "Expected '}' after fields.");
-  return std::make_unique<StructDeclStmt>(struct_id, std::move(fields));
-}
-
-// RULE struct_field = [ "mut" ] type identifier ";" ;
-std::unique_ptr<StructFieldStmt> Parser::struct_field() {
-  bool is_mut = false;
-  if (match({TOKEN_MUT})) {
-    is_mut = true;
-  }
-  Token field_type = type();
-  Token field_id =
-      consume({TOKEN_IDENTIFIER}, "Expected identifier after type.");
-  consume({TOKEN_SEMICOLON}, "Expected ';' after statement.");
-  return std::make_unique<StructFieldStmt>(field_type, field_id, is_mut);
-}
-
-// RULE variant_decl = "variant" identifier "{" type { "," type } "}" ";" ;
-std::unique_ptr<VariantDeclStmt> Parser::variant_decl() {
-  consume({TOKEN_VARIANT}, "Expected 'variant' for variant decl statement.");
-  Token variant_id =
-      consume({TOKEN_IDENTIFIER}, "Expected identifier after 'variant'.");
-  consume({TOKEN_LBRACE}, "Expected '{' after variant identifier.");
-  std::vector<Token> variant_params;
-  do {
-    variant_params.push_back(type());
-  } while (match({TOKEN_COMMA}));
-  consume({TOKEN_RBRACE}, "Expected '}' after variant types.");
-  consume({TOKEN_SEMICOLON}, "Expected ';' after statement.");
-  return std::make_unique<VariantDeclStmt>(variant_id,
-                                           std::move(variant_params));
 }
 
 // RULE statement = if_stmt
@@ -203,29 +23,33 @@ std::unique_ptr<VariantDeclStmt> Parser::variant_decl() {
 //                | return_stmt
 //                | print_stmt
 //                | inspect_stmt
-//                | block_stmt ;
+//                | block_stmt
+//                | declaration;
 std::unique_ptr<Stmt> Parser::statement() {
-  switch (current_token_.get_type()) {
-    case TOKEN_PRINT:
-      return print_stmt();
-    case TOKEN_IF:
-      return if_stmt();
-    case TOKEN_LBRACE:
-      return block_stmt();
-    case TOKEN_WHILE:
-      return while_stmt();
-    case TOKEN_RETURN:
-      return return_stmt();
-    case TOKEN_INSPECT:
-      return inspect_stmt();
-    default:
-      throw SyntaxError(current_token_, "Expected statement.");
+  std::vector<std::function<std::unique_ptr<Stmt>()>> stmt_handlers = {
+      [this]() { return print_stmt(); },
+      [this]() { return if_stmt(); },
+      [this]() { return block_stmt(); },
+      [this]() { return while_stmt(); },
+      [this]() { return return_stmt(); },
+      [this]() { return inspect_stmt(); },
+      [this]() { return declaration(); }
+  };
+
+  for (auto& handler : stmt_handlers) {
+    if (auto stmt = handler()) {
+      return stmt;
+    }
   }
+
+  return nullptr;
 }
 
 // RULE print_stmt = "print" expression ";" ;
 std::unique_ptr<PrintStmt> Parser::print_stmt() {
-  consume({TOKEN_PRINT}, "Expected 'print' for print statement.");
+  if (!match({TOKEN_PRINT})) {
+    return nullptr;
+  }
   std::unique_ptr<Expr> expr = expression();
   consume({TOKEN_SEMICOLON}, "Expected ';' after expression.");
   return std::make_unique<PrintStmt>(std::move(expr));
@@ -233,7 +57,9 @@ std::unique_ptr<PrintStmt> Parser::print_stmt() {
 
 // RULE if_stmt = "if" "(" expression ")" statement [ "else" statement ] ;
 std::unique_ptr<IfStmt> Parser::if_stmt() {
-  consume({TOKEN_IF}, "Expected 'if' keyword for if statement.");
+  if (!match({TOKEN_IF})) {
+    return nullptr;
+  }
   consume({TOKEN_LPAREN}, "Expected '(' after 'if'.");
   std::unique_ptr<Expr> condition = expression();
   consume({TOKEN_RPAREN}, "Expected ')' after condition.");
@@ -248,10 +74,12 @@ std::unique_ptr<IfStmt> Parser::if_stmt() {
 
 // RULE block = "{" { declaration } "}" ;
 std::unique_ptr<BlockStmt> Parser::block_stmt() {
-  consume({TOKEN_LBRACE}, "Expected '{' before block statement.");
+  if (!match({TOKEN_LBRACE})) {
+    return nullptr;
+  }
   std::vector<std::unique_ptr<Stmt>> statements;
-  while (!check({TOKEN_RBRACE, TOKEN_ETX})) {
-    statements.push_back(declaration());
+  while (auto stmt = statement()) {
+    statements.push_back(std::move(stmt));
   }
   consume({TOKEN_RBRACE}, "Expected '}' after block statement.");
   return std::make_unique<BlockStmt>(std::move(statements));
@@ -259,7 +87,9 @@ std::unique_ptr<BlockStmt> Parser::block_stmt() {
 
 // RULE while_stmt = "while" "(" expression ")" statement ;
 std::unique_ptr<WhileStmt> Parser::while_stmt() {
-  consume({TOKEN_WHILE}, "Expected 'while' keyword for while statement.");
+  if (!match({TOKEN_WHILE})) {
+    return nullptr;
+  }
   consume({TOKEN_LPAREN}, "Expected '(' after 'while'.");
   std::unique_ptr<Expr> condition = expression();
   consume({TOKEN_RPAREN}, "Expected ')' after while condition.");
@@ -270,7 +100,9 @@ std::unique_ptr<WhileStmt> Parser::while_stmt() {
 
 // RULE return_stmt = "return" [ expression ] ";" ;
 std::unique_ptr<ReturnStmt> Parser::return_stmt() {
-  consume({TOKEN_RETURN}, "Expected 'return' keyword for return statement.");
+  if (!match({TOKEN_RETURN})) {
+    return nullptr;
+  }
   std::unique_ptr<Expr> value;
   if (!check({TOKEN_SEMICOLON})) {
     value = expression();
@@ -282,7 +114,9 @@ std::unique_ptr<ReturnStmt> Parser::return_stmt() {
 // RULE inspect_stmt = "inspect" expression "{" { lambda_func } [ "default" "=>"
 // statement ] "}" ;
 std::unique_ptr<InspectStmt> Parser::inspect_stmt() {
-  consume({TOKEN_INSPECT}, "Expected 'inspect' keyword for inspect statement.");
+  if (!match({TOKEN_INSPECT})) {
+    return nullptr;
+  }
   std::unique_ptr<Expr> inspected = expression();
   consume({TOKEN_LBRACE}, "Expected '{' after expression.");
   std::vector<std::unique_ptr<LambdaFuncStmt>> lambdas;
@@ -302,13 +136,254 @@ std::unique_ptr<InspectStmt> Parser::inspect_stmt() {
 
 // RULE lambda_func = type identifier "=>" statement
 std::unique_ptr<LambdaFuncStmt> Parser::lambda_func() {
-  Token lambda_type = type();
+  std::optional<Token> lambda_type = type();
+  if (!lambda_type) {
+    throw SyntaxError(current_token_, "Expected type.");
+  }
   Token lambda_id =
       consume({TOKEN_IDENTIFIER}, "Expected identifier after type.");
   consume({TOKEN_ARROW}, "Expected '=>' after lambda identifier.");
   std::unique_ptr<Stmt> lambda_body = statement();
-  return std::make_unique<LambdaFuncStmt>(lambda_type, lambda_id,
+  return std::make_unique<LambdaFuncStmt>(lambda_type.value(), lambda_id,
                                           std::move(lambda_body));
+}
+
+// RULE declaration	= assign_call_decl
+//                  | struct_decl
+//                  | variant_decl ;
+std::unique_ptr<Stmt> Parser::declaration() {
+  std::vector<std::function<std::unique_ptr<Stmt>()>> declaration_handlers = {
+      [this]() { return assign_call_decl(); },
+      [this]() { return struct_decl(); },
+      [this]() { return variant_decl(); }
+  };
+
+  for (auto& handler : declaration_handlers) {
+    if (auto stmt = handler()) {
+      return stmt;
+    }
+  }
+
+  return nullptr;
+}
+
+// RULE assign_call_decl= mut_var_decl
+//                      | void_func_decl
+//                      | type var_func_decl
+//                      | identifier assign_call;
+std::unique_ptr<Stmt> Parser::assign_call_decl() {
+  std::vector<std::function<std::unique_ptr<Stmt>()>> declaration_handlers = {
+      [this]() { return mut_var_decl(); },
+      [this]() { return void_func_decl(); }
+  };
+
+  for (auto& handler : declaration_handlers) {
+    if (auto stmt = handler()) {
+      return stmt;
+    }
+  }
+
+  if (auto token = match({TOKEN_IDENTIFIER})) {
+    if (auto assigncall = assign_call(token.value())) {
+      return assigncall;
+    }
+    if (auto varfuncdecl = var_func_decl(token.value())) {
+      return varfuncdecl;
+    }
+    throw SyntaxError(current_token_, "Expected assignment, call or declaration.");
+  }
+
+  std::optional<Token> decl_type = type();
+  if (decl_type) {
+    if (auto varfuncdecl = var_func_decl(decl_type.value())) {
+      return varfuncdecl;
+    }
+  }
+
+  return nullptr;
+}
+
+// RULE assign_call = ( assign | call ) ;
+std::unique_ptr<Stmt> Parser::assign_call(const Token& identifier) {
+  if (auto call = call_stmt(identifier)) {
+    return call;
+  }
+  auto id_expr = std::make_unique<VarExpr>(identifier);
+  if (auto assign = assign_stmt(std::move(id_expr))) {
+    return assign;
+  }
+  return nullptr;
+}
+
+// RULE assign = [ "." field_access ] "=" expression ";" ;
+std::unique_ptr<AssignStmt> Parser::assign_stmt(std::unique_ptr<Expr> var) {
+  if (match({TOKEN_DOT})) {
+    var = field_access(std::move(var));
+  }
+
+  if (!match({TOKEN_EQUAL})) {
+    return nullptr;
+  }
+
+  auto value = expression();
+  consume({TOKEN_SEMICOLON}, "Expected ';' after expression.");
+  return std::make_unique<AssignStmt>(std::move(var), std::move(value));
+}
+
+// RULE call_stmt = "(" [ arguments ] ");" ;
+std::unique_ptr<CallStmt> Parser::call_stmt(const Token& identifier) {
+  if (!match({TOKEN_LPAREN})) {
+    return nullptr;
+  }
+  if (match({TOKEN_RPAREN})) {
+    consume({TOKEN_SEMICOLON}, "Expected ';' after statement.");
+    return std::make_unique<CallStmt>(identifier);
+  }
+
+  auto args = arguments();
+  consume({TOKEN_RPAREN}, "Excepted ')' after function arguments.");
+  consume({TOKEN_SEMICOLON}, "Expected ';' after statement.");
+  return std::make_unique<CallStmt>(identifier, std::move(args));
+}
+
+// RULE var_func_decl = identifier ( var_decl | func_decl )
+std::unique_ptr<Stmt> Parser::var_func_decl(const Token& type) {
+  if (auto identifier = match({TOKEN_IDENTIFIER})){
+    if (auto vardecl = var_decl(type, identifier.value(), false)) {
+      return vardecl;
+    }
+    if (auto funcdecl = func_decl(type, identifier.value())) {
+      return funcdecl;
+    }
+  }
+  return nullptr;
+}
+
+// RULE void_func_decl = "void" identifier func_decl ;
+std::unique_ptr<FuncStmt> Parser::void_func_decl() {
+  if (auto return_type = match({TOKEN_VOID})) {
+    Token identifier =
+        consume({TOKEN_IDENTIFIER}, "Expected identifier after type.");
+    return func_decl(return_type.value(), identifier);
+  }
+  return nullptr;
+}
+
+// RULE func_decl = "(" [ func_params ] ")" block ;
+std::unique_ptr<FuncStmt> Parser::func_decl(const Token& return_type,
+                                            const Token& identifier) {
+  if (!match({TOKEN_LPAREN})) {
+    return nullptr;
+  }
+  std::vector<std::unique_ptr<FuncParamStmt>> params;
+  if (!check({TOKEN_RPAREN})) {
+    params = func_params();
+  }
+  consume({TOKEN_RPAREN}, "Excepted ')' after function parameters.");
+  auto body = block_stmt();
+  return std::make_unique<FuncStmt>(identifier, return_type, std::move(params),
+                                    std::move(body));
+}
+
+// RULE func_params = type identifier { "," type identifier } ;
+std::vector<std::unique_ptr<FuncParamStmt>> Parser::func_params() {
+  std::vector<std::unique_ptr<FuncParamStmt>> params;
+  do {
+    std::optional<Token> param_type = type();
+    if (!param_type) {
+      throw SyntaxError(current_token_, "Expected type.");
+    }
+    Token param_id =
+        consume({TOKEN_IDENTIFIER}, "Expected identifier after type.");
+    params.push_back(std::make_unique<FuncParamStmt>(param_type.value(), param_id));
+  } while (match({TOKEN_COMMA}));
+  return params;
+}
+
+// RULE mut_var_decl = "mut" type identifier var_decl ;
+std::unique_ptr<VarDeclStmt> Parser::mut_var_decl() {
+  if (!match({TOKEN_MUT})) {
+    return nullptr;
+  }
+  auto var_type = type();
+  if (!var_type) {
+    throw SyntaxError(current_token_, "Expected type.");
+  }
+  Token identifier =
+      consume({TOKEN_IDENTIFIER}, "Expected identifier after type.");
+  return var_decl(var_type.value(), identifier, true);
+}
+
+// RULE var_decl = "=" expression ";" ;
+std::unique_ptr<VarDeclStmt> Parser::var_decl(const Token& type,
+                                              const Token& identifier,
+                                              bool mut) {
+  if (!match({TOKEN_EQUAL})) {
+    return nullptr;
+  }
+  std::unique_ptr<Expr> expr = expression();
+  consume({TOKEN_SEMICOLON}, "Expected ';' after assignment.");
+  return std::make_unique<VarDeclStmt>(type, identifier, std::move(expr), mut);
+}
+
+// RULE struct_decl = "struct" identifier "{" { struct_field } "}" ;
+std::unique_ptr<StructDeclStmt> Parser::struct_decl() {
+  if (!match({TOKEN_STRUCT})) {
+    return nullptr;
+  }
+  Token struct_id =
+      consume({TOKEN_IDENTIFIER}, "Expected identifier after 'struct'.");
+  consume({TOKEN_LBRACE}, "Expected '{' after struct identifier.");
+  std::vector<std::unique_ptr<StructFieldStmt>> fields;
+  while (!check({TOKEN_RBRACE, TOKEN_ETX})) {
+    fields.push_back(struct_field());
+  }
+  consume({TOKEN_RBRACE}, "Expected '}' after fields.");
+  return std::make_unique<StructDeclStmt>(struct_id, std::move(fields));
+}
+
+// RULE struct_field = [ "mut" ] type identifier ";" ;
+std::unique_ptr<StructFieldStmt> Parser::struct_field() {
+  bool is_mut = false;
+  if (match({TOKEN_MUT})) {
+    is_mut = true;
+  }
+  std::optional<Token> field_type = type();
+  if (!field_type) {
+    throw SyntaxError(current_token_, "Expected type.");
+  }
+  Token field_id =
+      consume({TOKEN_IDENTIFIER}, "Expected identifier after type.");
+  consume({TOKEN_SEMICOLON}, "Expected ';' after struct field.");
+  return std::make_unique<StructFieldStmt>(field_type.value(), field_id, is_mut);
+}
+
+// RULE variant_decl = "variant" identifier "{" variant_params "}" ";" ;
+std::unique_ptr<VariantDeclStmt> Parser::variant_decl() {
+  if (!match({TOKEN_VARIANT})) {
+    return nullptr;
+  }
+  Token variant_id =
+      consume({TOKEN_IDENTIFIER}, "Expected identifier.");
+  consume({TOKEN_LBRACE}, "Expected '{'.");
+  std::vector<Token> params = variant_params();
+  consume({TOKEN_RBRACE}, "Expected '}'.");
+  consume({TOKEN_SEMICOLON}, "Expected ';' after variant declaration.");
+  return std::make_unique<VariantDeclStmt>(variant_id,
+                                           std::move(params));
+}
+
+// RULE variant_params = type { "," type } ;
+std::vector<Token> Parser::variant_params() {
+  std::vector<Token> params;
+  do {
+    auto type_token = type();
+    if (!type_token) {
+      throw SyntaxError(current_token_, "Expected type.");
+    }
+    params.push_back(type_token.value());
+  } while (match({TOKEN_COMMA}));
+  return params;
 }
 
 // RULE expression = logic_or ;
@@ -416,7 +491,11 @@ std::unique_ptr<Expr> Parser::type_cast() {
 
   while (auto token = match({TOKEN_AS, TOKEN_IS})) {
     Token op_symbol = token.value();
-    expr = std::make_unique<CastExpr>(std::move(expr), op_symbol, type());
+    auto cast_type = type();
+    if (!cast_type) {
+      throw SyntaxError(current_token_, "Expected type.");
+    }
+    expr = std::make_unique<CastExpr>(std::move(expr), op_symbol, cast_type.value());
   }
 
   return expr;
@@ -434,7 +513,7 @@ std::unique_ptr<Expr> Parser::call() {
       consume({TOKEN_RPAREN}, "Excepted ')' after function arguments.");
       expr = std::make_unique<CallExpr>(std::move(expr), std::move(args));
     }
-  } else if (check({TOKEN_DOT})) {
+  } else if (match({TOKEN_DOT})) {
     expr = field_access(std::move(expr));
   }
 
@@ -466,17 +545,17 @@ std::unique_ptr<Expr> Parser::primary() {
     return std::make_unique<InitalizerListExpr>(std::move(exprs));
   }
 
-  throw SyntaxError(current_token_, "Expected expression.");
+  throw SyntaxError(current_token_, "Expected primary.");
 }
 
 // RULE type = "bool" | "str" | "int" | "float" | identifier ;
-Token Parser::type() {
+std::optional<Token> Parser::type() {
   if (auto token = match(
           {TOKEN_FLOAT, TOKEN_INT, TOKEN_STR, TOKEN_BOOL, TOKEN_IDENTIFIER})) {
     return token.value();
   }
 
-  throw SyntaxError(current_token_, "Expected type.");
+  return std::nullopt;
 }
 
 // RULE arguments = expression { "," expression } ;
@@ -494,15 +573,15 @@ std::vector<std::unique_ptr<Expr>> Parser::arguments() {
   return args;
 }
 
-// RULE field_access = { "." identifier } ;
+// RULE field_access = identifier { "." identifier } ;
 std::unique_ptr<Expr> Parser::field_access(
     std::unique_ptr<Expr> parent_struct) {
-  while (match({TOKEN_DOT})) {
+  do {
     auto id = consume({TOKEN_IDENTIFIER},
                       "Expected identifier after '.' for accessing field.");
     parent_struct =
         std::make_unique<FieldAccessExpr>(std::move(parent_struct), id);
-  }
+  } while(match({TOKEN_DOT}));
   return parent_struct;
 }
 

@@ -46,7 +46,7 @@ TEST(ParserErrorTest, comparison_instead_of_assignment) {
         try {
           parser.parse();
         } catch (const SyntaxError& e) {
-          EXPECT_TRUE(str_contains(e.what(), "Expected expression after '='."));
+          EXPECT_TRUE(str_contains(e.what(), "Expected assignment, call or declaration."));
           EXPECT_EQ(e.get_token().get_type(), TokenType::TOKEN_EQUAL_EQUAL);
           throw;
         }

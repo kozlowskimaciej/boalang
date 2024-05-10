@@ -190,22 +190,35 @@ Długość identyfikatorów i zakres wartości zmiennych `int` i `float` ogranic
 ## Gramatyka EBNF
 
 ```
-program		=	{ declaration } ;
+program		=	{ statement } ;
+
+statement 	=	if_stmt
+                |	while_stmt
+                |	return_stmt
+                |	print_stmt
+                |       inspect_stmt
+                |	block_stmt
+                |       declaration;
+if_stmt		=	"if" "(" expression ")" statement [ "else" statement ] ;
+while_stmt	=	"while" "(" expression ")" statement ;
+return_stmt	=	"return" [ expression ] ";" ;
+print_stmt	=	"print" expression ";" ;
+inspect_stmt    =       "inspect" expression "{" { lambda_func } [ "default" "=>" statement ] "}" ;
+lambda_func     =       type identifier "=>" statement
 declaration	=	assign_call_decl
                 |	struct_decl
-                |       variant_decl
-                |       statement ;
+                |       variant_decl;
 
 assign_call_decl=       mut_var_decl
                 |       void_func_decl
-                |       var_func_decl
-                |       assign_call;  
+                |       type var_func_decl
+                |       identifier assign_call;  
 
-assign_call     =       identifier ( assign_stmt | call_stmt )
+assign_call     =       ( assign_stmt | call_stmt ) ;
 assign_stmt     =	[ field_access ] "=" expression ";" ;
 call_stmt       =       "(" [ arguments ] ");" ;
 
-var_func_decl   =       type identifier ( var_decl | func_decl )
+var_func_decl   =       identifier ( var_decl | func_decl )
 mut_var_decl    =	"mut" type identifier var_decl ;
 void_func_decl	=	"void" identifier func_decl ;
 
@@ -220,20 +233,7 @@ struct_field    =       [ "mut" ] type identifier ";" ;
 variant_decl    =       "variant" identifier "{" variant_params "}" ";" ;
 variant_params  =       type { "," type } ;
 
-statement 	=	if_stmt
-                |	while_stmt
-                |	return_stmt
-                |	print_stmt
-                |       inspect_stmt
-                |	block_stmt ;
-if_stmt		=	"if" "(" expression ")" statement [ "else" statement ] ;
-while_stmt	=	"while" "(" expression ")" statement ;
-return_stmt	=	"return" [ expression ] ";" ;
-print_stmt	=	"print" expression ";" ;
-inspect_stmt    =       "inspect" expression "{" { lambda_func } [ "default" "=>" statement ] "}" ;
-lambda_func     =       type identifier "=>" statement
-
-block_stmt	=	"{" { declaration } "}" ;
+block_stmt	=	"{" { statement } "}" ;
 
 expression	=	logic_or ;
 logic_or	=	logic_and { "or" logic_and } ;
