@@ -8,12 +8,11 @@ constexpr unsigned int MAX_ARGUMENTS =
 // RULE program = { statement } ;
 std::unique_ptr<Program> Parser::parse() {
   std::vector<std::unique_ptr<Stmt>> statements;
-  while (!check({TOKEN_ETX})) {
-    if (auto stmt = statement()) {
-      statements.push_back(std::move(stmt));
-    } else {
-      throw SyntaxError(current_token_, "Expected statement or declaration.");
-    }
+  while (auto stmt = statement()) {
+    statements.push_back(std::move(stmt));
+  }
+  if (!match({TOKEN_ETX})) {
+    throw SyntaxError(current_token_, "Expected statement or declaration.");
   }
   return std::make_unique<Program>(std::move(statements));
 }
@@ -100,13 +99,13 @@ std::unique_ptr<ReturnStmt> Parser::return_stmt() {
     return nullptr;
   }
   std::unique_ptr<Expr> value;
-  if (!check({TOKEN_SEMICOLON})) {
+  if (!match({TOKEN_SEMICOLON})) {
     value = expression();
     if (!value) {
       throw SyntaxError(current_token_, "Expected expression after 'return'.");
     }
+    consume({TOKEN_SEMICOLON}, "Expected ';' after returned expression.");
   }
-  consume({TOKEN_SEMICOLON}, "Expected ';' after returned expression.");
   return std::make_unique<ReturnStmt>(std::move(value));
 }
 
@@ -334,14 +333,14 @@ std::unique_ptr<CallStmt> Parser::call_stmt(const Token& identifier) {
   }
 
   std::vector<std::unique_ptr<Expr>> call_args;
-  if (!check({TOKEN_LPAREN})) {
+  if (!match({TOKEN_RPAREN})) {
     if (auto args = arguments()) {
       call_args = std::move(args.value());
     } else {
       throw SyntaxError(current_token_, "Expected call arguments.");
     }
+    consume({TOKEN_RPAREN}, "Excepted ')' after call arguments.");
   }
-  consume({TOKEN_RPAREN}, "Excepted ')' after call arguments.");
   consume({TOKEN_SEMICOLON}, "Expected ';' after call statement.");
   return std::make_unique<CallStmt>(identifier, std::move(call_args));
 }
@@ -411,14 +410,14 @@ std::unique_ptr<FuncStmt> Parser::func_decl(const Token& return_type,
     return nullptr;
   }
   std::vector<std::unique_ptr<FuncParamStmt>> params;
-  if (!check({TOKEN_RPAREN})) {
+  if (!match({TOKEN_RPAREN})) {
     if (auto funcparams = func_params()) {
       params = std::move(funcparams.value());
     } else {
       throw SyntaxError(current_token_, "Expected function parameters.");
     }
+    consume({TOKEN_RPAREN}, "Excepted ')' after function parameters.");
   }
-  consume({TOKEN_RPAREN}, "Excepted ')' after function parameters.");
   auto body = block_stmt();
   if (!body) {
     throw SyntaxError(current_token_, "Expected block statement in function declaration.");
@@ -625,14 +624,14 @@ std::unique_ptr<Expr> Parser::call() {
 
   if (match({TOKEN_LPAREN})) {
     std::vector<std::unique_ptr<Expr>> call_args;
-    if (!check({TOKEN_RPAREN})) {
+    if (!match({TOKEN_RPAREN})) {
       auto args = arguments();
       if (!args) {
         throw SyntaxError(current_token_, "Expected arguments in call.");
       }
       call_args = std::move(args.value());
+      consume({TOKEN_RPAREN}, "Excepted ')' after call arguments.");
     }
-    consume({TOKEN_RPAREN}, "Excepted ')' after call arguments.");
     expr = std::make_unique<CallExpr>(std::move(expr), std::move(call_args));
   } else if (match({TOKEN_DOT})) {
     expr = field_access(std::move(expr));
@@ -743,10 +742,4 @@ Token Parser::consume(std::initializer_list<TokenType> types,
     return token.value();
   }
   throw SyntaxError(current_token_, err_msg);
-}
-
-bool Parser::check(std::initializer_list<TokenType> types) const {
-  return std::ranges::any_of(types, [&](const auto& type) {
-    return current_token_.get_type() == type;
-  });
 }

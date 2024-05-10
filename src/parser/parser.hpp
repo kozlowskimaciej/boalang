@@ -61,7 +61,6 @@ class Parser {
   Token advance();
   Token consume(std::initializer_list<TokenType> types,
                 const std::string& err_msg);
-  [[nodiscard]] bool check(std::initializer_list<TokenType> types) const;
 
  public:
   explicit Parser(ILexer& lexer)
