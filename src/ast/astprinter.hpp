@@ -25,33 +25,33 @@ class ASTPrinter : public ExprVisitor, public StmtVisitor {
  public:
   void print(Program* program);
 
-  void visit_program_stmt(const Program& stmt) override;
-  void visit_print_stmt(const PrintStmt& stmt) override;
-  void visit_if_stmt(const IfStmt& stmt) override;
-  void visit_block_stmt(const BlockStmt& stmt) override;
-  void visit_while_stmt(const WhileStmt& stmt) override;
-  void visit_vardecl_stmt(const VarDeclStmt& stmt) override;
-  void visit_structfield_stmt(const StructFieldStmt& stmt) override;
-  void visit_structdecl_stmt(const StructDeclStmt& stmt) override;
-  void visit_variantdecl_stmt(const VariantDeclStmt& stmt) override;
-  void visit_assign_stmt(const AssignStmt& stmt) override;
-  void visit_call_stmt(const CallStmt& stmt) override;
-  void visit_funcparam_stmt(const FuncParamStmt& stmt) override;
-  void visit_func_stmt(const FuncStmt& stmt) override;
-  void visit_return_stmt(const ReturnStmt& stmt) override;
-  void visit_lambdafunc_stmt(const LambdaFuncStmt& stmt) override;
-  void visit_inspect_stmt(const InspectStmt& stmt) override;
+  void visit(const Program& stmt) override;
+  void visit(const PrintStmt& stmt) override;
+  void visit(const IfStmt& stmt) override;
+  void visit(const BlockStmt& stmt) override;
+  void visit(const WhileStmt& stmt) override;
+  void visit(const VarDeclStmt& stmt) override;
+  void visit(const StructFieldStmt& stmt) override;
+  void visit(const StructDeclStmt& stmt) override;
+  void visit(const VariantDeclStmt& stmt) override;
+  void visit(const AssignStmt& stmt) override;
+  void visit(const CallStmt& stmt) override;
+  void visit(const FuncParamStmt& stmt) override;
+  void visit(const FuncStmt& stmt) override;
+  void visit(const ReturnStmt& stmt) override;
+  void visit(const LambdaFuncStmt& stmt) override;
+  void visit(const InspectStmt& stmt) override;
 
-  void visit_binary_expr(const BinaryExpr& expr) override;
-  void visit_grouping_expr(const GroupingExpr& expr) override;
-  void visit_literal_expr(const LiteralExpr& expr) override;
-  void visit_unary_expr(const UnaryExpr& expr) override;
-  void visit_var_expr(const VarExpr& expr) override;
-  void visit_logical_expr(const LogicalExpr& expr) override;
-  void visit_cast_expr(const CastExpr& expr) override;
-  void visit_initalizerlist_expr(const InitalizerListExpr& expr) override;
-  void visit_call_expr(const CallExpr& expr) override;
-  void visit_fieldaccess_expr(const FieldAccessExpr& expr) override;
+  void visit(const BinaryExpr& expr) override;
+  void visit(const GroupingExpr& expr) override;
+  void visit(const LiteralExpr& expr) override;
+  void visit(const UnaryExpr& expr) override;
+  void visit(const VarExpr& expr) override;
+  void visit(const LogicalExpr& expr) override;
+  void visit(const CastExpr& expr) override;
+  void visit(const InitalizerListExpr& expr) override;
+  void visit(const CallExpr& expr) override;
+  void visit(const FieldAccessExpr& expr) override;
 };
 
 #endif  // BOALANG_ASTPRINTER_HPP

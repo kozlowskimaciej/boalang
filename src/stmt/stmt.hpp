@@ -20,7 +20,7 @@ class Stmt {
 
 class Program : public Stmt {
  public:
-  const std::vector<std::unique_ptr<Stmt>> statements;
+  std::vector<std::unique_ptr<Stmt>> statements;
 
   explicit Program(std::vector<std::unique_ptr<Stmt>> statements)
       : statements(std::move(statements)){};
@@ -29,7 +29,7 @@ class Program : public Stmt {
 
 class PrintStmt : public Stmt {
  public:
-  const std::unique_ptr<Expr> expr;
+  std::unique_ptr<Expr> expr;
 
   explicit PrintStmt(std::unique_ptr<Expr> expr) : expr(std::move(expr)){};
   void accept(StmtVisitor& stmt_visitor) const override;
@@ -37,9 +37,9 @@ class PrintStmt : public Stmt {
 
 class IfStmt : public Stmt {
  public:
-  const std::unique_ptr<Expr> condition;
-  const std::unique_ptr<Stmt> then_branch;
-  const std::unique_ptr<Stmt> else_branch;
+  std::unique_ptr<Expr> condition;
+  std::unique_ptr<Stmt> then_branch;
+  std::unique_ptr<Stmt> else_branch;
 
   IfStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> then_branch,
          std::unique_ptr<Stmt> else_branch)
@@ -51,7 +51,7 @@ class IfStmt : public Stmt {
 
 class BlockStmt : public Stmt {
  public:
-  const std::vector<std::unique_ptr<Stmt>> statements;
+  std::vector<std::unique_ptr<Stmt>> statements;
 
   explicit BlockStmt(std::vector<std::unique_ptr<Stmt>> statements)
       : statements(std::move(statements)){};
@@ -60,8 +60,8 @@ class BlockStmt : public Stmt {
 
 class WhileStmt : public Stmt {
  public:
-  const std::unique_ptr<Expr> condition;
-  const std::unique_ptr<Stmt> body;
+  std::unique_ptr<Expr> condition;
+  std::unique_ptr<Stmt> body;
 
   WhileStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> body)
       : condition(std::move(condition)), body(std::move(body)){};
@@ -70,10 +70,10 @@ class WhileStmt : public Stmt {
 
 class VarDeclStmt : public Stmt {
  public:
-  const Token type;
-  const Token identifier;
-  const std::unique_ptr<Expr> initializer;
-  const bool mut;
+  Token type;
+  Token identifier;
+  std::unique_ptr<Expr> initializer;
+  bool mut;
 
   VarDeclStmt(Token type, Token identifier, std::unique_ptr<Expr> initializer,
               bool mut = false)
@@ -86,9 +86,9 @@ class VarDeclStmt : public Stmt {
 
 class StructFieldStmt : public Stmt {
  public:
-  const Token type;
-  const Token identifier;
-  const bool mut;
+  Token type;
+  Token identifier;
+  bool mut;
 
   StructFieldStmt(Token type, Token identifier, bool mut = false)
       : type(std::move(type)), identifier(std::move(identifier)), mut(mut){};
@@ -97,8 +97,8 @@ class StructFieldStmt : public Stmt {
 
 class StructDeclStmt : public Stmt {
  public:
-  const Token identifier;
-  const std::vector<std::unique_ptr<StructFieldStmt>> fields;
+  Token identifier;
+  std::vector<std::unique_ptr<StructFieldStmt>> fields;
 
   StructDeclStmt(Token identifier,
                  std::vector<std::unique_ptr<StructFieldStmt>> fields)
@@ -108,8 +108,8 @@ class StructDeclStmt : public Stmt {
 
 class VariantDeclStmt : public Stmt {
  public:
-  const Token identifier;
-  const std::vector<Token> params;
+  Token identifier;
+  std::vector<Token> params;
 
   VariantDeclStmt(Token identifier, std::vector<Token> params)
       : identifier(std::move(identifier)), params(std::move(params)){};
@@ -118,8 +118,8 @@ class VariantDeclStmt : public Stmt {
 
 class AssignStmt : public Stmt {
  public:
-  const std::unique_ptr<Expr> var;
-  const std::unique_ptr<Expr> value;
+  std::unique_ptr<Expr> var;
+  std::unique_ptr<Expr> value;
 
   AssignStmt(std::unique_ptr<Expr> var, std::unique_ptr<Expr> value)
       : var(std::move(var)), value(std::move(value)){};
@@ -128,8 +128,8 @@ class AssignStmt : public Stmt {
 
 class CallStmt : public Stmt {
  public:
-  const Token identifier;
-  const std::vector<std::unique_ptr<Expr>> arguments;
+  Token identifier;
+  std::vector<std::unique_ptr<Expr>> arguments;
 
   explicit CallStmt(Token identifier,
                     std::vector<std::unique_ptr<Expr>> arguments = {})
@@ -139,8 +139,8 @@ class CallStmt : public Stmt {
 
 class FuncParamStmt : public Stmt {
  public:
-  const Token type;
-  const Token identifier;
+  Token type;
+  Token identifier;
 
   FuncParamStmt(Token type, Token identifier)
       : type(std::move(type)), identifier(std::move(identifier)){};
@@ -149,10 +149,10 @@ class FuncParamStmt : public Stmt {
 
 class FuncStmt : public Stmt {
  public:
-  const Token identifier;
-  const Token return_type;
-  const std::vector<std::unique_ptr<FuncParamStmt>> params;
-  const std::unique_ptr<BlockStmt> body;
+  Token identifier;
+  Token return_type;
+  std::vector<std::unique_ptr<FuncParamStmt>> params;
+  std::unique_ptr<BlockStmt> body;
 
   FuncStmt(Token identifier, Token return_type,
            std::vector<std::unique_ptr<FuncParamStmt>> params,
@@ -166,7 +166,7 @@ class FuncStmt : public Stmt {
 
 class ReturnStmt : public Stmt {
  public:
-  const std::unique_ptr<Expr> value;
+  std::unique_ptr<Expr> value;
 
   ReturnStmt(std::unique_ptr<Expr> value) : value(std::move(value)){};
   void accept(StmtVisitor& stmt_visitor) const override;
@@ -174,9 +174,9 @@ class ReturnStmt : public Stmt {
 
 class LambdaFuncStmt : public Stmt {
  public:
-  const Token type;
-  const Token identifier;
-  const std::unique_ptr<Stmt> body;
+  Token type;
+  Token identifier;
+  std::unique_ptr<Stmt> body;
 
   LambdaFuncStmt(Token type, Token identifier, std::unique_ptr<Stmt> body)
       : type(std::move(type)),
@@ -187,9 +187,9 @@ class LambdaFuncStmt : public Stmt {
 
 class InspectStmt : public Stmt {
  public:
-  const std::unique_ptr<Expr> inspected;
-  const std::vector<std::unique_ptr<LambdaFuncStmt>> lambdas;
-  const std::unique_ptr<Stmt> default_lambda;
+  std::unique_ptr<Expr> inspected;
+  std::vector<std::unique_ptr<LambdaFuncStmt>> lambdas;
+  std::unique_ptr<Stmt> default_lambda;
 
   InspectStmt(std::unique_ptr<Expr> inspected,
               std::vector<std::unique_ptr<LambdaFuncStmt>> lambdas,
@@ -204,22 +204,22 @@ class StmtVisitor {
  public:
   virtual ~StmtVisitor() = default;
 
-  virtual void visit_program_stmt(const Program& stmt) = 0;
-  virtual void visit_print_stmt(const PrintStmt& stmt) = 0;
-  virtual void visit_if_stmt(const IfStmt& stmt) = 0;
-  virtual void visit_block_stmt(const BlockStmt& stmt) = 0;
-  virtual void visit_while_stmt(const WhileStmt& stmt) = 0;
-  virtual void visit_vardecl_stmt(const VarDeclStmt& stmt) = 0;
-  virtual void visit_structfield_stmt(const StructFieldStmt& stmt) = 0;
-  virtual void visit_structdecl_stmt(const StructDeclStmt& stmt) = 0;
-  virtual void visit_variantdecl_stmt(const VariantDeclStmt& stmt) = 0;
-  virtual void visit_assign_stmt(const AssignStmt& stmt) = 0;
-  virtual void visit_call_stmt(const CallStmt& stmt) = 0;
-  virtual void visit_funcparam_stmt(const FuncParamStmt& stmt) = 0;
-  virtual void visit_func_stmt(const FuncStmt& stmt) = 0;
-  virtual void visit_return_stmt(const ReturnStmt& stmt) = 0;
-  virtual void visit_lambdafunc_stmt(const LambdaFuncStmt& stmt) = 0;
-  virtual void visit_inspect_stmt(const InspectStmt& stmt) = 0;
+  virtual void visit(const Program& stmt) = 0;
+  virtual void visit(const PrintStmt& stmt) = 0;
+  virtual void visit(const IfStmt& stmt) = 0;
+  virtual void visit(const BlockStmt& stmt) = 0;
+  virtual void visit(const WhileStmt& stmt) = 0;
+  virtual void visit(const VarDeclStmt& stmt) = 0;
+  virtual void visit(const StructFieldStmt& stmt) = 0;
+  virtual void visit(const StructDeclStmt& stmt) = 0;
+  virtual void visit(const VariantDeclStmt& stmt) = 0;
+  virtual void visit(const AssignStmt& stmt) = 0;
+  virtual void visit(const CallStmt& stmt) = 0;
+  virtual void visit(const FuncParamStmt& stmt) = 0;
+  virtual void visit(const FuncStmt& stmt) = 0;
+  virtual void visit(const ReturnStmt& stmt) = 0;
+  virtual void visit(const LambdaFuncStmt& stmt) = 0;
+  virtual void visit(const InspectStmt& stmt) = 0;
 };
 
 #endif  // BOALANG_STMT_HPP
