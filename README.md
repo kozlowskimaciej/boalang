@@ -198,41 +198,41 @@ statement 	=	if_stmt
                 |	print_stmt
                 |       inspect_stmt
                 |	block_stmt
-                |       declaration;
+                |	struct_decl
+                |       variant_decl
+                |       var_or_func ;
 if_stmt		=	"if" "(" expression ")" statement [ "else" statement ] ;
 while_stmt	=	"while" "(" expression ")" statement ;
 return_stmt	=	"return" [ expression ] ";" ;
 print_stmt	=	"print" expression ";" ;
+
 inspect_stmt    =       "inspect" expression "{" { lambda_func } [ "default" "=>" statement ] "}" ;
 lambda_func     =       type identifier "=>" statement
+
 block_stmt	=	"{" { statement } "}" ;
-declaration	=	assign_call_decl
-                |	struct_decl
-                |       variant_decl;
-
-assign_call_decl=       mut_var_decl
-                |       void_func_decl
-                |       type var_func_decl
-                |       identifier assign_call;  
-
-assign_call     =       ( assign_stmt | call_stmt ) ;
-assign_stmt     =	[ "." field_access ] "=" expression ";" ;
-call_stmt       =       "(" [ arguments ] ");" ;
-
-var_func_decl   =       identifier ( var_decl | func_decl ) ;
-mut_var_decl    =	"mut" type identifier var_decl ;
-void_func_decl	=	"void" identifier func_decl ;
-
-var_decl        =       "=" expression ";" ;
-func_decl	=	"(" [ func_params ] ")" block ;
-
-func_params     =	type identifier { "," type identifier } ;
 
 struct_decl 	=	"struct" identifier "{" { struct_field } "}" ;
 struct_field    =       [ "mut" ] type identifier ";" ;
 
 variant_decl    =       "variant" identifier "{" variant_params "}" ";" ;
 variant_params  =       type { "," type } ;
+
+var_or_func     =       mut_var_decl
+                |       void_func_decl
+                |       type var_or_func_decl
+                |       identifier assign_or_call;  
+
+assign_or_call  =       ( assign_stmt | call_stmt ) ;
+assign_stmt     =	[ "." field_access ] "=" expression ";" ;
+call_stmt       =       "(" [ arguments ] ");" ;
+
+var_or_func_decl=       identifier ( var_decl | func_decl ) ;
+mut_var_decl    =	"mut" type identifier var_decl ;
+void_func_decl	=	"void" identifier func_decl ;
+
+var_decl        =       "=" expression ";" ;
+func_decl	=	"(" [ func_params ] ")" block ;
+func_params     =	type identifier { "," type identifier } ;
 
 expression	=	logic_or ;
 logic_or	=	logic_and { "or" logic_and } ;

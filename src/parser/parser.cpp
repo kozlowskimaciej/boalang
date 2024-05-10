@@ -33,7 +33,9 @@ std::unique_ptr<Stmt> Parser::statement() {
       [this]() { return print_stmt(); },
       [this]() { return inspect_stmt(); },
       [this]() { return block_stmt(); },
-      [this]() { return declaration(); }
+      [this]() { return struct_decl(); },
+      [this]() { return variant_decl(); },
+      [this]() { return var_or_func(); }
   };
 
   for (auto& handler : stmt_handlers) {
@@ -177,30 +179,86 @@ std::unique_ptr<BlockStmt> Parser::block_stmt() {
   return std::make_unique<BlockStmt>(std::move(statements));
 }
 
-// RULE declaration	= assign_call_decl
-//                  | struct_decl
-//                  | variant_decl ;
-std::unique_ptr<Stmt> Parser::declaration() {
-  std::vector<std::function<std::unique_ptr<Stmt>()>> declaration_handlers = {
-      [this]() { return assign_call_decl(); },
-      [this]() { return struct_decl(); },
-      [this]() { return variant_decl(); }
-  };
-
-  for (auto& handler : declaration_handlers) {
-    if (auto stmt = handler()) {
-      return stmt;
-    }
+// RULE struct_decl = "struct" identifier "{" { struct_field } "}" ;
+std::unique_ptr<StructDeclStmt> Parser::struct_decl() {
+  if (!match({TOKEN_STRUCT})) {
+    return nullptr;
   }
-
-  return nullptr;
+  Token struct_id =
+      consume({TOKEN_IDENTIFIER}, "Expected identifier after 'struct'.");
+  consume({TOKEN_LBRACE}, "Expected '{' after struct identifier.");
+  std::vector<std::unique_ptr<StructFieldStmt>> fields;
+  while (auto field = struct_field()) {
+    fields.push_back(std::move(field));
+  }
+  consume({TOKEN_RBRACE}, "Expected '}' after struct declaration.");
+  return std::make_unique<StructDeclStmt>(struct_id, std::move(fields));
 }
 
-// RULE assign_call_decl= mut_var_decl
-//                      | void_func_decl
-//                      | type var_func_decl
-//                      | identifier assign_call;
-std::unique_ptr<Stmt> Parser::assign_call_decl() {
+// RULE struct_field = [ "mut" ] type identifier ";" ;
+std::unique_ptr<StructFieldStmt> Parser::struct_field() {
+  bool is_mut = false;
+  if (match({TOKEN_MUT})) {
+    is_mut = true;
+  }
+  std::optional<Token> field_type = type();
+  if (!field_type) {
+    if (is_mut) {
+      throw SyntaxError(current_token_, "Expected struct field type.");
+    }
+    return nullptr;
+  }
+  Token field_id =
+      consume({TOKEN_IDENTIFIER}, "Expected identifier after struct field type.");
+  consume({TOKEN_SEMICOLON}, "Expected ';' after struct field.");
+  return std::make_unique<StructFieldStmt>(field_type.value(), field_id, is_mut);
+}
+
+// RULE variant_decl = "variant" identifier "{" variant_params "}" ";" ;
+std::unique_ptr<VariantDeclStmt> Parser::variant_decl() {
+  if (!match({TOKEN_VARIANT})) {
+    return nullptr;
+  }
+  Token variant_id =
+      consume({TOKEN_IDENTIFIER}, "Expected variant identifier.");
+  consume({TOKEN_LBRACE}, "Expected '{' after identifier.");
+  std::vector<Token> params;
+  if (auto variantparams = variant_params()) {
+    params = variantparams.value();
+  } else {
+    throw SyntaxError(current_token_, "Expected variant parameters.");
+  }
+  consume({TOKEN_RBRACE}, "Expected '}' after variant parameters.");
+  consume({TOKEN_SEMICOLON}, "Expected ';' after variant declaration.");
+  return std::make_unique<VariantDeclStmt>(variant_id,
+                                           std::move(params));
+}
+
+// RULE variant_params = type { "," type } ;
+std::optional<std::vector<Token>> Parser::variant_params() {
+  std::vector<Token> params;
+
+  if (auto type_token = type()) {
+    params.push_back(type_token.value());
+  } else {
+    return std::nullopt;
+  }
+
+  while (match({TOKEN_COMMA})) {
+    auto type_token = type();
+    if (!type_token) {
+      throw SyntaxError(current_token_, "Expected variant parameter type.");
+    }
+    params.push_back(type_token.value());
+  };
+  return params;
+}
+
+// RULE var_or_func = mut_var_decl
+//                  | void_func_decl
+//                  | type var_or_func_decl
+//                  | identifier assign_or_call;
+std::unique_ptr<Stmt> Parser::var_or_func() {
   std::vector<std::function<std::unique_ptr<Stmt>()>> declaration_handlers = {
       [this]() { return mut_var_decl(); },
       [this]() { return void_func_decl(); }
@@ -213,10 +271,10 @@ std::unique_ptr<Stmt> Parser::assign_call_decl() {
   }
 
   if (auto token = match({TOKEN_IDENTIFIER})) {
-    if (auto assigncall = assign_call(token.value())) {
+    if (auto assigncall = assign_or_call(token.value())) {
       return assigncall;
     }
-    if (auto varfuncdecl = var_func_decl(token.value())) {
+    if (auto varfuncdecl = var_or_func_decl(token.value())) {
       return varfuncdecl;
     }
     throw SyntaxError(current_token_, "Expected assignment, call or declaration.");
@@ -224,7 +282,7 @@ std::unique_ptr<Stmt> Parser::assign_call_decl() {
 
   std::optional<Token> decl_type = type();
   if (decl_type) {
-    if (auto varfuncdecl = var_func_decl(decl_type.value())) {
+    if (auto varfuncdecl = var_or_func_decl(decl_type.value())) {
       return varfuncdecl;
     }
   }
@@ -232,8 +290,8 @@ std::unique_ptr<Stmt> Parser::assign_call_decl() {
   return nullptr;
 }
 
-// RULE assign_call = ( assign_stmt | call_stmt ) ;
-std::unique_ptr<Stmt> Parser::assign_call(const Token& identifier) {
+// RULE assign_or_call = ( assign_stmt | call_stmt ) ;
+std::unique_ptr<Stmt> Parser::assign_or_call(const Token& identifier) {
   if (auto call = call_stmt(identifier)) {
     return call;
   }
@@ -286,8 +344,8 @@ std::unique_ptr<CallStmt> Parser::call_stmt(const Token& identifier) {
   return std::make_unique<CallStmt>(identifier, std::move(call_args));
 }
 
-// RULE var_func_decl = identifier ( var_decl | func_decl ) ;
-std::unique_ptr<Stmt> Parser::var_func_decl(const Token& type) {
+// RULE var_or_func_decl = identifier ( var_decl | func_decl ) ;
+std::unique_ptr<Stmt> Parser::var_or_func_decl(const Token& type) {
   if (auto identifier = match({TOKEN_IDENTIFIER})){
     if (auto vardecl = var_decl(type, identifier.value(), false)) {
       return vardecl;
@@ -388,81 +446,6 @@ std::optional<std::vector<std::unique_ptr<FuncParamStmt>>> Parser::func_params()
         consume({TOKEN_IDENTIFIER}, "Expected identifier after type.");
     params.push_back(std::make_unique<FuncParamStmt>(param_type.value(), param_id));
   }
-  return params;
-}
-
-// RULE struct_decl = "struct" identifier "{" { struct_field } "}" ;
-std::unique_ptr<StructDeclStmt> Parser::struct_decl() {
-  if (!match({TOKEN_STRUCT})) {
-    return nullptr;
-  }
-  Token struct_id =
-      consume({TOKEN_IDENTIFIER}, "Expected identifier after 'struct'.");
-  consume({TOKEN_LBRACE}, "Expected '{' after struct identifier.");
-  std::vector<std::unique_ptr<StructFieldStmt>> fields;
-  while (auto field = struct_field()) {
-    fields.push_back(std::move(field));
-  }
-  consume({TOKEN_RBRACE}, "Expected '}' after struct declaration.");
-  return std::make_unique<StructDeclStmt>(struct_id, std::move(fields));
-}
-
-// RULE struct_field = [ "mut" ] type identifier ";" ;
-std::unique_ptr<StructFieldStmt> Parser::struct_field() {
-  bool is_mut = false;
-  if (match({TOKEN_MUT})) {
-    is_mut = true;
-  }
-  std::optional<Token> field_type = type();
-  if (!field_type) {
-    if (is_mut) {
-      throw SyntaxError(current_token_, "Expected struct field type.");
-    }
-    return nullptr;
-  }
-  Token field_id =
-      consume({TOKEN_IDENTIFIER}, "Expected identifier after struct field type.");
-  consume({TOKEN_SEMICOLON}, "Expected ';' after struct field.");
-  return std::make_unique<StructFieldStmt>(field_type.value(), field_id, is_mut);
-}
-
-// RULE variant_decl = "variant" identifier "{" variant_params "}" ";" ;
-std::unique_ptr<VariantDeclStmt> Parser::variant_decl() {
-  if (!match({TOKEN_VARIANT})) {
-    return nullptr;
-  }
-  Token variant_id =
-      consume({TOKEN_IDENTIFIER}, "Expected variant identifier.");
-  consume({TOKEN_LBRACE}, "Expected '{' after identifier.");
-  std::vector<Token> params;
-  if (auto variantparams = variant_params()) {
-    params = variantparams.value();
-  } else {
-    throw SyntaxError(current_token_, "Expected variant parameters.");
-  }
-  consume({TOKEN_RBRACE}, "Expected '}' after variant parameters.");
-  consume({TOKEN_SEMICOLON}, "Expected ';' after variant declaration.");
-  return std::make_unique<VariantDeclStmt>(variant_id,
-                                           std::move(params));
-}
-
-// RULE variant_params = type { "," type } ;
-std::optional<std::vector<Token>> Parser::variant_params() {
-  std::vector<Token> params;
-
-  if (auto type_token = type()) {
-    params.push_back(type_token.value());
-  } else {
-    return std::nullopt;
-  }
-
-  while (match({TOKEN_COMMA})) {
-    auto type_token = type();
-    if (!type_token) {
-      throw SyntaxError(current_token_, "Expected variant parameter type.");
-    }
-    params.push_back(type_token.value());
-  };
   return params;
 }
 
