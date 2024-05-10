@@ -51,6 +51,9 @@ std::unique_ptr<PrintStmt> Parser::print_stmt() {
     return nullptr;
   }
   std::unique_ptr<Expr> expr = expression();
+  if (!expr) {
+    throw SyntaxError(current_token_, "Expected expression after 'print'.");
+  }
   consume({TOKEN_SEMICOLON}, "Expected ';' after expression.");
   return std::make_unique<PrintStmt>(std::move(expr));
 }
@@ -62,11 +65,20 @@ std::unique_ptr<IfStmt> Parser::if_stmt() {
   }
   consume({TOKEN_LPAREN}, "Expected '(' after 'if'.");
   std::unique_ptr<Expr> condition = expression();
+  if (!condition) {
+    throw SyntaxError(current_token_, "Expected if condition statement.");
+  }
   consume({TOKEN_RPAREN}, "Expected ')' after condition.");
   std::unique_ptr<Stmt> then_branch = statement();
+  if (!then_branch) {
+    throw SyntaxError(current_token_, "Expected if's then branch statement.");
+  }
   std::unique_ptr<Stmt> else_branch;
   if (match({TOKEN_ELSE})) {
     else_branch = statement();
+    if (!else_branch) {
+      throw SyntaxError(current_token_, "Expected if's else branch statement.");
+    }
   }
   return std::make_unique<IfStmt>(std::move(condition), std::move(then_branch),
                                   std::move(else_branch));
@@ -92,8 +104,14 @@ std::unique_ptr<WhileStmt> Parser::while_stmt() {
   }
   consume({TOKEN_LPAREN}, "Expected '(' after 'while'.");
   std::unique_ptr<Expr> condition = expression();
+  if (!condition) {
+    throw SyntaxError(current_token_, "Expected condition expression.");
+  }
   consume({TOKEN_RPAREN}, "Expected ')' after while condition.");
   std::unique_ptr<Stmt> body = statement();
+  if (!body) {
+    throw SyntaxError(current_token_, "Expected body statement.");
+  }
 
   return std::make_unique<WhileStmt>(std::move(condition), std::move(body));
 }
@@ -106,6 +124,9 @@ std::unique_ptr<ReturnStmt> Parser::return_stmt() {
   std::unique_ptr<Expr> value;
   if (!check({TOKEN_SEMICOLON})) {
     value = expression();
+    if (!value) {
+      throw SyntaxError(current_token_, "Expected expression after 'return'.");
+    }
   }
   consume({TOKEN_SEMICOLON}, "Expected ';' after expression.");
   return std::make_unique<ReturnStmt>(std::move(value));
@@ -118,10 +139,13 @@ std::unique_ptr<InspectStmt> Parser::inspect_stmt() {
     return nullptr;
   }
   std::unique_ptr<Expr> inspected = expression();
+  if (!inspected) {
+    throw SyntaxError(current_token_, "Expected expression after 'inspect'.");
+  }
   consume({TOKEN_LBRACE}, "Expected '{' after expression.");
   std::vector<std::unique_ptr<LambdaFuncStmt>> lambdas;
-  while (!check({TOKEN_DEFAULT, TOKEN_RBRACE, TOKEN_ETX})) {
-    lambdas.push_back(lambda_func());
+  while (auto lambda = lambda_func()) {
+    lambdas.push_back(std::move(lambda));
   }
 
   std::unique_ptr<Stmt> default_lambda;
@@ -138,12 +162,15 @@ std::unique_ptr<InspectStmt> Parser::inspect_stmt() {
 std::unique_ptr<LambdaFuncStmt> Parser::lambda_func() {
   std::optional<Token> lambda_type = type();
   if (!lambda_type) {
-    throw SyntaxError(current_token_, "Expected type.");
+    return nullptr;
   }
   Token lambda_id =
       consume({TOKEN_IDENTIFIER}, "Expected identifier after type.");
   consume({TOKEN_ARROW}, "Expected '=>' after lambda identifier.");
   std::unique_ptr<Stmt> lambda_body = statement();
+  if (!lambda_body) {
+    throw SyntaxError(current_token_, "Expected statement for lambda body.");
+  }
   return std::make_unique<LambdaFuncStmt>(lambda_type.value(), lambda_id,
                                           std::move(lambda_body));
 }
@@ -219,14 +246,18 @@ std::unique_ptr<Stmt> Parser::assign_call(const Token& identifier) {
 std::unique_ptr<AssignStmt> Parser::assign_stmt(std::unique_ptr<Expr> var) {
   if (match({TOKEN_DOT})) {
     var = field_access(std::move(var));
-  }
-
-  if (!match({TOKEN_EQUAL})) {
-    return nullptr;
+    consume({TOKEN_EQUAL}, "Expected '=' after field access for assignment.");
+  } else {
+    if (!match({TOKEN_EQUAL})) {
+      return nullptr;
+    }
   }
 
   auto value = expression();
-  consume({TOKEN_SEMICOLON}, "Expected ';' after expression.");
+  if (!value) {
+    throw SyntaxError(current_token_, "Expected expression for assignment.");
+  }
+  consume({TOKEN_SEMICOLON}, "Expected ';' after assignment expression.");
   return std::make_unique<AssignStmt>(std::move(var), std::move(value));
 }
 
@@ -236,14 +267,21 @@ std::unique_ptr<CallStmt> Parser::call_stmt(const Token& identifier) {
     return nullptr;
   }
   if (match({TOKEN_RPAREN})) {
-    consume({TOKEN_SEMICOLON}, "Expected ';' after statement.");
+    consume({TOKEN_SEMICOLON}, "Expected ';' after call statement.");
     return std::make_unique<CallStmt>(identifier);
   }
 
-  auto args = arguments();
-  consume({TOKEN_RPAREN}, "Excepted ')' after function arguments.");
-  consume({TOKEN_SEMICOLON}, "Expected ';' after statement.");
-  return std::make_unique<CallStmt>(identifier, std::move(args));
+  std::vector<std::unique_ptr<Expr>> call_args;
+  if (!check({TOKEN_LPAREN})) {
+    if (auto args = arguments()) {
+      call_args = std::move(args.value());
+    } else {
+      throw SyntaxError(current_token_, "Expected call arguments.");
+    }
+  }
+  consume({TOKEN_RPAREN}, "Excepted ')' after call arguments.");
+  consume({TOKEN_SEMICOLON}, "Expected ';' after call statement.");
+  return std::make_unique<CallStmt>(identifier, std::move(call_args));
 }
 
 // RULE var_func_decl = identifier ( var_decl | func_decl )
@@ -277,18 +315,34 @@ std::unique_ptr<FuncStmt> Parser::func_decl(const Token& return_type,
   }
   std::vector<std::unique_ptr<FuncParamStmt>> params;
   if (!check({TOKEN_RPAREN})) {
-    params = func_params();
+    if (auto funcparams = func_params()) {
+      params = std::move(funcparams.value());
+    } else {
+      throw SyntaxError(current_token_, "Expected function parameters.");
+    }
   }
   consume({TOKEN_RPAREN}, "Excepted ')' after function parameters.");
   auto body = block_stmt();
+  if (!body) {
+    throw SyntaxError(current_token_, "Expected block statement.");
+  }
   return std::make_unique<FuncStmt>(identifier, return_type, std::move(params),
                                     std::move(body));
 }
 
 // RULE func_params = type identifier { "," type identifier } ;
-std::vector<std::unique_ptr<FuncParamStmt>> Parser::func_params() {
+std::optional<std::vector<std::unique_ptr<FuncParamStmt>>> Parser::func_params() {
   std::vector<std::unique_ptr<FuncParamStmt>> params;
-  do {
+
+  if (auto param_type = type()) {
+    Token param_id =
+        consume({TOKEN_IDENTIFIER}, "Expected identifier after type.");
+    params.push_back(std::make_unique<FuncParamStmt>(param_type.value(), param_id));
+  } else {
+    return std::nullopt;
+  }
+
+  while (match({TOKEN_COMMA})) {
     std::optional<Token> param_type = type();
     if (!param_type) {
       throw SyntaxError(current_token_, "Expected type.");
@@ -296,7 +350,7 @@ std::vector<std::unique_ptr<FuncParamStmt>> Parser::func_params() {
     Token param_id =
         consume({TOKEN_IDENTIFIER}, "Expected identifier after type.");
     params.push_back(std::make_unique<FuncParamStmt>(param_type.value(), param_id));
-  } while (match({TOKEN_COMMA}));
+  }
   return params;
 }
 
@@ -322,6 +376,9 @@ std::unique_ptr<VarDeclStmt> Parser::var_decl(const Token& type,
     return nullptr;
   }
   std::unique_ptr<Expr> expr = expression();
+  if (!expr) {
+    throw SyntaxError(current_token_, "Expected expression.");
+  }
   consume({TOKEN_SEMICOLON}, "Expected ';' after assignment.");
   return std::make_unique<VarDeclStmt>(type, identifier, std::move(expr), mut);
 }
@@ -335,8 +392,8 @@ std::unique_ptr<StructDeclStmt> Parser::struct_decl() {
       consume({TOKEN_IDENTIFIER}, "Expected identifier after 'struct'.");
   consume({TOKEN_LBRACE}, "Expected '{' after struct identifier.");
   std::vector<std::unique_ptr<StructFieldStmt>> fields;
-  while (!check({TOKEN_RBRACE, TOKEN_ETX})) {
-    fields.push_back(struct_field());
+  while (auto field = struct_field()) {
+    fields.push_back(std::move(field));
   }
   consume({TOKEN_RBRACE}, "Expected '}' after fields.");
   return std::make_unique<StructDeclStmt>(struct_id, std::move(fields));
@@ -350,7 +407,10 @@ std::unique_ptr<StructFieldStmt> Parser::struct_field() {
   }
   std::optional<Token> field_type = type();
   if (!field_type) {
-    throw SyntaxError(current_token_, "Expected type.");
+    if (is_mut) {
+      throw SyntaxError(current_token_, "Expected type.");
+    }
+    return nullptr;
   }
   Token field_id =
       consume({TOKEN_IDENTIFIER}, "Expected identifier after type.");
@@ -366,7 +426,12 @@ std::unique_ptr<VariantDeclStmt> Parser::variant_decl() {
   Token variant_id =
       consume({TOKEN_IDENTIFIER}, "Expected identifier.");
   consume({TOKEN_LBRACE}, "Expected '{'.");
-  std::vector<Token> params = variant_params();
+  std::vector<Token> params;
+  if (auto variantparams = variant_params()) {
+    params = variantparams.value();
+  } else {
+    throw SyntaxError(current_token_, "Expected variant params.");
+  }
   consume({TOKEN_RBRACE}, "Expected '}'.");
   consume({TOKEN_SEMICOLON}, "Expected ';' after variant declaration.");
   return std::make_unique<VariantDeclStmt>(variant_id,
@@ -374,15 +439,22 @@ std::unique_ptr<VariantDeclStmt> Parser::variant_decl() {
 }
 
 // RULE variant_params = type { "," type } ;
-std::vector<Token> Parser::variant_params() {
+std::optional<std::vector<Token>> Parser::variant_params() {
   std::vector<Token> params;
-  do {
+
+  if (auto type_token = type()) {
+    params.push_back(type_token.value());
+  } else {
+    return std::nullopt;
+  }
+
+  while (match({TOKEN_COMMA})) {
     auto type_token = type();
     if (!type_token) {
       throw SyntaxError(current_token_, "Expected type.");
     }
     params.push_back(type_token.value());
-  } while (match({TOKEN_COMMA}));
+  };
   return params;
 }
 
@@ -395,6 +467,9 @@ std::unique_ptr<Expr> Parser::logic_or() {
 
   while (auto token = match({TOKEN_OR})) {
     std::unique_ptr<Expr> right = logic_and();
+    if (!right) {
+      throw SyntaxError(current_token_, "Expected expression.");
+    }
     Token op_symbol = token.value();
     expr = std::make_unique<LogicalExpr>(std::move(expr), op_symbol,
                                          std::move(right));
@@ -409,6 +484,9 @@ std::unique_ptr<Expr> Parser::logic_and() {
 
   while (auto token = match({TOKEN_AND})) {
     std::unique_ptr<Expr> right = equality();
+    if (!right) {
+      throw SyntaxError(current_token_, "Expected expression.");
+    }
     Token op_symbol = token.value();
     expr = std::make_unique<LogicalExpr>(std::move(expr), op_symbol,
                                          std::move(right));
@@ -423,6 +501,9 @@ std::unique_ptr<Expr> Parser::equality() {
 
   while (auto token = match({TOKEN_NOT_EQUAL, TOKEN_EQUAL_EQUAL})) {
     std::unique_ptr<Expr> right = comparison();
+    if (!right) {
+      throw SyntaxError(current_token_, "Expected expression.");
+    }
     Token op_symbol = token.value();
     expr = std::make_unique<BinaryExpr>(std::move(expr), op_symbol,
                                         std::move(right));
@@ -438,6 +519,9 @@ std::unique_ptr<Expr> Parser::comparison() {
   while (auto token = match({TOKEN_GREATER, TOKEN_GREATER_EQUAL, TOKEN_LESS,
                              TOKEN_LESS_EQUAL})) {
     std::unique_ptr<Expr> right = term();
+    if (!right) {
+      throw SyntaxError(current_token_, "Expected expression.");
+    }
     Token op_symbol = token.value();
     expr = std::make_unique<BinaryExpr>(std::move(expr), op_symbol,
                                         std::move(right));
@@ -452,6 +536,9 @@ std::unique_ptr<Expr> Parser::term() {
 
   while (auto token = match({TOKEN_MINUS, TOKEN_PLUS})) {
     std::unique_ptr<Expr> right = factor();
+    if (!right) {
+      throw SyntaxError(current_token_, "Expected expression.");
+    }
     Token op_symbol = token.value();
     expr = std::make_unique<BinaryExpr>(std::move(expr), op_symbol,
                                         std::move(right));
@@ -466,6 +553,9 @@ std::unique_ptr<Expr> Parser::factor() {
 
   while (auto token = match({TOKEN_SLASH, TOKEN_STAR})) {
     std::unique_ptr<Expr> right = unary();
+    if (!right) {
+      throw SyntaxError(current_token_, "Expected expression.");
+    }
     Token op_symbol = token.value();
     expr = std::make_unique<BinaryExpr>(std::move(expr), op_symbol,
                                         std::move(right));
@@ -478,6 +568,9 @@ std::unique_ptr<Expr> Parser::factor() {
 std::unique_ptr<Expr> Parser::unary() {
   if (auto token = match({TOKEN_EXCLAMATION, TOKEN_MINUS})) {
     std::unique_ptr<Expr> right = type_cast();
+    if (!right) {
+      throw SyntaxError(current_token_, "Expected expression.");
+    }
     Token op_symbol = token.value();
     return std::make_unique<UnaryExpr>(op_symbol, std::move(right));
   }
@@ -489,11 +582,15 @@ std::unique_ptr<Expr> Parser::unary() {
 std::unique_ptr<Expr> Parser::type_cast() {
   std::unique_ptr<Expr> expr = call();
 
+  if (!expr) {
+    return nullptr;
+  }
+
   while (auto token = match({TOKEN_AS, TOKEN_IS})) {
     Token op_symbol = token.value();
     auto cast_type = type();
     if (!cast_type) {
-      throw SyntaxError(current_token_, "Expected type.");
+      throw SyntaxError(current_token_, "Expected cast type.");
     }
     expr = std::make_unique<CastExpr>(std::move(expr), op_symbol, cast_type.value());
   }
@@ -505,14 +602,21 @@ std::unique_ptr<Expr> Parser::type_cast() {
 std::unique_ptr<Expr> Parser::call() {
   std::unique_ptr<Expr> expr = primary();
 
+  if (!expr) {
+    return nullptr;
+  }
+
   if (match({TOKEN_LPAREN})) {
-    if (match({TOKEN_RPAREN})) {
-      expr = std::make_unique<CallExpr>(std::move(expr));
-    } else {
+    std::vector<std::unique_ptr<Expr>> call_args;
+    if (!check({TOKEN_RPAREN})) {
       auto args = arguments();
-      consume({TOKEN_RPAREN}, "Excepted ')' after function arguments.");
-      expr = std::make_unique<CallExpr>(std::move(expr), std::move(args));
+      if (!args) {
+        throw SyntaxError(current_token_, "Expected arguments in call.");
+      }
+      call_args = std::move(args.value());
     }
+    consume({TOKEN_RPAREN}, "Excepted ')' after call arguments.");
+    expr = std::make_unique<CallExpr>(std::move(expr), std::move(call_args));
   } else if (match({TOKEN_DOT})) {
     expr = field_access(std::move(expr));
   }
@@ -535,17 +639,23 @@ std::unique_ptr<Expr> Parser::primary() {
 
   if (match({TOKEN_LPAREN})) {
     std::unique_ptr<Expr> expr = expression();
+    if (!expr) {
+      throw SyntaxError(current_token_, "Expected expression after '('.");
+    }
     consume({TOKEN_RPAREN}, "Excepted ')' after expression.");
     return std::make_unique<GroupingExpr>(std::move(expr));
   }
 
   if (match({TOKEN_LBRACE})) {
-    auto exprs = arguments();
+    auto args = arguments();
+    if (!args) {
+      throw SyntaxError(current_token_, "Expected arguments.");
+    }
     consume({TOKEN_RBRACE}, "Excepted '}' after initializer list.");
-    return std::make_unique<InitalizerListExpr>(std::move(exprs));
+    return std::make_unique<InitalizerListExpr>(std::move(args.value()));
   }
 
-  throw SyntaxError(current_token_, "Expected primary.");
+  return nullptr;
 }
 
 // RULE type = "bool" | "str" | "int" | "float" | identifier ;
@@ -559,17 +669,29 @@ std::optional<Token> Parser::type() {
 }
 
 // RULE arguments = expression { "," expression } ;
-std::vector<std::unique_ptr<Expr>> Parser::arguments() {
+std::optional<std::vector<std::unique_ptr<Expr>>> Parser::arguments() {
   std::vector<std::unique_ptr<Expr>> args;
 
-  do {
-    if (args.size() > MAX_ARGUMENTS) {
-      throw SyntaxError(current_token_, "Maximum amount (" +
-                                            std::to_string(MAX_ARGUMENTS) +
-                                            ") of arguments exceeded.");
+  if (auto expr = expression()) {
+    args.push_back(std::move(expr));
+  } else {
+    return std::nullopt;
+  }
+
+  if (match({TOKEN_COMMA})) {
+    while (auto expr = expression()) {
+      if (args.size() > MAX_ARGUMENTS) {
+        throw SyntaxError(current_token_, "Maximum amount (" +
+            std::to_string(MAX_ARGUMENTS) +
+            ") of arguments exceeded.");
+      }
+      args.push_back(std::move(expr));
+      if (!match({TOKEN_COMMA})) {
+        break;
+      }
     }
-    args.push_back(expression());
-  } while (match({TOKEN_COMMA}));
+  }
+
   return args;
 }
 

@@ -64,7 +64,7 @@ TEST(ParserErrorTest, invalid_func_call) {
           parser.parse();
         } catch (const SyntaxError& e) {
           EXPECT_TRUE(
-              str_contains(e.what(), "Excepted ')' after function arguments."));
+              str_contains(e.what(), "Excepted ')' after call arguments."));
           EXPECT_EQ(e.get_token().get_type(), TokenType::TOKEN_INT_VAL);
           EXPECT_EQ(e.get_token().stringify(), "3");
           throw;
@@ -280,7 +280,7 @@ TEST(ParserTest, print_call_function_args) {
 
 TEST(ParserTest, print_call_function_args_over_limit) {
   std::string code = "print foo(";
-  for (size_t i = 0; i <= 256; ++i) {
+  for (size_t i = 0; i <= 257; ++i) {
     code += "1, ";
   }
   code += "1);";
@@ -294,7 +294,7 @@ TEST(ParserTest, print_call_function_args_over_limit) {
         } catch (const SyntaxError& e) {
           EXPECT_TRUE(str_contains(
               e.what(), "Maximum amount (256) of arguments exceeded."));
-          EXPECT_EQ(e.get_token().get_type(), TokenType::TOKEN_INT_VAL);
+          EXPECT_EQ(e.get_token().get_type(), TokenType::TOKEN_COMMA);
           throw;
         }
       },
