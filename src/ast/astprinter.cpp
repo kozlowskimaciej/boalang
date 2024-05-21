@@ -158,10 +158,56 @@ void ASTPrinter::visit(const InspectStmt& stmt) {
   }
 }
 
-void ASTPrinter::visit(const BinaryExpr& expr) {
-  print_memory_info("BinaryExpr", &expr);
+void ASTPrinter::visit(const AdditionExpr& expr) {
+  print_memory_info("AdditionExpr", &expr);
   parenthesize({expr.left.get(), expr.right.get()}, expr.op_symbol);
 }
+
+void ASTPrinter::visit(const SubtractionExpr& expr) {
+  print_memory_info("SubtractionExpr", &expr);
+  parenthesize({expr.left.get(), expr.right.get()}, expr.op_symbol);
+}
+
+void ASTPrinter::visit(const DivisionExpr& expr) {
+  print_memory_info("DivisionExpr", &expr);
+  parenthesize({expr.left.get(), expr.right.get()}, expr.op_symbol);
+}
+
+void ASTPrinter::visit(const MultiplicationExpr& expr) {
+  print_memory_info("MultiplicationExpr", &expr);
+  parenthesize({expr.left.get(), expr.right.get()}, expr.op_symbol);
+}
+
+void ASTPrinter::visit(const EqualCompExpr& expr) {
+  print_memory_info("EqualCompExpr", &expr);
+  parenthesize({expr.left.get(), expr.right.get()}, expr.op_symbol);
+}
+
+void ASTPrinter::visit(const NotEqualCompExpr& expr) {
+  print_memory_info("NotEqualCompExpr", &expr);
+  parenthesize({expr.left.get(), expr.right.get()}, expr.op_symbol);
+}
+
+void ASTPrinter::visit(const GreaterCompExpr& expr) {
+  print_memory_info("GreaterCompExpr", &expr);
+  parenthesize({expr.left.get(), expr.right.get()}, expr.op_symbol);
+}
+
+void ASTPrinter::visit(const GreaterEqualCompExpr& expr) {
+  print_memory_info("GreaterEqualCompExpr", &expr);
+  parenthesize({expr.left.get(), expr.right.get()}, expr.op_symbol);
+}
+
+void ASTPrinter::visit(const LessCompExpr& expr) {
+  print_memory_info("LessCompExpr", &expr);
+  parenthesize({expr.left.get(), expr.right.get()}, expr.op_symbol);
+}
+
+void ASTPrinter::visit(const LessEqualCompExpr& expr) {
+  print_memory_info("LessEqualCompExpr", &expr);
+  parenthesize({expr.left.get(), expr.right.get()}, expr.op_symbol);
+}
+
 
 void ASTPrinter::visit(const GroupingExpr& expr) {
   print_memory_info("GroupingExpr", &expr);
@@ -183,8 +229,13 @@ void ASTPrinter::visit(const VarExpr& expr) {
   std::cout << "{" << expr.identifier << "}";
 }
 
-void ASTPrinter::visit(const LogicalExpr& expr) {
-  print_memory_info("LogicalExpr", &expr);
+void ASTPrinter::visit(const LogicalOrExpr& expr) {
+  print_memory_info("LogicalOrExpr", &expr);
+  parenthesize({expr.left.get(), expr.right.get()}, expr.op_symbol);
+}
+
+void ASTPrinter::visit(const LogicalAndExpr& expr) {
+  print_memory_info("LogicalAndExpr", &expr);
   parenthesize({expr.left.get(), expr.right.get()}, expr.op_symbol);
 }
 

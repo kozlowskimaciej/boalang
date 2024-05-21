@@ -42,12 +42,22 @@ class ASTPrinter : public ExprVisitor, public StmtVisitor {
   void visit(const LambdaFuncStmt& stmt) override;
   void visit(const InspectStmt& stmt) override;
 
-  void visit(const BinaryExpr& expr) override;
+  void visit(const AdditionExpr& expr) override;
+  void visit(const SubtractionExpr& expr) override;
+  void visit(const DivisionExpr& expr) override;
+  void visit(const MultiplicationExpr& expr) override;
+  void visit(const EqualCompExpr& expr) override;
+  void visit(const NotEqualCompExpr& expr) override;
+  void visit(const GreaterCompExpr& expr) override;
+  void visit(const GreaterEqualCompExpr& expr) override;
+  void visit(const LessCompExpr& expr) override;
+  void visit(const LessEqualCompExpr& expr) override;
   void visit(const GroupingExpr& expr) override;
   void visit(const LiteralExpr& expr) override;
   void visit(const UnaryExpr& expr) override;
   void visit(const VarExpr& expr) override;
-  void visit(const LogicalExpr& expr) override;
+  void visit(const LogicalOrExpr& expr) override;
+  void visit(const LogicalAndExpr& expr) override;
   void visit(const CastExpr& expr) override;
   void visit(const InitalizerListExpr& expr) override;
   void visit(const CallExpr& expr) override;

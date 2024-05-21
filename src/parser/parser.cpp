@@ -471,7 +471,7 @@ std::unique_ptr<Expr> Parser::logic_or() {
       throw SyntaxError(current_token_, "Expected expression.");
     }
     Token op_symbol = token.value();
-    expr = std::make_unique<LogicalExpr>(std::move(expr), op_symbol,
+    expr = std::make_unique<LogicalOrExpr>(std::move(expr), op_symbol,
                                          std::move(right));
   }
 
@@ -492,7 +492,7 @@ std::unique_ptr<Expr> Parser::logic_and() {
       throw SyntaxError(current_token_, "Expected expression.");
     }
     Token op_symbol = token.value();
-    expr = std::make_unique<LogicalExpr>(std::move(expr), op_symbol,
+    expr = std::make_unique<LogicalAndExpr>(std::move(expr), op_symbol,
                                          std::move(right));
   }
 
@@ -513,8 +513,18 @@ std::unique_ptr<Expr> Parser::equality() {
       throw SyntaxError(current_token_, "Expected expression.");
     }
     Token op_symbol = token.value();
-    expr = std::make_unique<BinaryExpr>(std::move(expr), op_symbol,
-                                        std::move(right));
+    switch(op_symbol.get_type()) {
+      case TOKEN_NOT_EQUAL:
+        expr = std::make_unique<NotEqualCompExpr>(std::move(expr), op_symbol,
+                                            std::move(right));
+        break;
+      case TOKEN_EQUAL_EQUAL:
+        expr = std::make_unique<EqualCompExpr>(std::move(expr), op_symbol,
+                                                  std::move(right));
+        break;
+      default:
+        break;
+    }
   }
 
   return expr;
@@ -535,8 +545,26 @@ std::unique_ptr<Expr> Parser::comparison() {
       throw SyntaxError(current_token_, "Expected expression.");
     }
     Token op_symbol = token.value();
-    expr = std::make_unique<BinaryExpr>(std::move(expr), op_symbol,
-                                        std::move(right));
+    switch(op_symbol.get_type()) {
+      case TOKEN_GREATER:
+        expr = std::make_unique<GreaterCompExpr>(std::move(expr), op_symbol,
+                                                  std::move(right));
+        break;
+      case TOKEN_GREATER_EQUAL:
+        expr = std::make_unique<GreaterEqualCompExpr>(std::move(expr), op_symbol,
+                                               std::move(right));
+        break;
+      case TOKEN_LESS:
+        expr = std::make_unique<LessCompExpr>(std::move(expr), op_symbol,
+                                                      std::move(right));
+        break;
+      case TOKEN_LESS_EQUAL:
+        expr = std::make_unique<LessEqualCompExpr>(std::move(expr), op_symbol,
+                                              std::move(right));
+        break;
+      default:
+        break;
+    }
   }
 
   return expr;
@@ -556,8 +584,18 @@ std::unique_ptr<Expr> Parser::term() {
       throw SyntaxError(current_token_, "Expected expression.");
     }
     Token op_symbol = token.value();
-    expr = std::make_unique<BinaryExpr>(std::move(expr), op_symbol,
-                                        std::move(right));
+    switch(op_symbol.get_type()) {
+      case TOKEN_MINUS:
+        expr = std::make_unique<SubtractionExpr>(std::move(expr), op_symbol,
+                                                 std::move(right));
+        break;
+      case TOKEN_PLUS:
+        expr = std::make_unique<AdditionExpr>(std::move(expr), op_symbol,
+                                                      std::move(right));
+        break;
+      default:
+        break;
+    }
   }
 
   return expr;
@@ -577,8 +615,18 @@ std::unique_ptr<Expr> Parser::factor() {
       throw SyntaxError(current_token_, "Expected expression.");
     }
     Token op_symbol = token.value();
-    expr = std::make_unique<BinaryExpr>(std::move(expr), op_symbol,
-                                        std::move(right));
+    switch(op_symbol.get_type()) {
+      case TOKEN_SLASH:
+        expr = std::make_unique<DivisionExpr>(std::move(expr), op_symbol,
+                                                 std::move(right));
+        break;
+      case TOKEN_STAR:
+        expr = std::make_unique<MultiplicationExpr>(std::move(expr), op_symbol,
+                                              std::move(right));
+        break;
+      default:
+        break;
+    }
   }
 
   return expr;

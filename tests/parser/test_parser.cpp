@@ -402,8 +402,8 @@ INSTANTIATE_TEST_SUITE_P(
 class ParserBinaryExprTest
     : public ::testing::TestWithParam<std::pair<std::string, TokenType>> {};
 
-TEST_P(ParserBinaryExprTest, print_binary) {
-  StringSource source("print 1 " + GetParam().first + " 2;");
+TEST(ParserBinaryExprTest, print_binary) {
+  StringSource source("print 1 + 2;");
   Lexer lexer(source);
   Parser parser(lexer);
   auto program = parser.parse();
@@ -412,9 +412,9 @@ TEST_P(ParserBinaryExprTest, print_binary) {
   auto print_stmt = dynamic_cast<PrintStmt*>(program->statements[0].get());
   EXPECT_TRUE(print_stmt != nullptr);
 
-  auto binary_expr = dynamic_cast<BinaryExpr*>(print_stmt->expr.get());
+  auto binary_expr = dynamic_cast<AdditionExpr*>(print_stmt->expr.get());
   EXPECT_TRUE(binary_expr != nullptr);
-  EXPECT_EQ(binary_expr->op_symbol.get_type(), GetParam().second);
+  EXPECT_EQ(binary_expr->op_symbol.get_type(), TOKEN_PLUS);
 
   auto left = dynamic_cast<LiteralExpr*>(binary_expr->left.get());
   EXPECT_TRUE(left != nullptr);
@@ -427,24 +427,8 @@ TEST_P(ParserBinaryExprTest, print_binary) {
   EXPECT_EQ(right->literal.stringify(), "2");
 }
 
-INSTANTIATE_TEST_SUITE_P(
-    ParserBinaryExprParams, ParserBinaryExprTest,
-    ::testing::Values(std::make_pair("!=", TokenType::TOKEN_NOT_EQUAL),
-                      std::make_pair("==", TokenType::TOKEN_EQUAL_EQUAL),
-                      std::make_pair(">", TokenType::TOKEN_GREATER),
-                      std::make_pair(">=", TokenType::TOKEN_GREATER_EQUAL),
-                      std::make_pair("<", TokenType::TOKEN_LESS),
-                      std::make_pair("<=", TokenType::TOKEN_LESS_EQUAL),
-                      std::make_pair("-", TokenType::TOKEN_MINUS),
-                      std::make_pair("+", TokenType::TOKEN_PLUS),
-                      std::make_pair("/", TokenType::TOKEN_SLASH),
-                      std::make_pair("*", TokenType::TOKEN_STAR)));
-
-class ParserLogicalExprTest
-    : public ::testing::TestWithParam<std::pair<std::string, TokenType>> {};
-
-TEST_P(ParserLogicalExprTest, print_logical) {
-  StringSource source("print 1 " + GetParam().first + " 2;");
+TEST(ParserBinaryExprTest, print_notequalcomp) {
+  StringSource source("print 1 != 2;");
   Lexer lexer(source);
   Parser parser(lexer);
   auto program = parser.parse();
@@ -453,25 +437,185 @@ TEST_P(ParserLogicalExprTest, print_logical) {
   auto print_stmt = dynamic_cast<PrintStmt*>(program->statements[0].get());
   EXPECT_TRUE(print_stmt != nullptr);
 
-  auto binary_expr = dynamic_cast<LogicalExpr*>(print_stmt->expr.get());
+  auto binary_expr = dynamic_cast<NotEqualCompExpr*>(print_stmt->expr.get());
   EXPECT_TRUE(binary_expr != nullptr);
-  EXPECT_EQ(binary_expr->op_symbol.get_type(), GetParam().second);
+  EXPECT_EQ(binary_expr->op_symbol.get_type(), TOKEN_NOT_EQUAL);
+}
 
-  auto left = dynamic_cast<LiteralExpr*>(binary_expr->left.get());
+TEST(ParserBinaryExprTest, print_equalcomp) {
+  StringSource source("print 1 == 2;");
+  Lexer lexer(source);
+  Parser parser(lexer);
+  auto program = parser.parse();
+  EXPECT_EQ(program->statements.size(), 1);
+
+  auto print_stmt = dynamic_cast<PrintStmt*>(program->statements[0].get());
+  EXPECT_TRUE(print_stmt != nullptr);
+
+  auto binary_expr = dynamic_cast<EqualCompExpr*>(print_stmt->expr.get());
+  EXPECT_TRUE(binary_expr != nullptr);
+  EXPECT_EQ(binary_expr->op_symbol.get_type(), TOKEN_EQUAL_EQUAL);
+}
+
+TEST(ParserBinaryExprTest, print_greatercomp) {
+  StringSource source("print 1 > 2;");
+  Lexer lexer(source);
+  Parser parser(lexer);
+  auto program = parser.parse();
+  EXPECT_EQ(program->statements.size(), 1);
+
+  auto print_stmt = dynamic_cast<PrintStmt*>(program->statements[0].get());
+  EXPECT_TRUE(print_stmt != nullptr);
+
+  auto binary_expr = dynamic_cast<GreaterCompExpr*>(print_stmt->expr.get());
+  EXPECT_TRUE(binary_expr != nullptr);
+  EXPECT_EQ(binary_expr->op_symbol.get_type(), TOKEN_GREATER);
+}
+
+TEST(ParserBinaryExprTest, print_greaterequalcomp) {
+  StringSource source("print 1 >= 2;");
+  Lexer lexer(source);
+  Parser parser(lexer);
+  auto program = parser.parse();
+  EXPECT_EQ(program->statements.size(), 1);
+
+  auto print_stmt = dynamic_cast<PrintStmt*>(program->statements[0].get());
+  EXPECT_TRUE(print_stmt != nullptr);
+
+  auto binary_expr = dynamic_cast<GreaterEqualCompExpr*>(print_stmt->expr.get());
+  EXPECT_TRUE(binary_expr != nullptr);
+  EXPECT_EQ(binary_expr->op_symbol.get_type(), TOKEN_GREATER_EQUAL);
+}
+
+TEST(ParserBinaryExprTest, print_lesscomp) {
+  StringSource source("print 1 < 2;");
+  Lexer lexer(source);
+  Parser parser(lexer);
+  auto program = parser.parse();
+  EXPECT_EQ(program->statements.size(), 1);
+
+  auto print_stmt = dynamic_cast<PrintStmt*>(program->statements[0].get());
+  EXPECT_TRUE(print_stmt != nullptr);
+
+  auto binary_expr = dynamic_cast<LessCompExpr*>(print_stmt->expr.get());
+  EXPECT_TRUE(binary_expr != nullptr);
+  EXPECT_EQ(binary_expr->op_symbol.get_type(), TOKEN_LESS);
+}
+
+TEST(ParserBinaryExprTest, print_lessequalcomp) {
+  StringSource source("print 1 <= 2;");
+  Lexer lexer(source);
+  Parser parser(lexer);
+  auto program = parser.parse();
+  EXPECT_EQ(program->statements.size(), 1);
+
+  auto print_stmt = dynamic_cast<PrintStmt*>(program->statements[0].get());
+  EXPECT_TRUE(print_stmt != nullptr);
+
+  auto binary_expr = dynamic_cast<LessEqualCompExpr*>(print_stmt->expr.get());
+  EXPECT_TRUE(binary_expr != nullptr);
+  EXPECT_EQ(binary_expr->op_symbol.get_type(), TOKEN_LESS_EQUAL);
+}
+
+TEST(ParserBinaryExprTest, print_subtraction) {
+  StringSource source("print 1 - 2;");
+  Lexer lexer(source);
+  Parser parser(lexer);
+  auto program = parser.parse();
+  EXPECT_EQ(program->statements.size(), 1);
+
+  auto print_stmt = dynamic_cast<PrintStmt*>(program->statements[0].get());
+  EXPECT_TRUE(print_stmt != nullptr);
+
+  auto binary_expr = dynamic_cast<SubtractionExpr*>(print_stmt->expr.get());
+  EXPECT_TRUE(binary_expr != nullptr);
+  EXPECT_EQ(binary_expr->op_symbol.get_type(), TOKEN_MINUS);
+}
+
+TEST(ParserBinaryExprTest, print_addition) {
+  StringSource source("print 1 + 2;");
+  Lexer lexer(source);
+  Parser parser(lexer);
+  auto program = parser.parse();
+  EXPECT_EQ(program->statements.size(), 1);
+
+  auto print_stmt = dynamic_cast<PrintStmt*>(program->statements[0].get());
+  EXPECT_TRUE(print_stmt != nullptr);
+
+  auto binary_expr = dynamic_cast<AdditionExpr*>(print_stmt->expr.get());
+  EXPECT_TRUE(binary_expr != nullptr);
+  EXPECT_EQ(binary_expr->op_symbol.get_type(), TOKEN_PLUS);
+}
+
+TEST(ParserBinaryExprTest, print_division) {
+  StringSource source("print 1 / 2;");
+  Lexer lexer(source);
+  Parser parser(lexer);
+  auto program = parser.parse();
+  EXPECT_EQ(program->statements.size(), 1);
+
+  auto print_stmt = dynamic_cast<PrintStmt*>(program->statements[0].get());
+  EXPECT_TRUE(print_stmt != nullptr);
+
+  auto binary_expr = dynamic_cast<DivisionExpr*>(print_stmt->expr.get());
+  EXPECT_TRUE(binary_expr != nullptr);
+  EXPECT_EQ(binary_expr->op_symbol.get_type(), TOKEN_SLASH);
+}
+
+TEST(ParserBinaryExprTest, print_multiplication) {
+  StringSource source("print 1 * 2;");
+  Lexer lexer(source);
+  Parser parser(lexer);
+  auto program = parser.parse();
+  EXPECT_EQ(program->statements.size(), 1);
+
+  auto print_stmt = dynamic_cast<PrintStmt*>(program->statements[0].get());
+  EXPECT_TRUE(print_stmt != nullptr);
+
+  auto binary_expr = dynamic_cast<MultiplicationExpr*>(print_stmt->expr.get());
+  EXPECT_TRUE(binary_expr != nullptr);
+  EXPECT_EQ(binary_expr->op_symbol.get_type(), TOKEN_STAR);
+}
+
+TEST(ParserLogicalExprTest, print_and) {
+  StringSource source("print 1 and 2;");
+  Lexer lexer(source);
+  Parser parser(lexer);
+  auto program = parser.parse();
+  EXPECT_EQ(program->statements.size(), 1);
+
+  auto print_stmt = dynamic_cast<PrintStmt*>(program->statements[0].get());
+  EXPECT_TRUE(print_stmt != nullptr);
+
+  auto logical_expr = dynamic_cast<LogicalAndExpr*>(print_stmt->expr.get());
+  EXPECT_TRUE(logical_expr != nullptr);
+  EXPECT_EQ(logical_expr->op_symbol.get_type(), TOKEN_AND);
+
+  auto left = dynamic_cast<LiteralExpr*>(logical_expr->left.get());
   EXPECT_TRUE(left != nullptr);
   EXPECT_EQ(left->literal.get_type(), TokenType::TOKEN_INT_VAL);
   EXPECT_EQ(left->literal.stringify(), "1");
 
-  auto right = dynamic_cast<LiteralExpr*>(binary_expr->right.get());
+  auto right = dynamic_cast<LiteralExpr*>(logical_expr->right.get());
   EXPECT_TRUE(right != nullptr);
   EXPECT_EQ(right->literal.get_type(), TokenType::TOKEN_INT_VAL);
   EXPECT_EQ(right->literal.stringify(), "2");
 }
 
-INSTANTIATE_TEST_SUITE_P(
-    ParserLogicalExprParams, ParserLogicalExprTest,
-    ::testing::Values(std::make_pair("and", TokenType::TOKEN_AND),
-                      std::make_pair("or", TokenType::TOKEN_OR)));
+TEST(ParserLogicalExprTest, print_or) {
+  StringSource source("print 1 or 2;");
+  Lexer lexer(source);
+  Parser parser(lexer);
+  auto program = parser.parse();
+  EXPECT_EQ(program->statements.size(), 1);
+
+  auto print_stmt = dynamic_cast<PrintStmt*>(program->statements[0].get());
+  EXPECT_TRUE(print_stmt != nullptr);
+
+  auto logical_expr = dynamic_cast<LogicalOrExpr*>(print_stmt->expr.get());
+  EXPECT_TRUE(logical_expr != nullptr);
+  EXPECT_EQ(logical_expr->op_symbol.get_type(), TOKEN_OR);
+}
 
 TEST(ParserTest, block_stmt) {
   StringSource source("{print \"Hello World\";}");
