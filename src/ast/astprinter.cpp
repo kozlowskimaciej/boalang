@@ -1,6 +1,15 @@
 #include "astprinter.hpp"
 
 #include <iostream>
+#include <magic_enum/magic_enum.hpp>
+
+template <class... Ts>
+struct overloaded : Ts... {
+  using Ts::operator()...;
+};
+
+template <class... Ts>
+overloaded(Ts...) -> overloaded<Ts...>;
 
 void ASTPrinter::parenthesize(
     std::initializer_list<std::variant<const Expr*, const Stmt*>> exprstmts,
@@ -76,15 +85,17 @@ void ASTPrinter::visit(const PrintStmt& stmt) {
 
 void ASTPrinter::visit(const VarDeclStmt& stmt) {
   print_memory_info("VarDeclStmt", &stmt);
-  std::cout << (stmt.mut ? "mut" : "") << " " << stmt.type << " {"
-            << stmt.identifier << "}";
+  std::cout << (stmt.mut ? "mut" : "") << " ";
+  visit_type(stmt.type);
+  std::cout << " {" << stmt.identifier << "}";
   parenthesize({stmt.initializer.get()});
 }
 
 void ASTPrinter::visit(const StructFieldStmt& stmt) {
   print_memory_info("StructFieldStmt", &stmt);
-  std::cout << (stmt.mut ? "mut" : "") << " " << stmt.type << " {"
-            << stmt.identifier << "}";
+  std::cout << (stmt.mut ? "mut" : "") << " ";
+  visit_type(stmt.type);
+  std::cout << " {" << stmt.identifier << "}";
 }
 void ASTPrinter::visit(const StructDeclStmt& stmt) {
   print_memory_info("StructDeclStmt", &stmt);
@@ -97,7 +108,8 @@ void ASTPrinter::visit(const VariantDeclStmt& stmt) {
   print_memory_info("VariantDeclStmt", &stmt);
   std::cout << "{" << stmt.identifier << "} types:";
   for (const auto& param : stmt.params) {
-    std::cout << " " << param;
+    std::cout << " ";
+    visit_type(param);
   }
 }
 
@@ -117,13 +129,15 @@ void ASTPrinter::visit(const CallStmt& stmt) {
 
 void ASTPrinter::visit(const FuncParamStmt& stmt) {
   print_memory_info("FuncParamStmt", &stmt);
-  std::cout << stmt.type << " {" << stmt.identifier << "}";
+  visit_type(stmt.type);
+  std::cout << " {" << stmt.identifier << "}";
 }
 
 void ASTPrinter::visit(const FuncStmt& stmt) {
   print_memory_info("FuncStmt", &stmt);
-  std::cout << "[return type: " << stmt.return_type << "] {" << stmt.identifier
-            << "}";
+  std::cout << "[return type: ";
+  visit_type(stmt.return_type);
+  std::cout << "] {" << stmt.identifier << "}";
   std::cout << "\nParams:";
   for (const auto& param : stmt.params) {
     parenthesize({param.get()});
@@ -139,7 +153,10 @@ void ASTPrinter::visit(const ReturnStmt& stmt) {
 
 void ASTPrinter::visit(const LambdaFuncStmt& stmt) {
   print_memory_info("LambdaFuncStmt", &stmt);
-  std::cout << "[type: " << stmt.type << "] {" << stmt.identifier << "}";
+  std::cout << "[type: ";
+  visit_type(stmt.type);
+  std::cout << "] ";
+  std::cout << "{" << stmt.identifier << "}";
   std::cout << "\nBody:";
   parenthesize({stmt.body.get()});
 }
@@ -160,54 +177,53 @@ void ASTPrinter::visit(const InspectStmt& stmt) {
 
 void ASTPrinter::visit(const AdditionExpr& expr) {
   print_memory_info("AdditionExpr", &expr);
-  parenthesize({expr.left.get(), expr.right.get()}, expr.op_symbol);
+  parenthesize({expr.left.get(), expr.right.get()});
 }
 
 void ASTPrinter::visit(const SubtractionExpr& expr) {
   print_memory_info("SubtractionExpr", &expr);
-  parenthesize({expr.left.get(), expr.right.get()}, expr.op_symbol);
+  parenthesize({expr.left.get(), expr.right.get()});
 }
 
 void ASTPrinter::visit(const DivisionExpr& expr) {
   print_memory_info("DivisionExpr", &expr);
-  parenthesize({expr.left.get(), expr.right.get()}, expr.op_symbol);
+  parenthesize({expr.left.get(), expr.right.get()});
 }
 
 void ASTPrinter::visit(const MultiplicationExpr& expr) {
   print_memory_info("MultiplicationExpr", &expr);
-  parenthesize({expr.left.get(), expr.right.get()}, expr.op_symbol);
+  parenthesize({expr.left.get(), expr.right.get()});
 }
 
 void ASTPrinter::visit(const EqualCompExpr& expr) {
   print_memory_info("EqualCompExpr", &expr);
-  parenthesize({expr.left.get(), expr.right.get()}, expr.op_symbol);
+  parenthesize({expr.left.get(), expr.right.get()});
 }
 
 void ASTPrinter::visit(const NotEqualCompExpr& expr) {
   print_memory_info("NotEqualCompExpr", &expr);
-  parenthesize({expr.left.get(), expr.right.get()}, expr.op_symbol);
+  parenthesize({expr.left.get(), expr.right.get()});
 }
 
 void ASTPrinter::visit(const GreaterCompExpr& expr) {
   print_memory_info("GreaterCompExpr", &expr);
-  parenthesize({expr.left.get(), expr.right.get()}, expr.op_symbol);
+  parenthesize({expr.left.get(), expr.right.get()});
 }
 
 void ASTPrinter::visit(const GreaterEqualCompExpr& expr) {
   print_memory_info("GreaterEqualCompExpr", &expr);
-  parenthesize({expr.left.get(), expr.right.get()}, expr.op_symbol);
+  parenthesize({expr.left.get(), expr.right.get()});
 }
 
 void ASTPrinter::visit(const LessCompExpr& expr) {
   print_memory_info("LessCompExpr", &expr);
-  parenthesize({expr.left.get(), expr.right.get()}, expr.op_symbol);
+  parenthesize({expr.left.get(), expr.right.get()});
 }
 
 void ASTPrinter::visit(const LessEqualCompExpr& expr) {
   print_memory_info("LessEqualCompExpr", &expr);
-  parenthesize({expr.left.get(), expr.right.get()}, expr.op_symbol);
+  parenthesize({expr.left.get(), expr.right.get()});
 }
-
 
 void ASTPrinter::visit(const GroupingExpr& expr) {
   print_memory_info("GroupingExpr", &expr);
@@ -216,12 +232,25 @@ void ASTPrinter::visit(const GroupingExpr& expr) {
 
 void ASTPrinter::visit(const LiteralExpr& expr) {
   print_memory_info("LiteralExpr", &expr);
-  std::cout << expr.literal;
+  return std::visit(
+      overloaded{
+          [](auto) { std::cout << std::string(); },
+          [](int arg) { std::cout << std::to_string(arg); },
+          [](float arg) { std::cout << std::to_string(arg); },
+          [](const std::string& arg) { std::cout << arg; },
+          [](bool arg) { std::cout << std::string(arg ? "true" : "false"); },
+      },
+      expr.literal);
 }
 
-void ASTPrinter::visit(const UnaryExpr& expr) {
-  print_memory_info("UnaryExpr", &expr);
-  parenthesize({expr.right.get()}, expr.op_symbol);
+void ASTPrinter::visit(const NegationExpr& expr) {
+  print_memory_info("NegationExpr", &expr);
+  parenthesize({expr.right.get()});
+}
+
+void ASTPrinter::visit(const LogicalNegationExpr& expr) {
+  print_memory_info("LogicalNegationExpr", &expr);
+  parenthesize({expr.right.get()});
 }
 
 void ASTPrinter::visit(const VarExpr& expr) {
@@ -231,18 +260,28 @@ void ASTPrinter::visit(const VarExpr& expr) {
 
 void ASTPrinter::visit(const LogicalOrExpr& expr) {
   print_memory_info("LogicalOrExpr", &expr);
-  parenthesize({expr.left.get(), expr.right.get()}, expr.op_symbol);
+  parenthesize({expr.left.get(), expr.right.get()});
 }
 
 void ASTPrinter::visit(const LogicalAndExpr& expr) {
   print_memory_info("LogicalAndExpr", &expr);
-  parenthesize({expr.left.get(), expr.right.get()}, expr.op_symbol);
+  parenthesize({expr.left.get(), expr.right.get()});
 }
 
-void ASTPrinter::visit(const CastExpr& expr) {
-  print_memory_info("CastExpr", &expr);
-  std::cout << "[target type: " << expr.type << "] ";
-  parenthesize({expr.left.get()}, expr.op_symbol);
+void ASTPrinter::visit(const IsTypeExpr& expr) {
+  print_memory_info("IsTypeExpr", &expr);
+  std::cout << "[target type: ";
+  visit_type(expr.type);
+  std::cout << "] ";
+  parenthesize({expr.left.get()});
+}
+
+void ASTPrinter::visit(const AsTypeExpr& expr) {
+  print_memory_info("AsTypeExpr", &expr);
+  std::cout << "[target type: ";
+  visit_type(expr.type);
+  std::cout << "] ";
+  parenthesize({expr.left.get()});
 }
 
 void ASTPrinter::visit(const InitalizerListExpr& expr) {
@@ -269,4 +308,12 @@ void ASTPrinter::visit(const FieldAccessExpr& expr) {
   std::cout << ' ';
   print_memory_info("FieldAccessExpr", &expr);
   std::cout << expr.field_name;
+}
+
+void ASTPrinter::visit_type(const VarType& type) {
+  std::visit(overloaded{[](const std::string& arg) { std::cout << arg; },
+                        [](BuiltinType arg) {
+                          std::cout << std::string(magic_enum::enum_name(arg));
+                        }},
+             type);
 }

@@ -23,11 +23,13 @@ class LessCompExpr;
 class LessEqualCompExpr;
 class GroupingExpr;
 class LiteralExpr;
-class UnaryExpr;
+class NegationExpr;
+class LogicalNegationExpr;
 class VarExpr;
 class LogicalOrExpr;
 class LogicalAndExpr;
-class CastExpr;
+class IsTypeExpr;
+class AsTypeExpr;
 class InitalizerListExpr;
 class CallExpr;
 class FieldAccessExpr;
@@ -48,11 +50,13 @@ class ExprVisitor {
   virtual void visit(const LessEqualCompExpr& expr) = 0;
   virtual void visit(const GroupingExpr& expr) = 0;
   virtual void visit(const LiteralExpr& expr) = 0;
-  virtual void visit(const UnaryExpr& expr) = 0;
+  virtual void visit(const NegationExpr& expr) = 0;
+  virtual void visit(const LogicalNegationExpr& expr) = 0;
   virtual void visit(const VarExpr& expr) = 0;
   virtual void visit(const LogicalOrExpr& expr) = 0;
   virtual void visit(const LogicalAndExpr& expr) = 0;
-  virtual void visit(const CastExpr& expr) = 0;
+  virtual void visit(const IsTypeExpr& expr) = 0;
+  virtual void visit(const AsTypeExpr& expr) = 0;
   virtual void visit(const InitalizerListExpr& expr) = 0;
   virtual void visit(const CallExpr& expr) = 0;
   virtual void visit(const FieldAccessExpr& expr) = 0;
@@ -76,14 +80,12 @@ template <typename Derived>
 class BinaryExpr : public ExprType<Derived> {
  public:
   std::unique_ptr<Expr> left;
-  Token op_symbol;
   std::unique_ptr<Expr> right;
+  Position position;
 
-  BinaryExpr(std::unique_ptr<Expr> left, Token op_symbol,
-             std::unique_ptr<Expr> right)
-      : left(std::move(left)),
-        op_symbol(std::move(op_symbol)),
-        right(std::move(right)){};
+  BinaryExpr(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right,
+             Position position)
+      : left(std::move(left)), right(std::move(right)), position(position){};
 };
 
 class AdditionExpr : public BinaryExpr<AdditionExpr> {
@@ -136,27 +138,36 @@ class LessEqualCompExpr : public BinaryExpr<LessEqualCompExpr> {
   using BinaryExpr::BinaryExpr;
 };
 
-class UnaryExpr : public ExprType<UnaryExpr> {
+template <typename Derived>
+class UnaryExpr : public ExprType<Derived> {
  public:
-  Token op_symbol;
   std::unique_ptr<Expr> right;
+  Position position;
 
-  UnaryExpr(Token op_symbol, std::unique_ptr<Expr> right)
-      : op_symbol(std::move(op_symbol)), right(std::move(right)){};
+  UnaryExpr(std::unique_ptr<Expr> right, Position position)
+      : right(std::move(right)), position(position){};
+};
+
+class NegationExpr : public UnaryExpr<NegationExpr> {
+ public:
+  using UnaryExpr::UnaryExpr;
+};
+
+class LogicalNegationExpr : public UnaryExpr<LogicalNegationExpr> {
+ public:
+  using UnaryExpr::UnaryExpr;
 };
 
 template <typename Derived>
 class LogicalExpr : public ExprType<Derived> {
  public:
   std::unique_ptr<Expr> left;
-  Token op_symbol;
   std::unique_ptr<Expr> right;
+  Position position;
 
-  LogicalExpr(std::unique_ptr<Expr> left, Token op_symbol,
-                std::unique_ptr<Expr> right)
-      : left(std::move(left)),
-        op_symbol(std::move(op_symbol)),
-        right(std::move(right)){}
+  LogicalExpr(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right,
+              Position position)
+      : left(std::move(left)), right(std::move(right)), position(position) {}
 };
 
 class LogicalOrExpr : public LogicalExpr<LogicalOrExpr> {
@@ -171,9 +182,11 @@ class LogicalAndExpr : public LogicalExpr<LogicalAndExpr> {
 
 class LiteralExpr : public ExprType<LiteralExpr> {
  public:
-  Token literal;
+  token_value_t literal;
+  Position position;
 
-  explicit LiteralExpr(Token literal) : literal(std::move(literal)){};
+  explicit LiteralExpr(token_value_t literal, Position position)
+      : literal(std::move(literal)), position(position){};
 };
 
 class GroupingExpr : public ExprType<GroupingExpr> {
@@ -185,21 +198,32 @@ class GroupingExpr : public ExprType<GroupingExpr> {
 
 class VarExpr : public ExprType<VarExpr> {
  public:
-  Token identifier;
+  std::string identifier;
+  Position position;
 
-  explicit VarExpr(Token identifier) : identifier(std::move(identifier)){};
+  explicit VarExpr(std::string identifier, Position position)
+      : identifier(std::move(identifier)), position(position){};
 };
 
-class CastExpr : public ExprType<CastExpr> {
+template <typename Derived>
+class CastExpr : public ExprType<Derived> {
  public:
   std::unique_ptr<Expr> left;
-  Token op_symbol;
-  Token type;
+  VarType type;
+  Position position;
 
-  CastExpr(std::unique_ptr<Expr> left, Token op_symbol, Token type)
-      : left(std::move(left)),
-        op_symbol(std::move(op_symbol)),
-        type(std::move(type)){};
+  CastExpr(std::unique_ptr<Expr> left, VarType type, Position position)
+      : left(std::move(left)), type(std::move(type)), position(position){};
+};
+
+class IsTypeExpr : public CastExpr<IsTypeExpr> {
+ public:
+  using CastExpr::CastExpr;
+};
+
+class AsTypeExpr : public CastExpr<AsTypeExpr> {
+ public:
+  using CastExpr::CastExpr;
 };
 
 class InitalizerListExpr : public ExprType<InitalizerListExpr> {
@@ -223,12 +247,14 @@ class CallExpr : public ExprType<CallExpr> {
 class FieldAccessExpr : public ExprType<FieldAccessExpr> {
  public:
   std::unique_ptr<Expr> parent_struct;
-  Token field_name;
+  std::string field_name;
+  Position position;
 
   explicit FieldAccessExpr(std::unique_ptr<Expr> parent_struct,
-                           Token field_name)
+                           std::string field_name, Position position)
       : parent_struct(std::move(parent_struct)),
-        field_name(std::move(field_name)){};
+        field_name(std::move(field_name)),
+        position(position){};
 };
 
 #endif  // BOALANG_EXPR_HPP

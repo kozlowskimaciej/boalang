@@ -140,8 +140,7 @@ TEST(ParserTest, print_primary_str) {
 
   auto expr = dynamic_cast<LiteralExpr*>(print_stmt->expr.get());
   EXPECT_TRUE(expr != nullptr);
-  EXPECT_EQ(expr->literal.get_type(), TokenType::TOKEN_STR_VAL);
-  EXPECT_EQ(expr->literal.stringify(), "Hello World");
+  EXPECT_EQ(std::get<std::string>(expr->literal), "Hello World");
 }
 
 TEST(ParserTest, print_primary_int_val) {
@@ -156,12 +155,11 @@ TEST(ParserTest, print_primary_int_val) {
 
   auto expr = dynamic_cast<LiteralExpr*>(print_stmt->expr.get());
   EXPECT_TRUE(expr != nullptr);
-  EXPECT_EQ(expr->literal.get_type(), TokenType::TOKEN_INT_VAL);
-  EXPECT_EQ(expr->literal.stringify(), "1");
+  EXPECT_EQ(std::get<int>(expr->literal), 1);
 }
 
 TEST(ParserTest, print_primary_float_val) {
-  StringSource source("print 1.1;");
+  StringSource source("print 1.0;");
   Lexer lexer(source);
   Parser parser(lexer);
   auto program = parser.parse();
@@ -172,8 +170,7 @@ TEST(ParserTest, print_primary_float_val) {
 
   auto expr = dynamic_cast<LiteralExpr*>(print_stmt->expr.get());
   EXPECT_TRUE(expr != nullptr);
-  EXPECT_EQ(expr->literal.get_type(), TokenType::TOKEN_FLOAT_VAL);
-  EXPECT_TRUE(str_contains(expr->literal.stringify(), "1.1"));
+  EXPECT_EQ(std::get<float>(expr->literal), 1.f);
 }
 
 TEST(ParserTest, print_primary_bool) {
@@ -188,7 +185,7 @@ TEST(ParserTest, print_primary_bool) {
 
   auto expr = dynamic_cast<LiteralExpr*>(print_stmt->expr.get());
   EXPECT_TRUE(expr != nullptr);
-  EXPECT_EQ(expr->literal.get_type(), TokenType::TOKEN_TRUE);
+  EXPECT_EQ(std::get<bool>(expr->literal), true);
 }
 
 TEST(ParserTest, print_primary_identifier) {
@@ -203,7 +200,7 @@ TEST(ParserTest, print_primary_identifier) {
 
   auto expr = dynamic_cast<VarExpr*>(print_stmt->expr.get());
   EXPECT_TRUE(expr != nullptr);
-  EXPECT_EQ(expr->identifier.stringify(), "id");
+  EXPECT_EQ(expr->identifier, "id");
 }
 
 TEST(ParserTest, print_primary_grouping) {
@@ -220,8 +217,7 @@ TEST(ParserTest, print_primary_grouping) {
   EXPECT_TRUE(grouping_expr != nullptr);
 
   auto expr = dynamic_cast<LiteralExpr*>(grouping_expr->expr.get());
-  EXPECT_EQ(expr->literal.get_type(), TokenType::TOKEN_INT_VAL);
-  EXPECT_EQ(expr->literal.stringify(), "1");
+  EXPECT_EQ(std::get<int>(expr->literal), 1);
 }
 
 TEST(ParserTest, print_primary_initalizer) {
@@ -241,13 +237,11 @@ TEST(ParserTest, print_primary_initalizer) {
 
   auto expr = dynamic_cast<LiteralExpr*>(initalizerlist_expr->list[0].get());
   EXPECT_TRUE(expr != nullptr);
-  EXPECT_EQ(expr->literal.get_type(), TokenType::TOKEN_INT_VAL);
-  EXPECT_EQ(expr->literal.stringify(), "1");
+  EXPECT_EQ(std::get<int>(expr->literal), 1);
 
   expr = dynamic_cast<LiteralExpr*>(initalizerlist_expr->list[1].get());
   EXPECT_TRUE(expr != nullptr);
-  EXPECT_EQ(expr->literal.get_type(), TokenType::TOKEN_INT_VAL);
-  EXPECT_EQ(expr->literal.stringify(), "2");
+  EXPECT_EQ(std::get<int>(expr->literal), 2);
 }
 
 TEST(ParserTest, print_call_function_no_args) {
@@ -266,7 +260,7 @@ TEST(ParserTest, print_call_function_no_args) {
 
   auto callee = dynamic_cast<VarExpr*>(call_expr->callee.get());
   EXPECT_TRUE(callee != nullptr);
-  EXPECT_EQ(callee->identifier.stringify(), "foo");
+  EXPECT_EQ(callee->identifier, "foo");
 }
 
 TEST(ParserTest, print_call_function_args) {
@@ -285,17 +279,15 @@ TEST(ParserTest, print_call_function_args) {
 
   auto arg = dynamic_cast<LiteralExpr*>(call_expr->arguments[0].get());
   EXPECT_TRUE(arg != nullptr);
-  EXPECT_EQ(arg->literal.get_type(), TokenType::TOKEN_INT_VAL);
-  EXPECT_EQ(arg->literal.stringify(), "1");
+  EXPECT_EQ(std::get<int>(arg->literal), 1);
 
   arg = dynamic_cast<LiteralExpr*>(call_expr->arguments[1].get());
   EXPECT_TRUE(arg != nullptr);
-  EXPECT_EQ(arg->literal.get_type(), TokenType::TOKEN_INT_VAL);
-  EXPECT_EQ(arg->literal.stringify(), "2");
+  EXPECT_EQ(std::get<int>(arg->literal), 2);
 
   auto callee = dynamic_cast<VarExpr*>(call_expr->callee.get());
   EXPECT_TRUE(callee != nullptr);
-  EXPECT_EQ(callee->identifier.stringify(), "foo");
+  EXPECT_EQ(callee->identifier, "foo");
 }
 
 TEST(ParserTest, print_call_function_args_over_limit) {
@@ -334,21 +326,16 @@ TEST(ParserTest, print_call_field_access) {
   auto fieldaccess_expr =
       dynamic_cast<FieldAccessExpr*>(print_stmt->expr.get());
   EXPECT_TRUE(fieldaccess_expr != nullptr);
-  EXPECT_EQ(fieldaccess_expr->field_name.get_type(),
-            TokenType::TOKEN_IDENTIFIER);
-  EXPECT_EQ(fieldaccess_expr->field_name.stringify(), "b");
+  EXPECT_EQ(fieldaccess_expr->field_name, "b");
 
   auto parent_struct =
       dynamic_cast<VarExpr*>(fieldaccess_expr->parent_struct.get());
   EXPECT_TRUE(parent_struct != nullptr);
-  EXPECT_EQ(parent_struct->identifier.stringify(), "a");
+  EXPECT_EQ(parent_struct->identifier, "a");
 }
 
-class ParserTypeCastExprTest
-    : public ::testing::TestWithParam<std::pair<std::string, TokenType>> {};
-
-TEST_P(ParserTypeCastExprTest, print_type_cast) {
-  StringSource source("print a " + GetParam().first + " int;");
+TEST(ParserTypeCastExprTest, print_type_as) {
+  StringSource source("print a as int;");
   Lexer lexer(source);
   Parser parser(lexer);
   auto program = parser.parse();
@@ -357,26 +344,17 @@ TEST_P(ParserTypeCastExprTest, print_type_cast) {
   auto print_stmt = dynamic_cast<PrintStmt*>(program->statements[0].get());
   EXPECT_TRUE(print_stmt != nullptr);
 
-  auto cast_expr = dynamic_cast<CastExpr*>(print_stmt->expr.get());
+  auto cast_expr = dynamic_cast<AsTypeExpr*>(print_stmt->expr.get());
   EXPECT_TRUE(cast_expr != nullptr);
-  EXPECT_EQ(cast_expr->op_symbol.get_type(), GetParam().second);
-  EXPECT_EQ(cast_expr->type.get_type(), TokenType::TOKEN_INT);
+  EXPECT_EQ(std::get<BuiltinType>(cast_expr->type), INT);
 
   auto left = dynamic_cast<VarExpr*>(cast_expr->left.get());
   EXPECT_TRUE(left != nullptr);
-  EXPECT_EQ(left->identifier.stringify(), "a");
+  EXPECT_EQ(left->identifier, "a");
 }
 
-INSTANTIATE_TEST_SUITE_P(
-    ParserTypeCastExprParams, ParserTypeCastExprTest,
-    ::testing::Values(std::make_pair("is", TokenType::TOKEN_IS),
-                      std::make_pair("as", TokenType::TOKEN_AS)));
-
-class ParserUnaryExprTest
-    : public ::testing::TestWithParam<std::pair<std::string, TokenType>> {};
-
-TEST_P(ParserUnaryExprTest, print_unary) {
-  StringSource source("print " + GetParam().first + "a;");
+TEST(ParserTypeCastExprTest, print_type_is) {
+  StringSource source("print a is int;");
   Lexer lexer(source);
   Parser parser(lexer);
   auto program = parser.parse();
@@ -385,22 +363,50 @@ TEST_P(ParserUnaryExprTest, print_unary) {
   auto print_stmt = dynamic_cast<PrintStmt*>(program->statements[0].get());
   EXPECT_TRUE(print_stmt != nullptr);
 
-  auto unary_expr = dynamic_cast<UnaryExpr*>(print_stmt->expr.get());
+  auto cast_expr = dynamic_cast<IsTypeExpr*>(print_stmt->expr.get());
+  EXPECT_TRUE(cast_expr != nullptr);
+  EXPECT_EQ(std::get<BuiltinType>(cast_expr->type), INT);
+
+  auto left = dynamic_cast<VarExpr*>(cast_expr->left.get());
+  EXPECT_TRUE(left != nullptr);
+  EXPECT_EQ(left->identifier, "a");
+}
+
+TEST(ParserUnaryExprTest, print_negation) {
+  StringSource source("print -a;");
+  Lexer lexer(source);
+  Parser parser(lexer);
+  auto program = parser.parse();
+  EXPECT_EQ(program->statements.size(), 1);
+
+  auto print_stmt = dynamic_cast<PrintStmt*>(program->statements[0].get());
+  EXPECT_TRUE(print_stmt != nullptr);
+
+  auto unary_expr = dynamic_cast<NegationExpr*>(print_stmt->expr.get());
   EXPECT_TRUE(unary_expr != nullptr);
-  EXPECT_EQ(unary_expr->op_symbol.get_type(), GetParam().second);
 
   auto left = dynamic_cast<VarExpr*>(unary_expr->right.get());
   EXPECT_TRUE(left != nullptr);
-  EXPECT_EQ(left->identifier.stringify(), "a");
+  EXPECT_EQ(left->identifier, "a");
 }
 
-INSTANTIATE_TEST_SUITE_P(
-    ParserUnaryExprParams, ParserUnaryExprTest,
-    ::testing::Values(std::make_pair("-", TokenType::TOKEN_MINUS),
-                      std::make_pair("!", TokenType::TOKEN_EXCLAMATION)));
+TEST(ParserUnaryExprTest, print_logicalnegation) {
+  StringSource source("print !a;");
+  Lexer lexer(source);
+  Parser parser(lexer);
+  auto program = parser.parse();
+  EXPECT_EQ(program->statements.size(), 1);
 
-class ParserBinaryExprTest
-    : public ::testing::TestWithParam<std::pair<std::string, TokenType>> {};
+  auto print_stmt = dynamic_cast<PrintStmt*>(program->statements[0].get());
+  EXPECT_TRUE(print_stmt != nullptr);
+
+  auto unary_expr = dynamic_cast<LogicalNegationExpr*>(print_stmt->expr.get());
+  EXPECT_TRUE(unary_expr != nullptr);
+
+  auto left = dynamic_cast<VarExpr*>(unary_expr->right.get());
+  EXPECT_TRUE(left != nullptr);
+  EXPECT_EQ(left->identifier, "a");
+}
 
 TEST(ParserBinaryExprTest, print_binary) {
   StringSource source("print 1 + 2;");
@@ -414,17 +420,14 @@ TEST(ParserBinaryExprTest, print_binary) {
 
   auto binary_expr = dynamic_cast<AdditionExpr*>(print_stmt->expr.get());
   EXPECT_TRUE(binary_expr != nullptr);
-  EXPECT_EQ(binary_expr->op_symbol.get_type(), TOKEN_PLUS);
 
   auto left = dynamic_cast<LiteralExpr*>(binary_expr->left.get());
   EXPECT_TRUE(left != nullptr);
-  EXPECT_EQ(left->literal.get_type(), TokenType::TOKEN_INT_VAL);
-  EXPECT_EQ(left->literal.stringify(), "1");
+  EXPECT_EQ(std::get<int>(left->literal), 1);
 
   auto right = dynamic_cast<LiteralExpr*>(binary_expr->right.get());
   EXPECT_TRUE(right != nullptr);
-  EXPECT_EQ(right->literal.get_type(), TokenType::TOKEN_INT_VAL);
-  EXPECT_EQ(right->literal.stringify(), "2");
+  EXPECT_EQ(std::get<int>(right->literal), 2);
 }
 
 TEST(ParserBinaryExprTest, print_notequalcomp) {
@@ -439,7 +442,6 @@ TEST(ParserBinaryExprTest, print_notequalcomp) {
 
   auto binary_expr = dynamic_cast<NotEqualCompExpr*>(print_stmt->expr.get());
   EXPECT_TRUE(binary_expr != nullptr);
-  EXPECT_EQ(binary_expr->op_symbol.get_type(), TOKEN_NOT_EQUAL);
 }
 
 TEST(ParserBinaryExprTest, print_equalcomp) {
@@ -454,7 +456,6 @@ TEST(ParserBinaryExprTest, print_equalcomp) {
 
   auto binary_expr = dynamic_cast<EqualCompExpr*>(print_stmt->expr.get());
   EXPECT_TRUE(binary_expr != nullptr);
-  EXPECT_EQ(binary_expr->op_symbol.get_type(), TOKEN_EQUAL_EQUAL);
 }
 
 TEST(ParserBinaryExprTest, print_greatercomp) {
@@ -469,7 +470,6 @@ TEST(ParserBinaryExprTest, print_greatercomp) {
 
   auto binary_expr = dynamic_cast<GreaterCompExpr*>(print_stmt->expr.get());
   EXPECT_TRUE(binary_expr != nullptr);
-  EXPECT_EQ(binary_expr->op_symbol.get_type(), TOKEN_GREATER);
 }
 
 TEST(ParserBinaryExprTest, print_greaterequalcomp) {
@@ -482,9 +482,9 @@ TEST(ParserBinaryExprTest, print_greaterequalcomp) {
   auto print_stmt = dynamic_cast<PrintStmt*>(program->statements[0].get());
   EXPECT_TRUE(print_stmt != nullptr);
 
-  auto binary_expr = dynamic_cast<GreaterEqualCompExpr*>(print_stmt->expr.get());
+  auto binary_expr =
+      dynamic_cast<GreaterEqualCompExpr*>(print_stmt->expr.get());
   EXPECT_TRUE(binary_expr != nullptr);
-  EXPECT_EQ(binary_expr->op_symbol.get_type(), TOKEN_GREATER_EQUAL);
 }
 
 TEST(ParserBinaryExprTest, print_lesscomp) {
@@ -499,7 +499,6 @@ TEST(ParserBinaryExprTest, print_lesscomp) {
 
   auto binary_expr = dynamic_cast<LessCompExpr*>(print_stmt->expr.get());
   EXPECT_TRUE(binary_expr != nullptr);
-  EXPECT_EQ(binary_expr->op_symbol.get_type(), TOKEN_LESS);
 }
 
 TEST(ParserBinaryExprTest, print_lessequalcomp) {
@@ -514,7 +513,6 @@ TEST(ParserBinaryExprTest, print_lessequalcomp) {
 
   auto binary_expr = dynamic_cast<LessEqualCompExpr*>(print_stmt->expr.get());
   EXPECT_TRUE(binary_expr != nullptr);
-  EXPECT_EQ(binary_expr->op_symbol.get_type(), TOKEN_LESS_EQUAL);
 }
 
 TEST(ParserBinaryExprTest, print_subtraction) {
@@ -529,7 +527,6 @@ TEST(ParserBinaryExprTest, print_subtraction) {
 
   auto binary_expr = dynamic_cast<SubtractionExpr*>(print_stmt->expr.get());
   EXPECT_TRUE(binary_expr != nullptr);
-  EXPECT_EQ(binary_expr->op_symbol.get_type(), TOKEN_MINUS);
 }
 
 TEST(ParserBinaryExprTest, print_addition) {
@@ -544,7 +541,6 @@ TEST(ParserBinaryExprTest, print_addition) {
 
   auto binary_expr = dynamic_cast<AdditionExpr*>(print_stmt->expr.get());
   EXPECT_TRUE(binary_expr != nullptr);
-  EXPECT_EQ(binary_expr->op_symbol.get_type(), TOKEN_PLUS);
 }
 
 TEST(ParserBinaryExprTest, print_division) {
@@ -559,7 +555,6 @@ TEST(ParserBinaryExprTest, print_division) {
 
   auto binary_expr = dynamic_cast<DivisionExpr*>(print_stmt->expr.get());
   EXPECT_TRUE(binary_expr != nullptr);
-  EXPECT_EQ(binary_expr->op_symbol.get_type(), TOKEN_SLASH);
 }
 
 TEST(ParserBinaryExprTest, print_multiplication) {
@@ -574,7 +569,6 @@ TEST(ParserBinaryExprTest, print_multiplication) {
 
   auto binary_expr = dynamic_cast<MultiplicationExpr*>(print_stmt->expr.get());
   EXPECT_TRUE(binary_expr != nullptr);
-  EXPECT_EQ(binary_expr->op_symbol.get_type(), TOKEN_STAR);
 }
 
 TEST(ParserLogicalExprTest, print_and) {
@@ -589,17 +583,14 @@ TEST(ParserLogicalExprTest, print_and) {
 
   auto logical_expr = dynamic_cast<LogicalAndExpr*>(print_stmt->expr.get());
   EXPECT_TRUE(logical_expr != nullptr);
-  EXPECT_EQ(logical_expr->op_symbol.get_type(), TOKEN_AND);
 
   auto left = dynamic_cast<LiteralExpr*>(logical_expr->left.get());
   EXPECT_TRUE(left != nullptr);
-  EXPECT_EQ(left->literal.get_type(), TokenType::TOKEN_INT_VAL);
-  EXPECT_EQ(left->literal.stringify(), "1");
+  EXPECT_EQ(std::get<int>(left->literal), 1);
 
   auto right = dynamic_cast<LiteralExpr*>(logical_expr->right.get());
   EXPECT_TRUE(right != nullptr);
-  EXPECT_EQ(right->literal.get_type(), TokenType::TOKEN_INT_VAL);
-  EXPECT_EQ(right->literal.stringify(), "2");
+  EXPECT_EQ(std::get<int>(right->literal), 2);
 }
 
 TEST(ParserLogicalExprTest, print_or) {
@@ -614,7 +605,6 @@ TEST(ParserLogicalExprTest, print_or) {
 
   auto logical_expr = dynamic_cast<LogicalOrExpr*>(print_stmt->expr.get());
   EXPECT_TRUE(logical_expr != nullptr);
-  EXPECT_EQ(logical_expr->op_symbol.get_type(), TOKEN_OR);
 }
 
 TEST(ParserTest, block_stmt) {
@@ -649,20 +639,22 @@ TEST(ParserTest, inspect_stmt) {
 
   auto inspected = dynamic_cast<VarExpr*>(inspect_stmt->inspected.get());
   EXPECT_TRUE(inspected != nullptr);
-  EXPECT_EQ(inspected->identifier.stringify(), "variant_obj");
+  EXPECT_EQ(inspected->identifier, "variant_obj");
 
   EXPECT_EQ(inspect_stmt->lambdas.size(), 2);
   auto lambda_stmt =
       dynamic_cast<LambdaFuncStmt*>(inspect_stmt->lambdas[0].get());
   EXPECT_TRUE(lambda_stmt != nullptr);
-  EXPECT_EQ(lambda_stmt->type.get_type(), TokenType::TOKEN_INT);
-  EXPECT_EQ(lambda_stmt->identifier.stringify(), "val");
+  EXPECT_EQ(std::get<BuiltinType>(lambda_stmt->type), INT);
+
+  EXPECT_EQ(lambda_stmt->identifier, "val");
   EXPECT_TRUE(dynamic_cast<PrintStmt*>(lambda_stmt->body.get()) != nullptr);
 
   lambda_stmt = dynamic_cast<LambdaFuncStmt*>(inspect_stmt->lambdas[1].get());
   EXPECT_TRUE(lambda_stmt != nullptr);
-  EXPECT_EQ(lambda_stmt->type.get_type(), TokenType::TOKEN_FLOAT);
-  EXPECT_EQ(lambda_stmt->identifier.stringify(), "val");
+  EXPECT_EQ(std::get<BuiltinType>(lambda_stmt->type), FLOAT);
+
+  EXPECT_EQ(lambda_stmt->identifier, "val");
   EXPECT_TRUE(dynamic_cast<PrintStmt*>(lambda_stmt->body.get()) != nullptr);
 
   EXPECT_TRUE(dynamic_cast<PrintStmt*>(inspect_stmt->default_lambda.get()) !=
@@ -681,8 +673,7 @@ TEST(ParserTest, return_stmt) {
 
   auto value = dynamic_cast<LiteralExpr*>(return_stmt->value.get());
   EXPECT_TRUE(value != nullptr);
-  EXPECT_EQ(value->literal.get_type(), TokenType::TOKEN_INT_VAL);
-  EXPECT_EQ(value->literal.stringify(), "1");
+  EXPECT_EQ(std::get<int>(value->literal), 1);
 }
 
 TEST(ParserTest, return_stmt_void) {
@@ -709,7 +700,7 @@ TEST(ParserTest, while_stmt) {
 
   auto condition = dynamic_cast<LiteralExpr*>(while_stmt->condition.get());
   EXPECT_TRUE(condition != nullptr);
-  EXPECT_EQ(condition->literal.get_type(), TokenType::TOKEN_TRUE);
+  EXPECT_EQ(std::get<bool>(condition->literal), true);
 
   EXPECT_TRUE(dynamic_cast<PrintStmt*>(while_stmt->body.get()) != nullptr);
 }
@@ -726,7 +717,7 @@ TEST(ParserTest, if_stmt) {
 
   auto condition = dynamic_cast<LiteralExpr*>(if_stmt->condition.get());
   EXPECT_TRUE(condition != nullptr);
-  EXPECT_EQ(condition->literal.get_type(), TokenType::TOKEN_TRUE);
+  EXPECT_EQ(std::get<bool>(condition->literal), true);
 
   EXPECT_TRUE(dynamic_cast<PrintStmt*>(if_stmt->then_branch.get()) != nullptr);
   EXPECT_TRUE(if_stmt->else_branch == nullptr);
@@ -744,7 +735,7 @@ TEST(ParserTest, if_else_stmt) {
 
   auto condition = dynamic_cast<LiteralExpr*>(if_stmt->condition.get());
   EXPECT_TRUE(condition != nullptr);
-  EXPECT_EQ(condition->literal.get_type(), TokenType::TOKEN_TRUE);
+  EXPECT_EQ(std::get<bool>(condition->literal), true);
 
   EXPECT_TRUE(dynamic_cast<PrintStmt*>(if_stmt->then_branch.get()) != nullptr);
   EXPECT_TRUE(dynamic_cast<ReturnStmt*>(if_stmt->else_branch.get()) != nullptr);
@@ -764,20 +755,22 @@ TEST(ParserTest, struct_decl_stmt) {
   auto struct_stmt =
       dynamic_cast<StructDeclStmt*>(program->statements[0].get());
   EXPECT_TRUE(struct_stmt != nullptr);
-  EXPECT_EQ(struct_stmt->identifier.stringify(), "S");
+  EXPECT_EQ(struct_stmt->identifier, "S");
 
   EXPECT_EQ(struct_stmt->fields.size(), 2);
   auto field = dynamic_cast<StructFieldStmt*>(struct_stmt->fields[0].get());
   EXPECT_TRUE(field != nullptr);
   EXPECT_EQ(field->mut, true);
-  EXPECT_EQ(field->type.get_type(), TokenType::TOKEN_INT);
-  EXPECT_EQ(field->identifier.stringify(), "a");
+  EXPECT_EQ(std::get<BuiltinType>(field->type), INT);
+
+  EXPECT_EQ(field->identifier, "a");
 
   field = dynamic_cast<StructFieldStmt*>(struct_stmt->fields[1].get());
   EXPECT_TRUE(field != nullptr);
   EXPECT_EQ(field->mut, false);
-  EXPECT_EQ(field->type.get_type(), TokenType::TOKEN_FLOAT);
-  EXPECT_EQ(field->identifier.stringify(), "b");
+  EXPECT_EQ(std::get<BuiltinType>(field->type), FLOAT);
+
+  EXPECT_EQ(field->identifier, "b");
 }
 
 TEST(ParserTest, variant_decl_stmt) {
@@ -790,13 +783,12 @@ TEST(ParserTest, variant_decl_stmt) {
   auto variant_stmt =
       dynamic_cast<VariantDeclStmt*>(program->statements[0].get());
   EXPECT_TRUE(variant_stmt != nullptr);
-  EXPECT_EQ(variant_stmt->identifier.stringify(), "V");
+  EXPECT_EQ(variant_stmt->identifier, "V");
 
   EXPECT_EQ(variant_stmt->params.size(), 3);
-  EXPECT_EQ(variant_stmt->params[0].get_type(), TokenType::TOKEN_INT);
-  EXPECT_EQ(variant_stmt->params[1].get_type(), TokenType::TOKEN_FLOAT);
-  EXPECT_EQ(variant_stmt->params[2].get_type(), TokenType::TOKEN_IDENTIFIER);
-  EXPECT_EQ(variant_stmt->params[2].stringify(), "S");
+  EXPECT_EQ(std::get<BuiltinType>(variant_stmt->params[0]), INT);
+  EXPECT_EQ(std::get<BuiltinType>(variant_stmt->params[1]), FLOAT);
+  EXPECT_EQ(std::get<std::string>(variant_stmt->params[2]), "S");
 }
 
 TEST(ParserTest, assign_stmt) {
@@ -811,7 +803,7 @@ TEST(ParserTest, assign_stmt) {
 
   auto var = dynamic_cast<VarExpr*>(assign_stmt->var.get());
   EXPECT_TRUE(var != nullptr);
-  EXPECT_EQ(var->identifier.stringify(), "a");
+  EXPECT_EQ(var->identifier, "a");
 
   EXPECT_TRUE(dynamic_cast<LiteralExpr*>(assign_stmt->value.get()) != nullptr);
 }
@@ -825,7 +817,7 @@ TEST(ParserTest, call_stmt) {
 
   auto call_stmt = dynamic_cast<CallStmt*>(program->statements[0].get());
   EXPECT_TRUE(call_stmt != nullptr);
-  EXPECT_EQ(call_stmt->identifier.stringify(), "a");
+  EXPECT_EQ(call_stmt->identifier, "a");
   EXPECT_EQ(call_stmt->arguments.size(), 1);
   EXPECT_TRUE(dynamic_cast<LiteralExpr*>(call_stmt->arguments[0].get()) !=
               nullptr);
@@ -841,7 +833,7 @@ TEST(ParserTest, call_stmt_no_args) {
   auto call_stmt = dynamic_cast<CallStmt*>(program->statements[0].get());
   EXPECT_TRUE(call_stmt != nullptr);
 
-  EXPECT_EQ(call_stmt->identifier.stringify(), "a");
+  EXPECT_EQ(call_stmt->identifier, "a");
   EXPECT_EQ(call_stmt->arguments.size(), 0);
 }
 
@@ -854,15 +846,15 @@ TEST(ParserTest, func_decl_stmt) {
 
   auto func_stmt = dynamic_cast<FuncStmt*>(program->statements[0].get());
   EXPECT_TRUE(func_stmt != nullptr);
-  EXPECT_EQ(func_stmt->identifier.stringify(), "func");
-  EXPECT_EQ(func_stmt->return_type.get_type(), TokenType::TOKEN_VOID);
+  EXPECT_EQ(func_stmt->identifier, "func");
+  EXPECT_EQ(std::get<BuiltinType>(func_stmt->return_type), VOID);
 
   auto& params = func_stmt->params;
   EXPECT_EQ(params.size(), 1);
   auto param = dynamic_cast<FuncParamStmt*>(params[0].get());
   EXPECT_TRUE(param != nullptr);
-  EXPECT_EQ(param->type.get_type(), TokenType::TOKEN_INT);
-  EXPECT_EQ(param->identifier.stringify(), "a");
+  EXPECT_EQ(std::get<BuiltinType>(param->type), INT);
+  EXPECT_EQ(param->identifier, "a");
 
   auto body = dynamic_cast<BlockStmt*>(func_stmt->body.get());
   EXPECT_TRUE(body != nullptr);

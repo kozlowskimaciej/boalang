@@ -159,8 +159,9 @@ std::unique_ptr<LambdaFuncStmt> Parser::lambda_func() {
   if (!lambda_body) {
     throw SyntaxError(current_token_, "Expected statement for lambda body.");
   }
-  return std::make_unique<LambdaFuncStmt>(lambda_type.value(), lambda_id,
-                                          std::move(lambda_body));
+  return std::make_unique<LambdaFuncStmt>(
+      lambda_type->get_var_type(), lambda_id.stringify(),
+      std::move(lambda_body), lambda_id.get_position());
 }
 
 // RULE block_stmt = "{" { statement } "}" ;
@@ -189,7 +190,8 @@ std::unique_ptr<StructDeclStmt> Parser::struct_decl() {
     fields.push_back(std::move(field));
   }
   consume({TOKEN_RBRACE}, "Expected '}' after struct declaration.");
-  return std::make_unique<StructDeclStmt>(struct_id, std::move(fields));
+  return std::make_unique<StructDeclStmt>(
+      struct_id.stringify(), std::move(fields), struct_id.get_position());
 }
 
 // RULE struct_field = [ "mut" ] type identifier ";" ;
@@ -208,8 +210,9 @@ std::unique_ptr<StructFieldStmt> Parser::struct_field() {
   Token field_id = consume({TOKEN_IDENTIFIER},
                            "Expected identifier after struct field type.");
   consume({TOKEN_SEMICOLON}, "Expected ';' after struct field.");
-  return std::make_unique<StructFieldStmt>(field_type.value(), field_id,
-                                           is_mut);
+  return std::make_unique<StructFieldStmt>(field_type->get_var_type(),
+                                           field_id.stringify(),
+                                           field_id.get_position(), is_mut);
 }
 
 // RULE variant_decl = "variant" identifier "{" variant_params "}" ";" ;
@@ -220,7 +223,7 @@ std::unique_ptr<VariantDeclStmt> Parser::variant_decl() {
   Token variant_id =
       consume({TOKEN_IDENTIFIER}, "Expected variant identifier.");
   consume({TOKEN_LBRACE}, "Expected '{' after identifier.");
-  std::vector<Token> params;
+  std::vector<VarType> params;
   if (auto variantparams = variant_params()) {
     params = variantparams.value();
   } else {
@@ -228,15 +231,16 @@ std::unique_ptr<VariantDeclStmt> Parser::variant_decl() {
   }
   consume({TOKEN_RBRACE}, "Expected '}' after variant parameters.");
   consume({TOKEN_SEMICOLON}, "Expected ';' after variant declaration.");
-  return std::make_unique<VariantDeclStmt>(variant_id, std::move(params));
+  return std::make_unique<VariantDeclStmt>(
+      variant_id.stringify(), std::move(params), variant_id.get_position());
 }
 
 // RULE variant_params = type { "," type } ;
-std::optional<std::vector<Token>> Parser::variant_params() {
-  std::vector<Token> params;
+std::optional<std::vector<VarType>> Parser::variant_params() {
+  std::vector<VarType> params;
 
   if (auto type_token = type()) {
-    params.push_back(type_token.value());
+    params.push_back(type_token->get_var_type());
   } else {
     return std::nullopt;
   }
@@ -246,7 +250,7 @@ std::optional<std::vector<Token>> Parser::variant_params() {
     if (!type_token) {
       throw SyntaxError(current_token_, "Expected variant parameter type.");
     }
-    params.push_back(type_token.value());
+    params.push_back(type_token->get_var_type());
   }
   return params;
 }
@@ -294,7 +298,8 @@ std::unique_ptr<Stmt> Parser::assign_or_call(const Token& identifier) {
   if (auto call = call_stmt(identifier)) {
     return call;
   }
-  auto id_expr = std::make_unique<VarExpr>(identifier);
+  auto id_expr = std::make_unique<VarExpr>(identifier.stringify(),
+                                           identifier.get_position());
   if (auto assign = assign_stmt(std::move(id_expr))) {
     return assign;
   }
@@ -327,7 +332,8 @@ std::unique_ptr<CallStmt> Parser::call_stmt(const Token& identifier) {
   }
   if (match({TOKEN_RPAREN})) {
     consume({TOKEN_SEMICOLON}, "Expected ';' after call statement.");
-    return std::make_unique<CallStmt>(identifier);
+    return std::make_unique<CallStmt>(identifier.stringify(),
+                                      identifier.get_position());
   }
 
   std::vector<std::unique_ptr<Expr>> call_args;
@@ -340,7 +346,8 @@ std::unique_ptr<CallStmt> Parser::call_stmt(const Token& identifier) {
     consume({TOKEN_RPAREN}, "Excepted ')' after call arguments.");
   }
   consume({TOKEN_SEMICOLON}, "Expected ';' after call statement.");
-  return std::make_unique<CallStmt>(identifier, std::move(call_args));
+  return std::make_unique<CallStmt>(
+      identifier.stringify(), identifier.get_position(), std::move(call_args));
 }
 
 // RULE var_or_func_decl = identifier ( var_decl | func_decl ) ;
@@ -400,7 +407,9 @@ std::unique_ptr<VarDeclStmt> Parser::var_decl(const Token& type,
     throw SyntaxError(current_token_, "Expected expression.");
   }
   consume({TOKEN_SEMICOLON}, "Expected ';' after variable declaration.");
-  return std::make_unique<VarDeclStmt>(type, identifier, std::move(expr), mut);
+  return std::make_unique<VarDeclStmt>(type.get_var_type(),
+                                       identifier.stringify(), std::move(expr),
+                                       identifier.get_position(), mut);
 }
 
 // RULE func_decl = "(" [ func_params ] ")" block ;
@@ -423,8 +432,9 @@ std::unique_ptr<FuncStmt> Parser::func_decl(const Token& return_type,
     throw SyntaxError(current_token_,
                       "Expected block statement in function declaration.");
   }
-  return std::make_unique<FuncStmt>(identifier, return_type, std::move(params),
-                                    std::move(body));
+  return std::make_unique<FuncStmt>(
+      identifier.stringify(), return_type.get_var_type(), std::move(params),
+      std::move(body), identifier.get_position());
 }
 
 // RULE func_params = type identifier { "," type identifier } ;
@@ -435,8 +445,9 @@ Parser::func_params() {
   if (auto param_type = type()) {
     Token param_id =
         consume({TOKEN_IDENTIFIER}, "Expected identifier after type.");
-    params.push_back(
-        std::make_unique<FuncParamStmt>(param_type.value(), param_id));
+    params.push_back(std::make_unique<FuncParamStmt>(param_type->get_var_type(),
+                                                     param_id.stringify(),
+                                                     param_id.get_position()));
   } else {
     return std::nullopt;
   }
@@ -448,8 +459,9 @@ Parser::func_params() {
     }
     Token param_id =
         consume({TOKEN_IDENTIFIER}, "Expected identifier after type.");
-    params.push_back(
-        std::make_unique<FuncParamStmt>(param_type.value(), param_id));
+    params.push_back(std::make_unique<FuncParamStmt>(param_type->get_var_type(),
+                                                     param_id.stringify(),
+                                                     param_id.get_position()));
   }
   return params;
 }
@@ -470,9 +482,8 @@ std::unique_ptr<Expr> Parser::logic_or() {
     if (!right) {
       throw SyntaxError(current_token_, "Expected expression.");
     }
-    Token op_symbol = token.value();
-    expr = std::make_unique<LogicalOrExpr>(std::move(expr), op_symbol,
-                                         std::move(right));
+    expr = std::make_unique<LogicalOrExpr>(std::move(expr), std::move(right),
+                                           token->get_position());
   }
 
   return expr;
@@ -491,9 +502,8 @@ std::unique_ptr<Expr> Parser::logic_and() {
     if (!right) {
       throw SyntaxError(current_token_, "Expected expression.");
     }
-    Token op_symbol = token.value();
-    expr = std::make_unique<LogicalAndExpr>(std::move(expr), op_symbol,
-                                         std::move(right));
+    expr = std::make_unique<LogicalAndExpr>(std::move(expr), std::move(right),
+                                            token->get_position());
   }
 
   return expr;
@@ -512,15 +522,14 @@ std::unique_ptr<Expr> Parser::equality() {
     if (!right) {
       throw SyntaxError(current_token_, "Expected expression.");
     }
-    Token op_symbol = token.value();
-    switch(op_symbol.get_type()) {
+    switch (token->get_type()) {
       case TOKEN_NOT_EQUAL:
-        expr = std::make_unique<NotEqualCompExpr>(std::move(expr), op_symbol,
-                                            std::move(right));
+        expr = std::make_unique<NotEqualCompExpr>(
+            std::move(expr), std::move(right), token->get_position());
         break;
       case TOKEN_EQUAL_EQUAL:
-        expr = std::make_unique<EqualCompExpr>(std::move(expr), op_symbol,
-                                                  std::move(right));
+        expr = std::make_unique<EqualCompExpr>(
+            std::move(expr), std::move(right), token->get_position());
         break;
       default:
         break;
@@ -544,23 +553,22 @@ std::unique_ptr<Expr> Parser::comparison() {
     if (!right) {
       throw SyntaxError(current_token_, "Expected expression.");
     }
-    Token op_symbol = token.value();
-    switch(op_symbol.get_type()) {
+    switch (token->get_type()) {
       case TOKEN_GREATER:
-        expr = std::make_unique<GreaterCompExpr>(std::move(expr), op_symbol,
-                                                  std::move(right));
+        expr = std::make_unique<GreaterCompExpr>(
+            std::move(expr), std::move(right), token->get_position());
         break;
       case TOKEN_GREATER_EQUAL:
-        expr = std::make_unique<GreaterEqualCompExpr>(std::move(expr), op_symbol,
-                                               std::move(right));
+        expr = std::make_unique<GreaterEqualCompExpr>(
+            std::move(expr), std::move(right), token->get_position());
         break;
       case TOKEN_LESS:
-        expr = std::make_unique<LessCompExpr>(std::move(expr), op_symbol,
-                                                      std::move(right));
+        expr = std::make_unique<LessCompExpr>(std::move(expr), std::move(right),
+                                              token->get_position());
         break;
       case TOKEN_LESS_EQUAL:
-        expr = std::make_unique<LessEqualCompExpr>(std::move(expr), op_symbol,
-                                              std::move(right));
+        expr = std::make_unique<LessEqualCompExpr>(
+            std::move(expr), std::move(right), token->get_position());
         break;
       default:
         break;
@@ -583,15 +591,14 @@ std::unique_ptr<Expr> Parser::term() {
     if (!right) {
       throw SyntaxError(current_token_, "Expected expression.");
     }
-    Token op_symbol = token.value();
-    switch(op_symbol.get_type()) {
+    switch (token->get_type()) {
       case TOKEN_MINUS:
-        expr = std::make_unique<SubtractionExpr>(std::move(expr), op_symbol,
-                                                 std::move(right));
+        expr = std::make_unique<SubtractionExpr>(
+            std::move(expr), std::move(right), token->get_position());
         break;
       case TOKEN_PLUS:
-        expr = std::make_unique<AdditionExpr>(std::move(expr), op_symbol,
-                                                      std::move(right));
+        expr = std::make_unique<AdditionExpr>(std::move(expr), std::move(right),
+                                              token->get_position());
         break;
       default:
         break;
@@ -614,15 +621,14 @@ std::unique_ptr<Expr> Parser::factor() {
     if (!right) {
       throw SyntaxError(current_token_, "Expected expression.");
     }
-    Token op_symbol = token.value();
-    switch(op_symbol.get_type()) {
+    switch (token->get_type()) {
       case TOKEN_SLASH:
-        expr = std::make_unique<DivisionExpr>(std::move(expr), op_symbol,
-                                                 std::move(right));
+        expr = std::make_unique<DivisionExpr>(std::move(expr), std::move(right),
+                                              token->get_position());
         break;
       case TOKEN_STAR:
-        expr = std::make_unique<MultiplicationExpr>(std::move(expr), op_symbol,
-                                              std::move(right));
+        expr = std::make_unique<MultiplicationExpr>(
+            std::move(expr), std::move(right), token->get_position());
         break;
       default:
         break;
@@ -639,8 +645,16 @@ std::unique_ptr<Expr> Parser::unary() {
     if (!right) {
       throw SyntaxError(current_token_, "Expected expression.");
     }
-    Token op_symbol = token.value();
-    return std::make_unique<UnaryExpr>(op_symbol, std::move(right));
+    switch (token->get_type()) {
+      case TOKEN_EXCLAMATION:
+        return std::make_unique<LogicalNegationExpr>(std::move(right),
+                                                     token->get_position());
+      case TOKEN_MINUS:
+        return std::make_unique<NegationExpr>(std::move(right),
+                                              token->get_position());
+      default:
+        break;
+    }
   }
 
   return type_cast();
@@ -660,8 +674,18 @@ std::unique_ptr<Expr> Parser::type_cast() {
     if (!cast_type) {
       throw SyntaxError(current_token_, "Expected cast type.");
     }
-    expr = std::make_unique<CastExpr>(std::move(expr), op_symbol,
-                                      cast_type.value());
+    switch (token->get_type()) {
+      case TOKEN_AS:
+        expr = std::make_unique<AsTypeExpr>(
+            std::move(expr), cast_type->get_var_type(), token->get_position());
+        break;
+      case TOKEN_IS:
+        expr = std::make_unique<IsTypeExpr>(
+            std::move(expr), cast_type->get_var_type(), token->get_position());
+        break;
+      default:
+        break;
+    }
   }
 
   return expr;
@@ -698,12 +722,12 @@ std::unique_ptr<Expr> Parser::call() {
 std::unique_ptr<Expr> Parser::primary() {
   if (auto token = match({TOKEN_FLOAT_VAL, TOKEN_INT_VAL, TOKEN_STR_VAL,
                           TOKEN_TRUE, TOKEN_FALSE})) {
-    return std::make_unique<LiteralExpr>(token.value());
+    return std::make_unique<LiteralExpr>(token->get_value(),
+                                         token->get_position());
   }
 
   if (auto token = match({TOKEN_IDENTIFIER})) {
-    Token identifier = token.value();
-    return std::make_unique<VarExpr>(identifier);
+    return std::make_unique<VarExpr>(token->stringify(), token->get_position());
   }
 
   if (match({TOKEN_LPAREN})) {
@@ -761,8 +785,8 @@ std::unique_ptr<Expr> Parser::field_access(
   do {
     auto id = consume({TOKEN_IDENTIFIER},
                       "Expected identifier after '.' for accessing field.");
-    parent_struct =
-        std::make_unique<FieldAccessExpr>(std::move(parent_struct), id);
+    parent_struct = std::make_unique<FieldAccessExpr>(
+        std::move(parent_struct), id.stringify(), id.get_position());
   } while (match({TOKEN_DOT}));
   return parent_struct;
 }

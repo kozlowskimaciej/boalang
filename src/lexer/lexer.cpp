@@ -120,6 +120,12 @@ opt_token_t Lexer::try_tokenize_identifier() {
   }
   for (const auto& kw : keywords) {
     if (kw.first == current_context_) {
+      if (current_context_ == "true") {
+        return build_token_with_value(kw.second, true);
+      }
+      if (current_context_ == "false") {
+        return build_token_with_value(kw.second, false);
+      }
       return build_token(kw.second);
     }
   }

@@ -27,7 +27,7 @@ class Parser {
   std::unique_ptr<StructDeclStmt> struct_decl();
   std::unique_ptr<StructFieldStmt> struct_field();
   std::unique_ptr<VariantDeclStmt> variant_decl();
-  std::optional<std::vector<Token>> variant_params();
+  std::optional<std::vector<VarType>> variant_params();
 
   std::unique_ptr<VarDeclStmt> mut_var_decl();
   std::unique_ptr<FuncStmt> void_func_decl();

@@ -108,6 +108,7 @@ class Token {
       : type(type), value(std::move(value)), position(position){};
 
   [[nodiscard]] const TokenType& get_type() const { return type; };
+  [[nodiscard]] VarType get_var_type() const;
   [[nodiscard]] const token_value_t& get_value() const { return value; };
   [[nodiscard]] const Position& get_position() const { return position; };
 

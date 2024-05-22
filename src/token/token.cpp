@@ -1,5 +1,6 @@
 #include "token.hpp"
 
+#include <exception>
 #include <magic_enum/magic_enum.hpp>
 
 template <class... Ts>
@@ -9,6 +10,25 @@ struct overloaded : Ts... {
 
 template <class... Ts>
 overloaded(Ts...) -> overloaded<Ts...>;
+
+VarType Token::get_var_type() const {
+  switch (this->get_type()) {
+    case TOKEN_INT:
+      return INT;
+    case TOKEN_FLOAT:
+      return FLOAT;
+    case TOKEN_STR:
+      return STR;
+    case TOKEN_BOOL:
+      return BOOL;
+    case TOKEN_VOID:
+      return VOID;
+    case TOKEN_IDENTIFIER:
+      return this->stringify();
+    default:
+      throw std::logic_error("Invalid var type " + this->stringify_type());
+  }
+}
 
 std::string Token::stringify() const {
   return std::visit(

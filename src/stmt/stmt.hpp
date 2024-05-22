@@ -110,46 +110,62 @@ class WhileStmt : public StmtType<WhileStmt> {
 
 class VarDeclStmt : public StmtType<VarDeclStmt> {
  public:
-  Token type;
-  Token identifier;
+  VarType type;
+  std::string identifier;
   std::unique_ptr<Expr> initializer;
+  Position position;
   bool mut;
 
-  VarDeclStmt(Token type, Token identifier, std::unique_ptr<Expr> initializer,
+  VarDeclStmt(VarType type, std::string identifier,
+              std::unique_ptr<Expr> initializer, Position position,
               bool mut = false)
       : type(std::move(type)),
         identifier(std::move(identifier)),
         initializer(std::move(initializer)),
+        position(position),
         mut(mut){};
 };
 
 class StructFieldStmt : public StmtType<StructFieldStmt> {
  public:
-  Token type;
-  Token identifier;
+  VarType type;
+  std::string identifier;
+  Position position;
   bool mut;
 
-  StructFieldStmt(Token type, Token identifier, bool mut = false)
-      : type(std::move(type)), identifier(std::move(identifier)), mut(mut){};
+  StructFieldStmt(VarType type, std::string identifier, Position position,
+                  bool mut = false)
+      : type(std::move(type)),
+        identifier(std::move(identifier)),
+        position(position),
+        mut(mut){};
 };
 
 class StructDeclStmt : public StmtType<StructDeclStmt> {
  public:
-  Token identifier;
+  std::string identifier;
   std::vector<std::unique_ptr<StructFieldStmt>> fields;
+  Position position;
 
-  StructDeclStmt(Token identifier,
-                 std::vector<std::unique_ptr<StructFieldStmt>> fields)
-      : identifier(std::move(identifier)), fields(std::move(fields)){};
+  StructDeclStmt(std::string identifier,
+                 std::vector<std::unique_ptr<StructFieldStmt>> fields,
+                 Position position)
+      : identifier(std::move(identifier)),
+        fields(std::move(fields)),
+        position(position){};
 };
 
 class VariantDeclStmt : public StmtType<VariantDeclStmt> {
  public:
-  Token identifier;
-  std::vector<Token> params;
+  std::string identifier;
+  std::vector<VarType> params;
+  Position position;
 
-  VariantDeclStmt(Token identifier, std::vector<Token> params)
-      : identifier(std::move(identifier)), params(std::move(params)){};
+  VariantDeclStmt(std::string identifier, std::vector<VarType> params,
+                  Position position)
+      : identifier(std::move(identifier)),
+        params(std::move(params)),
+        position(position){};
 };
 
 class AssignStmt : public StmtType<AssignStmt> {
@@ -163,37 +179,45 @@ class AssignStmt : public StmtType<AssignStmt> {
 
 class CallStmt : public StmtType<CallStmt> {
  public:
-  Token identifier;
+  std::string identifier;
+  Position position;
   std::vector<std::unique_ptr<Expr>> arguments;
 
-  explicit CallStmt(Token identifier,
+  explicit CallStmt(std::string identifier, Position position,
                     std::vector<std::unique_ptr<Expr>> arguments = {})
-      : identifier(std::move(identifier)), arguments(std::move(arguments)){};
+      : identifier(std::move(identifier)),
+        position(position),
+        arguments(std::move(arguments)){};
 };
 
 class FuncParamStmt : public StmtType<FuncParamStmt> {
  public:
-  Token type;
-  Token identifier;
+  VarType type;
+  std::string identifier;
+  Position position;
 
-  FuncParamStmt(Token type, Token identifier)
-      : type(std::move(type)), identifier(std::move(identifier)){};
+  FuncParamStmt(VarType type, std::string identifier, Position position)
+      : type(std::move(type)),
+        identifier(std::move(identifier)),
+        position(position){};
 };
 
 class FuncStmt : public StmtType<FuncStmt> {
  public:
-  Token identifier;
-  Token return_type;
+  std::string identifier;
+  VarType return_type;
   std::vector<std::unique_ptr<FuncParamStmt>> params;
   std::unique_ptr<BlockStmt> body;
+  Position position;
 
-  FuncStmt(Token identifier, Token return_type,
+  FuncStmt(std::string identifier, VarType return_type,
            std::vector<std::unique_ptr<FuncParamStmt>> params,
-           std::unique_ptr<BlockStmt> body)
+           std::unique_ptr<BlockStmt> body, Position position)
       : identifier(std::move(identifier)),
         return_type(std::move(return_type)),
         params(std::move(params)),
-        body(std::move(body)){};
+        body(std::move(body)),
+        position(position){};
 };
 
 class ReturnStmt : public StmtType<ReturnStmt> {
@@ -205,14 +229,17 @@ class ReturnStmt : public StmtType<ReturnStmt> {
 
 class LambdaFuncStmt : public StmtType<LambdaFuncStmt> {
  public:
-  Token type;
-  Token identifier;
+  VarType type;
+  std::string identifier;
   std::unique_ptr<Stmt> body;
+  Position position;
 
-  LambdaFuncStmt(Token type, Token identifier, std::unique_ptr<Stmt> body)
+  LambdaFuncStmt(VarType type, std::string identifier,
+                 std::unique_ptr<Stmt> body, Position position)
       : type(std::move(type)),
         identifier(std::move(identifier)),
-        body(std::move(body)){};
+        body(std::move(body)),
+        position(position){};
 };
 
 class InspectStmt : public StmtType<InspectStmt> {

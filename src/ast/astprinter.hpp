@@ -21,6 +21,7 @@ class ASTPrinter : public ExprVisitor, public StmtVisitor {
       std::optional<Token> token = std::nullopt);
   static void print_memory_info(const std::string& class_name,
                                 const void* address);
+  static void visit_type(const VarType& type);
 
  public:
   void print(Program* program);
@@ -54,11 +55,13 @@ class ASTPrinter : public ExprVisitor, public StmtVisitor {
   void visit(const LessEqualCompExpr& expr) override;
   void visit(const GroupingExpr& expr) override;
   void visit(const LiteralExpr& expr) override;
-  void visit(const UnaryExpr& expr) override;
+  void visit(const NegationExpr& expr) override;
+  void visit(const LogicalNegationExpr& expr) override;
   void visit(const VarExpr& expr) override;
   void visit(const LogicalOrExpr& expr) override;
   void visit(const LogicalAndExpr& expr) override;
-  void visit(const CastExpr& expr) override;
+  void visit(const IsTypeExpr& expr) override;
+  void visit(const AsTypeExpr& expr) override;
   void visit(const InitalizerListExpr& expr) override;
   void visit(const CallExpr& expr) override;
   void visit(const FieldAccessExpr& expr) override;
