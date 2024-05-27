@@ -1,0 +1,19 @@
+variant a {bool, int, float, b};
+struct fi {
+    mut foo far;
+    bar boo;
+}
+
+a(1, 2);
+a.b.c = a(1, 2);
+
+mut bool a = 123;
+b a = 1 as float;
+
+if (1) {
+    print abc;
+} else {
+    while (true) {
+        print def;
+    }
+}

@@ -95,10 +95,10 @@ Zmienne mogą być przykrywane jedynie w podrzędnych scope'ach.
 int a = 5;
 {
     int a = 10;
-    a == 10;  // PRAWDA   
+    print a == 10;  // PRAWDA   
 }
-a == 10;  // FAŁSZ
-a == 5;  // PRAWDA
+print a == 10;  // FAŁSZ
+print a == 5;  // PRAWDA
 
 float a = 1.0; // BŁĄD, ZMIENNA 'a' JUŻ ISTNIEJE
 ```
@@ -190,17 +190,26 @@ Długość identyfikatorów i zakres wartości zmiennych `int` i `float` ogranic
 ## Gramatyka EBNF
 
 ```
-program		=	{ declaration } ;
-declaration	=	var_decl
-                |	func_decl
+program		=	{ statement } ;
+
+statement 	=	if_stmt
+                |	while_stmt
+                |	return_stmt
+                |	print_stmt
+                |       inspect_stmt
+                |	block_stmt
                 |	struct_decl
                 |       variant_decl
-                |       statement ;
+                |       var_or_func ;
+if_stmt		=	"if" "(" expression ")" statement [ "else" statement ] ;
+while_stmt	=	"while" "(" expression ")" statement ;
+return_stmt	=	"return" [ expression ] ";" ;
+print_stmt	=	"print" expression ";" ;
 
-var_decl	=	[ "mut" ] type identifier "=" expression ";" ;
+inspect_stmt    =       "inspect" expression "{" { lambda_func } [ "default" "=>" statement ] "}" ;
+lambda_func     =       type identifier "=>" statement
 
-func_decl	=	( type | "void" ) identifier "(" [ func_params ] ")" block ;
-func_params     =	type identifier { "," type identifier } ;
+block_stmt	=	"{" { statement } "}" ;
 
 struct_decl 	=	"struct" identifier "{" { struct_field } "}" ;
 struct_field    =       [ "mut" ] type identifier ";" ;
@@ -208,37 +217,37 @@ struct_field    =       [ "mut" ] type identifier ";" ;
 variant_decl    =       "variant" identifier "{" variant_params "}" ";" ;
 variant_params  =       type { "," type } ;
 
-statement 	=	expr_stmt
-                |	if_stmt
-                |	while_stmt
-                |	return_stmt
-                |	print_stmt
-                |       inspect_stmt
-                |	block ;
-expr_stmt	=	expression ";" ;
-if_stmt		=	"if" "(" expression ")" statement [ "else" statement ] ;
-while_stmt	=	"while" "(" expression ")" statement ;
-return_stmt	=	"return" [ expression ] ";" ;
-print_stmt	=	"print" expression ";" ;
-inspect_stmt    =       "inspect" expression "{" { type [ identifier ] "=" ">" statement } [ "default" "=" ">" statement ] "}" ;
+var_or_func     =       mut_var_decl
+                |       void_func_decl
+                |       identifier assign_or_call
+                |       type var_or_func_decl ;
 
-block		=	"{" { declaration } "}" ;
+assign_or_call  =       ( assign_stmt | call_stmt ) ;
+assign_stmt     =	[ "." field_access ] "=" expression ";" ;
+call_stmt       =       "(" [ arguments ] ");" ;
 
-expression	=	assignment ;
-assignment	=	identifier { "." identifier } "=" assignment
-                |	logic_or ;
+var_or_func_decl=       identifier ( var_decl | func_decl ) ;
+mut_var_decl    =	"mut" type identifier var_decl ;
+void_func_decl	=	"void" identifier func_decl ;
+
+var_decl        =       "=" expression ";" ;
+func_decl	=	"(" [ func_params ] ")" block ;
+func_params     =	type identifier { "," type identifier } ;
+
+expression	=	logic_or ;
 logic_or	=	logic_and { "or" logic_and } ;
 logic_and	=	equality { "and" equality } ;
-equality	=	comparison [ ( "!=" | "==" ) comparison ] ;
-comparison	=	term [ ( ">" | ">=" | "<" | "<=" ) term ] ;
-term		=	factor [ ( "-" | "+" ) factor ] ;
-factor		=	unary [ ( "/" | "*" ) unary ] ;
-unary		=	("!" | "-" ) type_cast ;
+equality	=	comparison { ( "!=" | "==" ) comparison } ;
+comparison	=	term { ( ">" | ">=" | "<" | "<=" ) term } ;
+term		=	factor { ( "-" | "+" ) factor } ;
+factor		=	unary { ( "/" | "*" ) unary } ;
+unary		=	[ "!" | "-" ] type_cast ;
 type_cast	=	call { ("as" | "is") type } ;
-call		=	identifier { "(" [ arguments ] ")" | "." identifier }
-                |       primary ;
+call		=	primary [ "(" [ arguments ] ")" | field_access ] ;
 primary		=	string | int_val | float_val | bool_values | identifier | "(" expression ")" | "{" arguments "}" ;
+
 arguments       =       expression { "," expression } ;
+field_access    =       { "." identifier } ;
 
 bool_value	=	"true" | "false" ;
 type		=	"bool" | "str" | "int" | "float" | identifier ;
@@ -303,7 +312,7 @@ while (a < 5) {
 /*
     LOGICAL OPERATORS
 */
-a = 1
+a = 1;
 mut bool b = false;
 b = a as bool;  // true
 b = not a;  // false
@@ -330,7 +339,7 @@ Numeric fib(Numeric n) {
     } else {
         float val = n as float;
         if (val <= 1.0) {
-            return n
+            return n;
         }
         return fib((n - 1.0) as Numeric) + fib((n - 2.0) as Numeric);
     }

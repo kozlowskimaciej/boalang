@@ -1,11 +1,8 @@
 #include <gtest/gtest.h>
 
+#include "../utils.hpp"
 #include "lexer/lexer.hpp"
 #include "token/token.hpp"
-
-bool str_contains(const std::string& str, const std::string& str2) {
-  return str.find(str2) != std::string::npos;
-}
 
 TEST(LexerTokenizeTest, integer_valid) {
   StringSource source("2147483647");
@@ -348,6 +345,7 @@ INSTANTIATE_TEST_SUITE_P(
                       std::make_pair("str", TokenType::TOKEN_STR),
                       std::make_pair("bool", TokenType::TOKEN_BOOL),
                       std::make_pair("void", TokenType::TOKEN_VOID),
+                      std::make_pair("default", TokenType::TOKEN_DEFAULT),
                       std::make_pair("==", TokenType::TOKEN_EQUAL_EQUAL),
                       std::make_pair("!=", TokenType::TOKEN_NOT_EQUAL),
                       std::make_pair("<=", TokenType::TOKEN_LESS_EQUAL),

@@ -6,16 +6,17 @@
 #include <vector>
 
 static const std::initializer_list<std::pair<std::string, TokenType>> keywords{
-    {"if", TOKEN_IF},         {"else", TOKEN_ELSE},
-    {"and", TOKEN_AND},       {"or", TOKEN_OR},
-    {"true", TOKEN_TRUE},     {"false", TOKEN_FALSE},
-    {"while", TOKEN_WHILE},   {"return", TOKEN_RETURN},
-    {"is", TOKEN_IS},         {"as", TOKEN_AS},
-    {"print", TOKEN_PRINT},   {"inspect", TOKEN_INSPECT},
-    {"struct", TOKEN_STRUCT}, {"variant", TOKEN_VARIANT},
-    {"int", TOKEN_INT},       {"float", TOKEN_FLOAT},
-    {"str", TOKEN_STR},       {"bool", TOKEN_BOOL},
-    {"void", TOKEN_VOID},     {"mut", TOKEN_MUT},
+    {"if", TOKEN_IF},           {"else", TOKEN_ELSE},
+    {"and", TOKEN_AND},         {"or", TOKEN_OR},
+    {"true", TOKEN_TRUE},       {"false", TOKEN_FALSE},
+    {"while", TOKEN_WHILE},     {"return", TOKEN_RETURN},
+    {"is", TOKEN_IS},           {"as", TOKEN_AS},
+    {"print", TOKEN_PRINT},     {"inspect", TOKEN_INSPECT},
+    {"struct", TOKEN_STRUCT},   {"variant", TOKEN_VARIANT},
+    {"int", TOKEN_INT},         {"float", TOKEN_FLOAT},
+    {"str", TOKEN_STR},         {"bool", TOKEN_BOOL},
+    {"void", TOKEN_VOID},       {"mut", TOKEN_MUT},
+    {"default", TOKEN_DEFAULT},
 }; /**< List of all supported keywords. */
 
 static constexpr int BASE =
@@ -119,6 +120,12 @@ opt_token_t Lexer::try_tokenize_identifier() {
   }
   for (const auto& kw : keywords) {
     if (kw.first == current_context_) {
+      if (current_context_ == "true") {
+        return build_token_with_value(kw.second, true);
+      }
+      if (current_context_ == "false") {
+        return build_token_with_value(kw.second, false);
+      }
       return build_token(kw.second);
     }
   }

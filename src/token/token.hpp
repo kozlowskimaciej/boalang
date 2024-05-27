@@ -73,6 +73,7 @@ enum TokenType {
   TOKEN_STR,
   TOKEN_BOOL,
   TOKEN_VOID,
+  TOKEN_DEFAULT,
 
   TOKEN_COMMENT,
   TOKEN_UNKNOWN,
@@ -107,6 +108,7 @@ class Token {
       : type(type), value(std::move(value)), position(position){};
 
   [[nodiscard]] const TokenType& get_type() const { return type; };
+  [[nodiscard]] VarType get_var_type() const;
   [[nodiscard]] const token_value_t& get_value() const { return value; };
   [[nodiscard]] const Position& get_position() const { return position; };
 
@@ -116,6 +118,7 @@ class Token {
    * @return token's value as a std::string
    */
   [[nodiscard]] std::string stringify() const;
+  [[nodiscard]] std::string stringify_type() const;
   [[nodiscard]] bool has_value() const;
 
   friend std::ostream& operator<<(std::ostream& os, const Token& token);

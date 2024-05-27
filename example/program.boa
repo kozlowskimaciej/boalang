@@ -44,10 +44,10 @@ while (a < 5) {
 /*
     LOGICAL OPERATORS
 */
-a = 1
+a = 1;
 mut bool b = false;
 b = a as bool;  // true
-b = not a;  // false
+b = !a;  // false
 b = a or false;  // true
 b = a and false; // false
 
@@ -71,7 +71,7 @@ Numeric fib(Numeric n) {
     } else {
         float val = n as float;
         if (val <= 1.0) {
-            return n
+            return n;
         }
         return fib((n - 1.0) as Numeric) + fib((n - 2.0) as Numeric);
     }

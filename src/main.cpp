@@ -3,7 +3,9 @@
 #include <string>
 
 #include "argparse/argparse.hpp"
+#include "ast/astprinter.hpp"
 #include "lexer/lexer.hpp"
+#include "parser/parser.hpp"
 #include "source/source.hpp"
 
 void parse_args(int& argc, char* argv[], argparse::ArgumentParser& program) {
@@ -34,11 +36,9 @@ int main(int argc, char* argv[]) {
   }
 
   Lexer lexer(*src);
-  Token token = lexer.next_token();
-  while (token.get_type() != TokenType::TOKEN_ETX) {
-    std::cout << token << ' ';
-    token = lexer.next_token();
-  }
+  LexerCommentFilter filter(lexer);
+  Parser parser(filter);
+  ASTPrinter().print(parser.parse().get());
 
   return 0;
 }
