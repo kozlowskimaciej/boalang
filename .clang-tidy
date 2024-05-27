@@ -8,10 +8,12 @@ Checks: '
   performance-*,
   -modernize-use-trailing-return-type,
   -readability-identifier-length,
+  -readability-avoid-const-params-in-decls,
+  -readability-implicit-bool-conversion,
   -cppcoreguidelines-avoid-c-arrays,
   -modernize-avoid-c-arrays,
   -bugprone-exception-escape,
-  -readability-implicit-bool-conversion
+  -cppcoreguidelines-pro-type-reinterpret-cast
   '
 WarningsAsErrors: true
 HeaderFilterRegex: '.'

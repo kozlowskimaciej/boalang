@@ -207,12 +207,12 @@ class FuncStmt : public StmtType<FuncStmt> {
   std::string identifier;
   VarType return_type;
   std::vector<std::unique_ptr<FuncParamStmt>> params;
-  std::unique_ptr<BlockStmt> body;
+  std::unique_ptr<Stmt> body;
   Position position;
 
   FuncStmt(std::string identifier, VarType return_type,
            std::vector<std::unique_ptr<FuncParamStmt>> params,
-           std::unique_ptr<BlockStmt> body, Position position)
+           std::unique_ptr<Stmt> body, Position position)
       : identifier(std::move(identifier)),
         return_type(std::move(return_type)),
         params(std::move(params)),

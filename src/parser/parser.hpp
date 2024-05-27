@@ -6,31 +6,39 @@
 #define BOALANG_PARSER_HPP
 
 #include <expr/expr.hpp>
+#include <functional>
 #include <lexer/lexer.hpp>
 #include <memory>
 #include <stmt/stmt.hpp>
+#include <type_traits>
 #include <vector>
 
 class Parser {
   ILexer& lexer_;
   Token current_token_;
 
+  using StmtHandlers =
+      std::initializer_list<std::unique_ptr<Stmt> (Parser::*)()>;
+  static const StmtHandlers stmt_handlers;
+  static const StmtHandlers declaration_handlers;
+  std::unique_ptr<Stmt> try_handlers(const StmtHandlers handlers);
+
   std::unique_ptr<Stmt> statement();
-  std::unique_ptr<IfStmt> if_stmt();
-  std::unique_ptr<WhileStmt> while_stmt();
-  std::unique_ptr<ReturnStmt> return_stmt();
-  std::unique_ptr<PrintStmt> print_stmt();
-  std::unique_ptr<InspectStmt> inspect_stmt();
+  std::unique_ptr<Stmt> if_stmt();
+  std::unique_ptr<Stmt> while_stmt();
+  std::unique_ptr<Stmt> return_stmt();
+  std::unique_ptr<Stmt> print_stmt();
+  std::unique_ptr<Stmt> inspect_stmt();
   std::unique_ptr<LambdaFuncStmt> lambda_func();
-  std::unique_ptr<BlockStmt> block_stmt();
+  std::unique_ptr<Stmt> block_stmt();
   std::unique_ptr<Stmt> var_or_func();
-  std::unique_ptr<StructDeclStmt> struct_decl();
+  std::unique_ptr<Stmt> struct_decl();
   std::unique_ptr<StructFieldStmt> struct_field();
-  std::unique_ptr<VariantDeclStmt> variant_decl();
+  std::unique_ptr<Stmt> variant_decl();
   std::optional<std::vector<VarType>> variant_params();
 
-  std::unique_ptr<VarDeclStmt> mut_var_decl();
-  std::unique_ptr<FuncStmt> void_func_decl();
+  std::unique_ptr<Stmt> mut_var_decl();
+  std::unique_ptr<Stmt> void_func_decl();
   std::unique_ptr<Stmt> var_or_func_decl(const Token& type);
   std::unique_ptr<VarDeclStmt> var_decl(const Token& type,
                                         const Token& identifier, bool mut);
@@ -57,10 +65,14 @@ class Parser {
   std::unique_ptr<Expr> field_access(std::unique_ptr<Expr> parent_struct);
   std::optional<Token> type();
 
-  opt_token_t match(std::initializer_list<TokenType> types);
+  template <typename... TokenTypes>
+  opt_token_t match(TokenTypes&&... types);
+
   Token advance();
-  Token consume(std::initializer_list<TokenType> types,
-                const std::string& err_msg);
+
+  template <typename... TokenTypes>
+  std::enable_if_t<(std::is_same_v<TokenTypes, TokenType> && ...), Token>
+  consume(const std::string& err_msg, TokenTypes... types);
 
  public:
   explicit Parser(ILexer& lexer)
