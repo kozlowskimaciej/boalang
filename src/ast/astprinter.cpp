@@ -311,9 +311,12 @@ void ASTPrinter::visit(const FieldAccessExpr& expr) {
 }
 
 void ASTPrinter::visit_type(const VarType& type) {
-  std::visit(overloaded{[](const std::string& arg) { std::cout << arg; },
-                        [](BuiltinType arg) {
-                          std::cout << std::string(magic_enum::enum_name(arg));
-                        }},
-             type);
+  switch (type.type) {
+    case IDENTIFIER:
+      std::cout << type.name;
+      break;
+    default:
+      std::cout << std::string(magic_enum::enum_name(type.type));
+      break;
+  }
 }

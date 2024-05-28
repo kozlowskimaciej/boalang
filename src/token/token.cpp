@@ -14,17 +14,17 @@ overloaded(Ts...) -> overloaded<Ts...>;
 VarType Token::get_var_type() const {
   switch (this->get_type()) {
     case TOKEN_INT:
-      return INT;
+      return {INT};
     case TOKEN_FLOAT:
-      return FLOAT;
+      return {FLOAT};
     case TOKEN_STR:
-      return STR;
+      return {STR};
     case TOKEN_BOOL:
-      return BOOL;
+      return {BOOL};
     case TOKEN_VOID:
-      return VOID;
+      return {VOID};
     case TOKEN_IDENTIFIER:
-      return this->stringify();
+      return {this->stringify(), IDENTIFIER};
     default:
       throw std::logic_error("Invalid var type " + this->stringify_type());
   }

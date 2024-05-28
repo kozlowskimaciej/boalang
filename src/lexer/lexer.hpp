@@ -54,7 +54,7 @@ class Lexer : public ILexer {
    * @return The constructed token.
    */
   [[nodiscard]] Token build_token_with_value(const TokenType& type,
-                                             const token_value_t& value) const;
+                                             const value_t& value) const;
   /**
    * @brief Builds a token of the specified type without a value.
    *

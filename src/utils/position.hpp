@@ -7,9 +7,15 @@
 #ifndef BOALANG_POSITION_HPP
 #define BOALANG_POSITION_HPP
 
-enum BuiltinType { INT, FLOAT, STR, BOOL, VOID };
+enum BuiltinType { IDENTIFIER, INT, FLOAT, STR, BOOL, VOID };
 
-using VarType = std::variant<std::string, BuiltinType>;
+struct VarType {
+  std::string name;
+  BuiltinType type;
+
+  VarType(BuiltinType type) : type(type) {};
+  VarType(std::string name, BuiltinType type) : name(std::move(name)), type(type) {};
+};
 
 /**
  * @brief Represents the position in source.

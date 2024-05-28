@@ -4,6 +4,7 @@
 
 #include "argparse/argparse.hpp"
 #include "ast/astprinter.hpp"
+#include "interpreter/interpreter.hpp"
 #include "lexer/lexer.hpp"
 #include "parser/parser.hpp"
 #include "source/source.hpp"
@@ -38,7 +39,8 @@ int main(int argc, char* argv[]) {
   Lexer lexer(*src);
   LexerCommentFilter filter(lexer);
   Parser parser(filter);
-  ASTPrinter().print(parser.parse().get());
+//  ASTPrinter().print(parser.parse().get());
+  Interpreter().visit(*parser.parse());
 
   return 0;
 }

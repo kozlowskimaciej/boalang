@@ -182,10 +182,10 @@ class LogicalAndExpr : public LogicalExpr<LogicalAndExpr> {
 
 class LiteralExpr : public ExprType<LiteralExpr> {
  public:
-  token_value_t literal;
+  value_t literal;
   Position position;
 
-  explicit LiteralExpr(token_value_t literal, Position position)
+  explicit LiteralExpr(value_t literal, Position position)
       : literal(std::move(literal)), position(position){};
 };
 
