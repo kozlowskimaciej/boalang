@@ -6,6 +6,7 @@
 #define BOALANG_INTERPRETER_HPP
 
 #include <optional>
+#include <vector>
 
 #include "expr/expr.hpp"
 #include "stmt/stmt.hpp"
@@ -17,6 +18,9 @@ class Interpreter : public ExprVisitor, public StmtVisitor {
   eval_value_t evaluate(const Expr* expr);
   void set_evaluation(eval_value_t value);
   eval_value_t get_evaluation();
+
+  static bool boolify(const eval_value_t& value);
+  std::vector<Scope> scopes = {Scope()};
 
  public:
   void visit(const Program& stmt) override;

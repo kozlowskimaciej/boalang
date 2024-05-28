@@ -7,6 +7,8 @@ file(GLOB EXPR_FILES expr/*.cpp expr/*.hpp)
 file(GLOB STMT_FILES stmt/*.cpp stmt/*.hpp)
 file(GLOB PARSER_FILES parser/*.cpp parser/*.hpp)
 file(GLOB AST_FILES ast/*.cpp ast/*.hpp)
+file(GLOB SCOPE_FILES interpreter/scope/*.cpp interpreter/scope/*.hpp)
+file(GLOB INTERPRETER_FILES interpreter/*.cpp interpreter/*.hpp)
 
 find_package(magic_enum REQUIRED)
 find_package(argparse REQUIRED)
@@ -21,6 +23,8 @@ add_library(
         ${STMT_FILES}
         ${PARSER_FILES}
         ${AST_FILES}
+        ${SCOPE_FILES}
+        ${INTERPRETER_FILES}
 )
 target_link_libraries(
         boalang_lib
