@@ -48,20 +48,26 @@ bool Scope::match_type(const eval_value_t& actual, const VarType& expected) cons
     }
   }
 
-  return std::visit(overloaded{
-      [&expected](const value_t& value) {
-        return std::visit(overloaded{
-            [&expected](std::monostate) { return expected.type == VOID; },
-            [&expected](const std::string &) { return expected.type == STR; },
-            [&expected](int) { return expected.type == INT; },
-            [&expected](float) { return expected.type == FLOAT; },
-            [&expected](bool) { return expected.type == BOOL; },
-        }, value);
-      },
-        [&expected](const std::shared_ptr<Variable>& obj) { return expected.type == IDENTIFIER && expected.name == obj->name; },
-        [&expected](const std::shared_ptr<StructObject>& obj) { return expected.type == IDENTIFIER && expected.name == obj->name; },
-        [&expected](const std::shared_ptr<VariantObject>& obj) { return expected.type == IDENTIFIER && expected.name == obj->name; },
-      }, actual);
+  std::function<bool(const eval_value_t&)> check = [&](const auto& arg) -> bool {
+    return std::visit(overloaded{
+        [&expected](const value_t& v) {
+          return std::visit(overloaded{
+              [](auto) { return false; },
+              [&expected](int) { return expected.type == INT; },
+              [&expected](float) { return expected.type == FLOAT; },
+              [&expected](const std::string&) { return expected.type == STR; },
+              [&expected](bool) { return expected.type == BOOL; },
+          }, v);
+        },
+        [&expected](const std::shared_ptr<Variable>& arg) { return arg->type.name == expected.name; },
+        [&expected](const std::shared_ptr<StructObject>& arg) { return arg->type_def->type_name == expected.name; },
+        [&expected, &check](const std::shared_ptr<VariantObject>& arg) {
+          return arg->type_def->type_name == expected.name || check(arg->contained);
+        },
+    }, arg);
+  };
+
+  return check(actual);
 }
 
 void Scope::define(const std::string& name, var_t variable) {

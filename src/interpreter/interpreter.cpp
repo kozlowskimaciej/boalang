@@ -1,6 +1,5 @@
 #include "interpreter.hpp"
 
-#include <algorithm>
 #include <iostream>
 #include <cassert>
 #include <cmath>
@@ -435,10 +434,10 @@ void Interpreter::visit(const IsTypeExpr &expr) {
         [&type](const value_t& v) {
           return std::visit(overloaded{
               [](auto) { return false; },
-              [&type](int arg) { return type.type == INT; },
-              [&type](float arg) { return type.type == FLOAT; },
-              [&type](const std::string& arg) { return type.type == STR; },
-              [&type](bool arg) { return type.type == BOOL; },
+              [&type](int) { return type.type == INT; },
+              [&type](float) { return type.type == FLOAT; },
+              [&type](const std::string&) { return type.type == STR; },
+              [&type](bool) { return type.type == BOOL; },
           }, v);
         },
         [&type](const std::shared_ptr<Variable>& arg) { return arg->type.name == type.name; },
@@ -518,9 +517,14 @@ void Interpreter::visit(const AsTypeExpr &expr) {
             },
         }, v);
       },
-//      [&type](const std::shared_ptr<Variable>& arg) { return arg->type.name == type.name; },
 //      [&type](const std::shared_ptr<StructObject>& arg) { return arg->type_name == type.name; },
-//      [&type](const std::shared_ptr<VariantObject>& arg) { return arg->type_name == type.name; },
+      [&](const std::shared_ptr<VariantObject>& arg) {
+        if (scopes.back()->match_type(arg->contained, type)) {
+          set_evaluation(arg->contained);
+          return;
+        }
+        throw RuntimeError(expr.position, "Invalid contained value type cast");
+      },
       [&expr](auto) { throw RuntimeError(expr.position, "Invalid type cast"); },
   }, left);
 }
