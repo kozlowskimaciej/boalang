@@ -120,14 +120,14 @@ void Interpreter::visit(const VarDeclStmt &stmt) {
     throw RuntimeError(stmt.position, "Identifier '" + stmt.identifier + "' already defined");
   }
 
-  auto init_value = evaluate(stmt.initializer.get());
+  auto init_value = evaluate_var(stmt.initializer.get());
 
   auto type = scopes.back()->get_type(stmt.type.name);
   if (!type && !stmt.type.name.empty()) {
     throw RuntimeError(stmt.position, "Type '" + stmt.type.name + "' is not defined");
   }
 
-  if (!Scope::match_type(init_value, stmt.type)) {
+  if (!scopes.back()->match_type(init_value, stmt.type)) {
     throw RuntimeError(stmt.position, "Tried to initialize '" + stmt.identifier + "' with value of different type");
   }
 
@@ -178,7 +178,7 @@ void Interpreter::visit(const AssignStmt &stmt) {
         if (!arg->mut) {
           throw RuntimeError("Tried assigning value to a const '" + arg->name + "'");
         }
-        if (!Scope::match_type(value, arg->type)) {
+        if (!scopes.back()->match_type(value, arg->type)) {
           throw RuntimeError("Tried assigning value with different type to '" + arg->name + "'");
         }
         scopes.back()->assign(arg->name, value);
