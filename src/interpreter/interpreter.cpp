@@ -482,7 +482,7 @@ void Interpreter::visit(const AsTypeExpr &expr) {
                   throw RuntimeError(expr.position, "Invalid type cast");
               }
             },
-            [this, &expr, &type](const std::string& arg) {
+            [this, &expr, &type](std::string arg) {
               switch (type.type) {
                 case STR:
                   set_evaluation(arg);
