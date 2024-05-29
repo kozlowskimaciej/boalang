@@ -22,6 +22,14 @@ eval_value_t Interpreter::evaluate(const Expr* expr) {
   return get_evaluation();
 }
 
+eval_value_t Interpreter::evaluate_var(const Expr *expr) {
+  auto var = evaluate(expr);
+  while (const auto& v = std::get_if<std::shared_ptr<Variable>>(&var)) {
+    var = *(v->get()->value);
+  }
+  return var;
+}
+
 void Interpreter::set_evaluation(eval_value_t value) {
   assert(!evaluation.has_value());
   evaluation = std::move(value);
@@ -56,7 +64,7 @@ void Interpreter::visit(const Program& stmt) {
 }
 
 void Interpreter::visit(const PrintStmt& stmt) {
-  auto value = evaluate(stmt.expr.get());
+  auto value = evaluate_var(stmt.expr.get());
 
   std::visit(overloaded{
       [](const value_t& v) {
@@ -68,7 +76,7 @@ void Interpreter::visit(const PrintStmt& stmt) {
             [](bool arg) { std::cout << std::string(arg ? "true" : "false"); },
         }, v);
       },
-      [](auto) { throw RuntimeError("Value unprintable"); },  // &stmt
+      [](auto) { throw RuntimeError("Value unprintable"); },
   }, value);
 
   std::cout << '\n';
@@ -87,7 +95,8 @@ void Interpreter::visit(const IfStmt &stmt) {
 }
 
 void Interpreter::visit(const BlockStmt &stmt) {
-  scopes.emplace_back();
+  auto new_scope = std::make_unique<Scope>(scopes.back().get());
+  scopes.push_back(std::move(new_scope));
   std::exception_ptr eptr = nullptr;
   try {
     for (const auto& s : stmt.statements) {
@@ -107,7 +116,34 @@ void Interpreter::visit(const WhileStmt &stmt) {
 }
 
 void Interpreter::visit(const VarDeclStmt &stmt) {
+  if (const auto& var = scopes.back()->get(stmt.identifier)) {
+    throw RuntimeError(stmt.position, "Identifier '" + stmt.identifier + "' already defined");
+  }
 
+  auto init_value = evaluate(stmt.initializer.get());
+
+  auto type = scopes.back()->get_type(stmt.type.name);
+  if (!type && !stmt.type.name.empty()) {
+    throw RuntimeError(stmt.position, "Type '" + stmt.type.name + "' is not defined");
+  }
+
+  if (!Scope::match_type(init_value, stmt.type)) {
+    throw RuntimeError(stmt.position, "Tried to initialize '" + stmt.identifier + "' with value of different type");
+  }
+
+  if (type) {
+    std::visit(overloaded{
+//        [](const std::shared_ptr<StructType>& arg) {},
+        [this, &stmt, &init_value](const std::shared_ptr<VariantType>& arg) {
+          auto obj = std::make_shared<VariantObject>(arg.get(), stmt.mut, stmt.identifier, init_value);
+          scopes.back()->define(stmt.identifier, obj);
+        },
+        [&stmt](auto) { throw RuntimeError(stmt.position, "Unknown type"); },
+    }, *type);
+  } else {
+    auto var = std::make_shared<Variable>(stmt.type, stmt.identifier, stmt.mut, init_value);
+    scopes.back()->define(stmt.identifier, var);
+  }
 }
 
 void Interpreter::visit(const StructFieldStmt &stmt) {
@@ -119,11 +155,40 @@ void Interpreter::visit(const StructDeclStmt &stmt) {
 }
 
 void Interpreter::visit(const VariantDeclStmt &stmt) {
+  if (const auto& var = scopes.back()->get_type(stmt.identifier)) {
+    throw RuntimeError(stmt.position, "Type '" + stmt.identifier + "' already defined");
+  }
 
+  for (const auto& param : stmt.params) {
+    if (!param.name.empty() && !scopes.back()->get_type(param.name)) {
+      throw RuntimeError(stmt.position, "Unknown type in variant '" + param.name + "'");
+    }
+  }
+
+  auto var = std::make_shared<VariantType>(stmt.identifier, stmt.params);
+  scopes.back()->define_type(stmt.identifier, var);
 }
 
 void Interpreter::visit(const AssignStmt &stmt) {
+  auto var = evaluate(stmt.var.get());
+  auto value = evaluate_var(stmt.value.get());
 
+  std::visit(overloaded{
+      [this, &value](const std::shared_ptr<Variable>& arg) {
+        if (!arg->mut) {
+          throw RuntimeError("Tried assigning value to a const '" + arg->name + "'");
+        }
+        if (!Scope::match_type(value, arg->type)) {
+          throw RuntimeError("Tried assigning value with different type to '" + arg->name + "'");
+        }
+        scopes.back()->assign(arg->name, value);
+      },
+//      [](const std::shared_ptr<StructObject>& arg) { return arg->type_name == type.name; },
+//      [this, &value](const std::shared_ptr<VariantObject>& arg) {
+//        return arg->type_name == type.name;
+//      },
+      [](auto) { throw RuntimeError("Invalid assignment"); },
+  }, var);
 }
 
 void Interpreter::visit(const CallStmt &stmt) {
@@ -151,73 +216,73 @@ void Interpreter::visit(const InspectStmt &stmt) {
 }
 
 void Interpreter::visit(const AdditionExpr &expr) {
-  auto leftValue = evaluate(expr.left.get());
-  auto rightValue = evaluate(expr.right.get());
+  auto leftValue = evaluate_var(expr.left.get());
+  auto rightValue = evaluate_var(expr.right.get());
 
   std::visit(overloaded{
-      [this, &expr](const value_t& lhs, const value_t& rhs) {
-        return std::visit(overloaded{
-          [this](int lhs, int rhs) { set_evaluation(lhs + rhs); },
-          [this](float lhs, float rhs) { set_evaluation(lhs + rhs); },
-          [this](const std::string& lhs, const std::string& rhs) { set_evaluation(lhs + rhs); },
-          [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot add"); }
-        }, lhs, rhs);
-      },
-      [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot add"); },
+    [this, &expr](const value_t& lhs, const value_t& rhs) {
+      std::visit(overloaded{
+        [this](int lhs, int rhs) { set_evaluation(lhs + rhs); },
+        [this](float lhs, float rhs) { set_evaluation(lhs + rhs); },
+        [this](const std::string& lhs, const std::string& rhs) { set_evaluation(lhs + rhs); },
+        [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot add different types"); }
+      }, lhs, rhs);
+    },
+    [&expr](auto, auto) { throw RuntimeError(expr.position, "Unsupported types for addition"); },
   }, leftValue, rightValue);
 }
 
 void Interpreter::visit(const SubtractionExpr &expr) {
-  auto leftValue = evaluate(expr.left.get());
-  auto rightValue = evaluate(expr.right.get());
+  auto leftValue = evaluate_var(expr.left.get());
+  auto rightValue = evaluate_var(expr.right.get());
 
   std::visit(overloaded{
-      [this, &expr](const value_t& lhs, const value_t& rhs) {
-        return std::visit(overloaded{
-            [this](int lhs, int rhs) { set_evaluation(lhs - rhs); },
-            [this](float lhs, float rhs) { set_evaluation(lhs - rhs); },
-            [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot substract"); }
-        }, lhs, rhs);
-      },
-      [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot substract"); },
+    [this, &expr](const value_t& lhs, const value_t& rhs) {
+      std::visit(overloaded{
+          [this](int lhs, int rhs) { set_evaluation(lhs - rhs); },
+          [this](float lhs, float rhs) { set_evaluation(lhs - rhs); },
+          [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot substract different types"); }
+      }, lhs, rhs);
+    },
+    [&expr](auto, auto) { throw RuntimeError(expr.position, "Unsupported types for subtraction"); },
   }, leftValue, rightValue);
 }
 
 void Interpreter::visit(const DivisionExpr &expr) {
-  auto leftValue = evaluate(expr.left.get());
-  auto rightValue = evaluate(expr.right.get());
+  auto leftValue = evaluate_var(expr.left.get());
+  auto rightValue = evaluate_var(expr.right.get());
 
   std::visit(overloaded{
       [this, &expr](const value_t& lhs, const value_t& rhs) {
-        return std::visit(overloaded{
+        std::visit(overloaded{
             [this](int lhs, int rhs) { set_evaluation(lhs / rhs); },
             [this](float lhs, float rhs) { set_evaluation(lhs / rhs); },
-            [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot divide"); }
+            [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot divide different types"); }
         }, lhs, rhs);
       },
-      [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot divide"); },
+      [&expr](auto, auto) { throw RuntimeError(expr.position, "Unsupported types for division"); },
   }, leftValue, rightValue);
 }
 
 void Interpreter::visit(const MultiplicationExpr &expr) {
-  auto leftValue = evaluate(expr.left.get());
-  auto rightValue = evaluate(expr.right.get());
+  auto leftValue = evaluate_var(expr.left.get());
+  auto rightValue = evaluate_var(expr.right.get());
 
   std::visit(overloaded{
       [this, &expr](const value_t& lhs, const value_t& rhs) {
-        return std::visit(overloaded{
+        std::visit(overloaded{
             [this](int lhs, int rhs) { set_evaluation(lhs * rhs); },
             [this](float lhs, float rhs) { set_evaluation(lhs * rhs); },
-            [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot multiply"); }
+            [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot multiply different types"); }
         }, lhs, rhs);
       },
-      [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot multiply"); },
+      [&expr](auto, auto) { throw RuntimeError(expr.position, "Unsupported types for multiplication"); },
   }, leftValue, rightValue);
 }
 
 void Interpreter::visit(const EqualCompExpr &expr) {
-  auto leftValue = evaluate(expr.left.get());
-  auto rightValue = evaluate(expr.right.get());
+  auto leftValue = evaluate_var(expr.left.get());
+  auto rightValue = evaluate_var(expr.right.get());
 
   std::visit(overloaded{
       [this](const value_t& lhs, const value_t& rhs) {
@@ -229,13 +294,13 @@ void Interpreter::visit(const EqualCompExpr &expr) {
             [this](auto, auto) { set_evaluation(false); },
         }, lhs, rhs);
       },
-      [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot compare"); },
+      [&expr](auto, auto) { throw RuntimeError(expr.position, "Unsupported types for comparison"); },
   }, leftValue, rightValue);
 }
 
 void Interpreter::visit(const NotEqualCompExpr &expr) {
-  auto leftValue = evaluate(expr.left.get());
-  auto rightValue = evaluate(expr.right.get());
+  auto leftValue = evaluate_var(expr.left.get());
+  auto rightValue = evaluate_var(expr.right.get());
 
   std::visit(overloaded{
       [this](const value_t& lhs, const value_t& rhs) {
@@ -247,13 +312,13 @@ void Interpreter::visit(const NotEqualCompExpr &expr) {
             [this](auto, auto) { set_evaluation(true); },
         }, lhs, rhs);
       },
-      [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot compare"); },
+      [&expr](auto, auto) { throw RuntimeError(expr.position, "Unsupported types for comparison"); },
   }, leftValue, rightValue);
 }
 
 void Interpreter::visit(const GreaterCompExpr &expr) {
-  auto leftValue = evaluate(expr.left.get());
-  auto rightValue = evaluate(expr.right.get());
+  auto leftValue = evaluate_var(expr.left.get());
+  auto rightValue = evaluate_var(expr.right.get());
 
   std::visit(overloaded{
       [&expr, this](const value_t& lhs, const value_t& rhs) {
@@ -262,16 +327,16 @@ void Interpreter::visit(const GreaterCompExpr &expr) {
             [this](float lhs, float rhs) { set_evaluation(lhs > rhs); },
             [this](bool lhs, bool rhs) { set_evaluation(lhs > rhs); },
             [this](const std::string& lhs, const std::string& rhs) { set_evaluation(lhs > rhs); },
-            [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot compare"); },
+            [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot compare different types"); },
         }, lhs, rhs);
       },
-      [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot compare"); },
+      [&expr](auto, auto) { throw RuntimeError(expr.position, "Unsupported types for comparison"); },
   }, leftValue, rightValue);
 }
 
 void Interpreter::visit(const GreaterEqualCompExpr &expr) {
-  auto leftValue = evaluate(expr.left.get());
-  auto rightValue = evaluate(expr.right.get());
+  auto leftValue = evaluate_var(expr.left.get());
+  auto rightValue = evaluate_var(expr.right.get());
 
   std::visit(overloaded{
       [&expr, this](const value_t& lhs, const value_t& rhs) {
@@ -280,16 +345,16 @@ void Interpreter::visit(const GreaterEqualCompExpr &expr) {
             [this](float lhs, float rhs) { set_evaluation(lhs >= rhs); },
             [this](bool lhs, bool rhs) { set_evaluation(lhs >= rhs); },
             [this](const std::string& lhs, const std::string& rhs) { set_evaluation(lhs >= rhs); },
-            [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot compare"); },
+            [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot compare different types"); },
         }, lhs, rhs);
       },
-      [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot compare"); },
+      [&expr](auto, auto) { throw RuntimeError(expr.position, "Unsupported types for comparison"); },
   }, leftValue, rightValue);
 }
 
 void Interpreter::visit(const LessCompExpr &expr) {
-  auto leftValue = evaluate(expr.left.get());
-  auto rightValue = evaluate(expr.right.get());
+  auto leftValue = evaluate_var(expr.left.get());
+  auto rightValue = evaluate_var(expr.right.get());
 
   std::visit(overloaded{
       [&expr, this](const value_t& lhs, const value_t& rhs) {
@@ -298,16 +363,16 @@ void Interpreter::visit(const LessCompExpr &expr) {
             [this](float lhs, float rhs) { set_evaluation(lhs < rhs); },
             [this](bool lhs, bool rhs) { set_evaluation(lhs < rhs); },
             [this](const std::string& lhs, const std::string& rhs) { set_evaluation(lhs < rhs); },
-            [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot compare"); },
+            [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot compare different types"); },
         }, lhs, rhs);
       },
-      [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot compare"); },
+      [&expr](auto, auto) { throw RuntimeError(expr.position, "Unsupported types for comparison"); },
   }, leftValue, rightValue);
 }
 
 void Interpreter::visit(const LessEqualCompExpr &expr) {
-  auto leftValue = evaluate(expr.left.get());
-  auto rightValue = evaluate(expr.right.get());
+  auto leftValue = evaluate_var(expr.left.get());
+  auto rightValue = evaluate_var(expr.right.get());
 
   std::visit(overloaded{
       [&expr, this](const value_t& lhs, const value_t& rhs) {
@@ -316,10 +381,10 @@ void Interpreter::visit(const LessEqualCompExpr &expr) {
             [this](float lhs, float rhs) { set_evaluation(lhs <= rhs); },
             [this](bool lhs, bool rhs) { set_evaluation(lhs <= rhs); },
             [this](const std::string& lhs, const std::string& rhs) { set_evaluation(lhs <= rhs); },
-            [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot compare"); },
+            [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot compare different types"); },
         }, lhs, rhs);
       },
-      [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot compare"); },
+      [&expr](auto, auto) { throw RuntimeError(expr.position, "Unsupported types for comparison"); },
   }, leftValue, rightValue);
 }
 
@@ -328,33 +393,39 @@ void Interpreter::visit(const GroupingExpr &expr) {
 }
 
 void Interpreter::visit(const NegationExpr &expr) {
-  auto value = evaluate(expr.right.get());
+  auto value = evaluate_var(expr.right.get());
   set_evaluation(boolify(value));
 }
 
 void Interpreter::visit(const LogicalNegationExpr &expr) {
-  auto value = evaluate(expr.right.get());
+  auto value = evaluate_var(expr.right.get());
   set_evaluation(!boolify(value));
 }
 
 void Interpreter::visit(const VarExpr &expr) {
-
+  if (const auto& var = scopes.back()->get(expr.identifier)) {
+    std::visit(overloaded{
+      [this](const auto& arg) { set_evaluation(arg); },
+    }, *var);
+    return;
+  }
+  throw RuntimeError(expr.position, "Identifier '" + expr.identifier + "' not found");
 }
 
 void Interpreter::visit(const LogicalOrExpr &expr) {
-  auto right = evaluate(expr.right.get());
-  auto left = evaluate(expr.left.get());
+  auto right = evaluate_var(expr.right.get());
+  auto left = evaluate_var(expr.left.get());
   set_evaluation(boolify(right) || boolify(left));
 }
 
 void Interpreter::visit(const LogicalAndExpr &expr) {
-  auto right = evaluate(expr.right.get());
-  auto left = evaluate(expr.left.get());
+  auto right = evaluate_var(expr.right.get());
+  auto left = evaluate_var(expr.left.get());
   set_evaluation(boolify(right) && boolify(left));
 }
 
 void Interpreter::visit(const IsTypeExpr &expr) {
-  auto left = evaluate(expr.left.get());
+  auto left = evaluate_var(expr.left.get());
   auto type = expr.type;
   bool value = std::visit(overloaded{
     [&type](const value_t& v) {
@@ -367,15 +438,15 @@ void Interpreter::visit(const IsTypeExpr &expr) {
       }, v);
     },
     [&type](const std::shared_ptr<Variable>& arg) { return arg->type.name == type.name; },
-    [&type](const std::shared_ptr<StructObject>& arg) { return arg->type_name == type.name; },
-    [&type](const std::shared_ptr<VariantObject>& arg) { return arg->type_name == type.name; },
-    [](auto) { throw RuntimeError("Invalid type comparison"); },
+    [&type](const std::shared_ptr<StructObject>& arg) { return arg->type_def->type_name == type.name; },
+    [&type](const std::shared_ptr<VariantObject>& arg) { return arg->type_def->type_name == type.name; },
+    [&expr](auto) { throw RuntimeError(expr.position, "Invalid type check"); },
   }, left);
   set_evaluation(value);
 }
 
 void Interpreter::visit(const AsTypeExpr &expr) {
-  auto left = evaluate(expr.left.get());
+  auto left = evaluate_var(expr.left.get());
   auto type = expr.type;
 
   if (type.type == BOOL) {
@@ -384,9 +455,9 @@ void Interpreter::visit(const AsTypeExpr &expr) {
   }
 
   std::visit(overloaded{
-      [this, &type](const value_t& v) {
+      [this, &expr, &type](const value_t& v) {
         std::visit(overloaded{
-            [](auto) { throw RuntimeError("Invalid type cast"); },
+            [&expr](auto) { throw RuntimeError(expr.position, "Invalid type cast"); },
             [this, &type](int arg) {
               switch (type.type) {
                 case INT:
@@ -403,7 +474,7 @@ void Interpreter::visit(const AsTypeExpr &expr) {
                   break;
               }
             },
-            [this, &type](float arg) {
+            [this, &expr, &type](float arg) {
               switch (type.type) {
                 case INT:
                   set_evaluation(static_cast<int>(std::round(arg)));
@@ -415,25 +486,25 @@ void Interpreter::visit(const AsTypeExpr &expr) {
                   set_evaluation(std::to_string(arg));
                   break;
                 default:
-                  throw RuntimeError("Invalid type cast");
+                  throw RuntimeError(expr.position, "Invalid type cast");
               }
             },
-            [this, &type](const std::string& arg) {
+            [this, &expr, &type](const std::string& arg) {
               switch (type.type) {
                 case STR:
                   set_evaluation(arg);
                   break;
                 default:
-                  throw RuntimeError("Invalid type cast");
+                  throw RuntimeError(expr.position, "Invalid type cast");
               }
             },
-            [this, &type](bool arg) {
+            [this, &expr, &type](bool arg) {
               switch (type.type) {
                 case STR:
                   set_evaluation(arg?"true":"false");
                   break;
                 default:
-                  throw RuntimeError("Invalid type cast");
+                  throw RuntimeError(expr.position, "Invalid type cast");
               }
             },
         }, v);
@@ -441,7 +512,7 @@ void Interpreter::visit(const AsTypeExpr &expr) {
 //      [&type](const std::shared_ptr<Variable>& arg) { return arg->type.name == type.name; },
 //      [&type](const std::shared_ptr<StructObject>& arg) { return arg->type_name == type.name; },
 //      [&type](const std::shared_ptr<VariantObject>& arg) { return arg->type_name == type.name; },
-      [](auto) { throw RuntimeError("Invalid type comparison"); },
+      [&expr](auto) { throw RuntimeError(expr.position, "Invalid type cast"); },
   }, left);
 }
 

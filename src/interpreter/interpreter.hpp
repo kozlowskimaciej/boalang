@@ -16,13 +16,15 @@
 class Interpreter : public ExprVisitor, public StmtVisitor {
   std::optional<eval_value_t> evaluation = std::nullopt;
   eval_value_t evaluate(const Expr* expr);
+  eval_value_t evaluate_var(const Expr* expr);
   void set_evaluation(eval_value_t value);
   eval_value_t get_evaluation();
 
   static bool boolify(const eval_value_t& value);
-  std::vector<Scope> scopes = {Scope()};
+  std::vector<std::unique_ptr<Scope>> scopes;
 
  public:
+  Interpreter() { scopes.push_back(std::make_unique<Scope>()); };
   void visit(const Program& stmt) override;
   void visit(const PrintStmt& stmt) override;
   void visit(const IfStmt& stmt) override;
