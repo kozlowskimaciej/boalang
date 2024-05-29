@@ -1,8 +1,10 @@
 #include "interpreter.hpp"
 
+#include <algorithm>
 #include <iostream>
 #include <cassert>
 #include <cmath>
+#include <functional>
 
 #include "utils/position.hpp"
 
@@ -427,21 +429,28 @@ void Interpreter::visit(const LogicalAndExpr &expr) {
 void Interpreter::visit(const IsTypeExpr &expr) {
   auto left = evaluate_var(expr.left.get());
   auto type = expr.type;
-  bool value = std::visit(overloaded{
-    [&type](const value_t& v) {
-      return std::visit(overloaded{
-          [](auto) { return false; },
-          [&type](int arg) { return type.type == INT; },
-          [&type](float arg) { return type.type == FLOAT; },
-          [&type](const std::string& arg) { return type.type == STR; },
-          [&type](bool arg) { return type.type == BOOL; },
-      }, v);
-    },
-    [&type](const std::shared_ptr<Variable>& arg) { return arg->type.name == type.name; },
-    [&type](const std::shared_ptr<StructObject>& arg) { return arg->type_def->type_name == type.name; },
-    [&type](const std::shared_ptr<VariantObject>& arg) { return arg->type_def->type_name == type.name; },
-    [&expr](auto) { throw RuntimeError(expr.position, "Invalid type check"); },
-  }, left);
+
+  std::function<bool(const eval_value_t&)> check = [&](const auto& arg) -> bool {
+    return std::visit(overloaded{
+        [&type](const value_t& v) {
+          return std::visit(overloaded{
+              [](auto) { return false; },
+              [&type](int arg) { return type.type == INT; },
+              [&type](float arg) { return type.type == FLOAT; },
+              [&type](const std::string& arg) { return type.type == STR; },
+              [&type](bool arg) { return type.type == BOOL; },
+          }, v);
+        },
+        [&type](const std::shared_ptr<Variable>& arg) { return arg->type.name == type.name; },
+        [&type](const std::shared_ptr<StructObject>& arg) { return arg->type_def->type_name == type.name; },
+        [&type, &check](const std::shared_ptr<VariantObject>& arg) {
+          return arg->type_def->type_name == type.name || check(arg->contained);
+        },
+        [&expr](auto) { throw RuntimeError(expr.position, "Invalid type check"); },
+    }, arg);
+  };
+
+  bool value = check(left);
   set_evaluation(value);
 }
 
