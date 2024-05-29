@@ -90,9 +90,9 @@ class Scope {
   void assign(const std::string& name, eval_value_t new_value);
   [[nodiscard]] std::optional<var_t> get(const std::string& name) const;
   [[nodiscard]] std::optional<types_t> get_type(const std::string& name) const;
-  [[nodiscard]] bool match_type(const eval_value_t& actual, const VarType& expected) const;
-  [[nodiscard]] bool type_in_variant(std::vector<VarType> variant_types, BuiltinType type) const;
-  [[nodiscard]] bool identifier_in_variant(std::vector<VarType> variant_types, std::string identifier) const;
+  [[nodiscard]] bool match_type(const eval_value_t& actual, const VarType& expected, bool check_self = true) const;
+  [[nodiscard]] bool type_in_variant(const std::vector<VarType>& variant_types, BuiltinType type) const;
+  [[nodiscard]] bool identifier_in_variant(const std::vector<VarType>& variant_types, const std::string& identifier) const;
 };
 
 #endif  // BOALANG_SCOPE_HPP

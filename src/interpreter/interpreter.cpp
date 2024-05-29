@@ -1,9 +1,9 @@
 #include "interpreter.hpp"
 
+#include <algorithm>
 #include <iostream>
 #include <cassert>
 #include <cmath>
-#include <functional>
 
 #include "utils/position.hpp"
 
@@ -185,9 +185,15 @@ void Interpreter::visit(const AssignStmt &stmt) {
         scopes.back()->assign(arg->name, value);
       },
 //      [](const std::shared_ptr<StructObject>& arg) { return arg->type_name == type.name; },
-//      [this, &value](const std::shared_ptr<VariantObject>& arg) {
-//        return arg->type_name == type.name;
-//      },
+      [this, &value](const std::shared_ptr<VariantObject>& arg) {
+        if (!arg->mut) {
+          throw RuntimeError("Tried assigning value to a const '" + arg->name + "'");
+        }
+        if (!std::ranges::any_of(arg->type_def->types, [&](const VarType& param) { return scopes.back()->match_type(value, param); } )){
+            throw RuntimeError("Tried assigning value with different type to '" + arg->name + "'");
+        }
+        arg->contained = std::move(value);
+      },
       [](auto) { throw RuntimeError("Invalid assignment"); },
   }, var);
 }
@@ -429,28 +435,7 @@ void Interpreter::visit(const IsTypeExpr &expr) {
   auto left = evaluate_var(expr.left.get());
   auto type = expr.type;
 
-  std::function<bool(const eval_value_t&)> check = [&](const auto& arg) -> bool {
-    return std::visit(overloaded{
-        [&type](const value_t& v) {
-          return std::visit(overloaded{
-              [](auto) { return false; },
-              [&type](int) { return type.type == INT; },
-              [&type](float) { return type.type == FLOAT; },
-              [&type](const std::string&) { return type.type == STR; },
-              [&type](bool) { return type.type == BOOL; },
-          }, v);
-        },
-        [&type](const std::shared_ptr<Variable>& arg) { return arg->type.name == type.name; },
-        [&type](const std::shared_ptr<StructObject>& arg) { return arg->type_def->type_name == type.name; },
-        [&type, &check](const std::shared_ptr<VariantObject>& arg) {
-          return arg->type_def->type_name == type.name || check(arg->contained);
-        },
-        [&expr](auto) { throw RuntimeError(expr.position, "Invalid type check"); },
-    }, arg);
-  };
-
-  bool value = check(left);
-  set_evaluation(value);
+  set_evaluation(scopes.back()->match_type(left, type));
 }
 
 void Interpreter::visit(const AsTypeExpr &expr) {
@@ -519,7 +504,7 @@ void Interpreter::visit(const AsTypeExpr &expr) {
       },
 //      [&type](const std::shared_ptr<StructObject>& arg) { return arg->type_name == type.name; },
       [&](const std::shared_ptr<VariantObject>& arg) {
-        if (scopes.back()->match_type(arg->contained, type)) {
+        if (scopes.back()->match_type(arg->contained, type, false)) {
           set_evaluation(arg->contained);
           return;
         }

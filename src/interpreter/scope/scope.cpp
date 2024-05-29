@@ -10,13 +10,13 @@ struct overloaded : Ts... {
 template <class... Ts>
 overloaded(Ts...) -> overloaded<Ts...>;
 
-bool Scope::type_in_variant(std::vector<VarType> variant_types, BuiltinType type) const {
+bool Scope::type_in_variant(const std::vector<VarType>& variant_types, BuiltinType type) const {
   return std::ranges::any_of(variant_types, [&type](const VarType& param) {
     return param.type == type;
   });
 }
 
-bool Scope::identifier_in_variant(std::vector<VarType> variant_types, std::string identifier) const {
+bool Scope::identifier_in_variant(const std::vector<VarType>& variant_types, const std::string& identifier) const {
   if (!get_type(identifier)) {
     return false;
   }
@@ -26,8 +26,8 @@ bool Scope::identifier_in_variant(std::vector<VarType> variant_types, std::strin
   });
 }
 
-bool Scope::match_type(const eval_value_t& actual, const VarType& expected) const {
-  if (!expected.name.empty() && expected.type == IDENTIFIER) {
+bool Scope::match_type(const eval_value_t& actual, const VarType& expected, bool check_self) const {
+  if (check_self && !expected.name.empty() && expected.type == IDENTIFIER) {
     if (const auto& type = get_type(expected.name)) {
       if (const auto& variant = std::get_if<std::shared_ptr<VariantType>>(&*type)) {
         return std::visit(overloaded{
@@ -42,7 +42,7 @@ bool Scope::match_type(const eval_value_t& actual, const VarType& expected) cons
             },
             [&](const std::shared_ptr<Variable>& obj) { return identifier_in_variant(variant->get()->types, obj->type.name); },
             [&](const std::shared_ptr<StructObject>& obj) { return identifier_in_variant(variant->get()->types, obj->type_def->type_name); },
-            [&](const std::shared_ptr<VariantObject>& obj) { return identifier_in_variant(variant->get()->types, obj->type_def->type_name); },
+            [&](const std::shared_ptr<VariantObject>& obj) { return identifier_in_variant(variant->get()->types, obj->type_def->type_name) || obj->type_def->type_name == expected.name; },
         }, actual);
       }
     }
@@ -61,7 +61,7 @@ bool Scope::match_type(const eval_value_t& actual, const VarType& expected) cons
         },
         [&expected](const std::shared_ptr<Variable>& arg) { return arg->type.name == expected.name; },
         [&expected](const std::shared_ptr<StructObject>& arg) { return arg->type_def->type_name == expected.name; },
-        [&expected, &check](const std::shared_ptr<VariantObject>& arg) {
+        [&](const std::shared_ptr<VariantObject>& arg) {
           return arg->type_def->type_name == expected.name || check(arg->contained);
         },
     }, arg);
