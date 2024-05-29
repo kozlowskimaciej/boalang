@@ -128,20 +128,42 @@ void Interpreter::visit(const VarDeclStmt &stmt) {
     throw RuntimeError(stmt.position, "Type '" + stmt.type.name + "' is not defined");
   }
 
-  if (!scopes.back()->match_type(init_value, stmt.type)) {
-    throw RuntimeError(stmt.position, "Tried to initialize '" + stmt.identifier + "' with value of different type");
-  }
-
   if (type) {
     std::visit(overloaded{
-//        [](const std::shared_ptr<StructType>& arg) {},
+        [&](const std::shared_ptr<StructType>& arg) {
+          if (const auto& init_list = std::get_if<std::shared_ptr<InitalizerList>>(&init_value)) {
+            if (init_list->get()->values.size() != arg->init_fields.size()) {
+              throw RuntimeError(stmt.position, "Different number of struct fields and values in initalizer list for '" + stmt.identifier + "'");
+            }
+
+            auto struct_scope = std::make_unique<Scope>();
+            const auto& init_fields = arg->init_fields;
+            for (auto field = init_fields.rbegin(); field != init_fields.rend(); ++field) {
+              auto init_item = init_list->get()->values.back();
+              if (!scopes.back()->match_type(init_item, field->type)) {
+                throw RuntimeError(stmt.position, "Type mismatch in initalizer list for '" + stmt.identifier + "." + field->name + "'");
+              }
+              struct_scope->define(field->name, std::make_shared<Variable>(field->type, field->name, field->mut, init_item));
+            }
+            auto obj = std::make_shared<StructObject>(arg.get(), stmt.identifier, std::move(struct_scope));
+            scopes.back()->define(stmt.identifier, obj);
+          } else {
+            throw RuntimeError(stmt.position, "Expected initalizer list for '" + stmt.identifier + "'");
+          }
+        },
         [this, &stmt, &init_value](const std::shared_ptr<VariantType>& arg) {
+          if (!scopes.back()->match_type(init_value, stmt.type)) {
+            throw RuntimeError(stmt.position, "Tried to initialize '" + stmt.identifier + "' with value of different type");
+          }
           auto obj = std::make_shared<VariantObject>(arg.get(), stmt.mut, stmt.identifier, init_value);
           scopes.back()->define(stmt.identifier, obj);
         },
         [&stmt](auto) { throw RuntimeError(stmt.position, "Unknown type"); },
     }, *type);
   } else {
+    if (!scopes.back()->match_type(init_value, stmt.type)) {
+      throw RuntimeError(stmt.position, "Tried to initialize '" + stmt.identifier + "' with value of different type");
+    }
     auto var = std::make_shared<Variable>(stmt.type, stmt.identifier, stmt.mut, init_value);
     scopes.back()->define(stmt.identifier, var);
   }
@@ -152,7 +174,17 @@ void Interpreter::visit(const StructFieldStmt &stmt) {
 }
 
 void Interpreter::visit(const StructDeclStmt &stmt) {
+  if (const auto& var = scopes.back()->get_type(stmt.identifier)) {
+    throw RuntimeError(stmt.position, "Type '" + stmt.identifier + "' already defined");
+  }
 
+  std::vector<Variable> vars{};
+  for (const auto& field : stmt.fields) {
+    vars.emplace_back(field->type, field->identifier, field->mut);
+  }
+
+  auto struct_def = std::make_shared<StructType>(stmt.identifier, std::move(vars));
+  scopes.back()->define_type(stmt.identifier, struct_def);
 }
 
 void Interpreter::visit(const VariantDeclStmt &stmt) {
@@ -166,8 +198,8 @@ void Interpreter::visit(const VariantDeclStmt &stmt) {
     }
   }
 
-  auto var = std::make_shared<VariantType>(stmt.identifier, stmt.params);
-  scopes.back()->define_type(stmt.identifier, var);
+  auto variant_def = std::make_shared<VariantType>(stmt.identifier, stmt.params);
+  scopes.back()->define_type(stmt.identifier, variant_def);
 }
 
 void Interpreter::visit(const AssignStmt &stmt) {
@@ -184,7 +216,6 @@ void Interpreter::visit(const AssignStmt &stmt) {
         }
         scopes.back()->assign(arg->name, value);
       },
-//      [](const std::shared_ptr<StructObject>& arg) { return arg->type_name == type.name; },
       [this, &value](const std::shared_ptr<VariantObject>& arg) {
         if (!arg->mut) {
           throw RuntimeError("Tried assigning value to a const '" + arg->name + "'");
@@ -515,7 +546,11 @@ void Interpreter::visit(const AsTypeExpr &expr) {
 }
 
 void Interpreter::visit(const InitalizerListExpr &expr) {
-
+  std::vector<eval_value_t> values{};
+  for (const auto& e : expr.list) {
+    values.push_back(evaluate_var(e.get()));
+  }
+  set_evaluation(std::make_shared<InitalizerList>(std::move(values)));
 }
 
 void Interpreter::visit(const CallExpr &expr) {
@@ -523,7 +558,15 @@ void Interpreter::visit(const CallExpr &expr) {
 }
 
 void Interpreter::visit(const FieldAccessExpr &expr) {
-
+  auto parent = evaluate(expr.parent_struct.get());
+  if (const auto& struct_obj = std::get_if<std::shared_ptr<StructObject>>(&parent)) {
+    if (const auto& eval = struct_obj->get()->scope->get(expr.field_name)) {
+      set_evaluation(*eval);
+      return;
+    }
+    throw RuntimeError(expr.position, "Field '" + expr.field_name +"' does not exist");
+  }
+  throw RuntimeError(expr.position, "Cannot access field of a non-struct variable");
 }
 
 #pragma clang diagnostic pop

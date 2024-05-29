@@ -19,10 +19,11 @@
 struct Variable;
 struct StructObject;
 struct VariantObject;
+struct InitalizerList;
 //struct FunctionObject;
 class Scope;
 
-using eval_value_t = std::variant<value_t, std::shared_ptr<StructObject>, std::shared_ptr<VariantObject>, std::shared_ptr<Variable>>;  // , FunctionObject
+using eval_value_t = std::variant<value_t, std::shared_ptr<StructObject>, std::shared_ptr<VariantObject>, std::shared_ptr<Variable>, std::shared_ptr<InitalizerList>>;  // , FunctionObject
 using var_t = std::variant<std::shared_ptr<Variable>, std::shared_ptr<StructObject>, std::shared_ptr<VariantObject>>;
 
 struct Variable {
@@ -39,9 +40,9 @@ struct Variable {
 
 struct StructType {
   std::string type_name;
-  std::map<std::string, Variable> init_fields;
+  std::vector<Variable> init_fields;
 
-  StructType(std::string type_name, std::map<std::string, Variable> init_fields) : type_name(std::move(type_name)), init_fields(std::move(init_fields)) {};
+  StructType(std::string type_name, std::vector<Variable> init_fields) : type_name(std::move(type_name)), init_fields(std::move(init_fields)) {};
 };
 
 struct StructObject {
@@ -74,10 +75,16 @@ struct VariantObject {
 //
 //};
 
+struct InitalizerList {
+  std::vector<eval_value_t> values;
+
+  InitalizerList(std::vector<eval_value_t> values) : values(std::move(values)) {};
+};
+
 using types_t = std::variant<std::shared_ptr<StructType>, std::shared_ptr<VariantType>>;
 
 class Scope {
-  std::map<std::string, var_t> variables{};
+  std::map<std::string, eval_value_t> variables{};
   std::map<std::string, types_t> types{};
   Scope* enclosing;
 
@@ -85,10 +92,10 @@ class Scope {
   Scope() : enclosing(nullptr) {};
   Scope(Scope* enclosing) : enclosing(enclosing) {};
 
-  void define(const std::string& name, var_t variable);
+  void define(const std::string& name, eval_value_t variable);
   void define_type(const std::string& name, types_t type);
   void assign(const std::string& name, eval_value_t new_value);
-  [[nodiscard]] std::optional<var_t> get(const std::string& name) const;
+  [[nodiscard]] std::optional<eval_value_t> get(const std::string& name) const;
   [[nodiscard]] std::optional<types_t> get_type(const std::string& name) const;
   [[nodiscard]] bool match_type(const eval_value_t& actual, const VarType& expected, bool check_self = true) const;
   [[nodiscard]] bool type_in_variant(const std::vector<VarType>& variant_types, BuiltinType type) const;

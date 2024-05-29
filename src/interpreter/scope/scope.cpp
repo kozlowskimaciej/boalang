@@ -43,6 +43,7 @@ bool Scope::match_type(const eval_value_t& actual, const VarType& expected, bool
             [&](const std::shared_ptr<Variable>& obj) { return identifier_in_variant(variant->get()->types, obj->type.name); },
             [&](const std::shared_ptr<StructObject>& obj) { return identifier_in_variant(variant->get()->types, obj->type_def->type_name); },
             [&](const std::shared_ptr<VariantObject>& obj) { return identifier_in_variant(variant->get()->types, obj->type_def->type_name) || obj->type_def->type_name == expected.name; },
+            [](auto) { return false; }
         }, actual);
       }
     }
@@ -64,13 +65,14 @@ bool Scope::match_type(const eval_value_t& actual, const VarType& expected, bool
         [&](const std::shared_ptr<VariantObject>& arg) {
           return arg->type_def->type_name == expected.name || check(arg->contained);
         },
+        [](auto) { return false; }
     }, arg);
   };
 
   return check(actual);
 }
 
-void Scope::define(const std::string& name, var_t variable) {
+void Scope::define(const std::string& name, eval_value_t variable) {
   variables.insert({name, std::move(variable)});
 }
 
@@ -92,7 +94,7 @@ void Scope::assign(const std::string& name, eval_value_t new_value) {
   throw RuntimeError(name + " not found in scope");
 }
 
-std::optional<var_t> Scope::get(const std::string& name) const {
+std::optional<eval_value_t> Scope::get(const std::string& name) const {
   auto item = variables.find(name);
   if (item != variables.end()) {
     return item->second;
