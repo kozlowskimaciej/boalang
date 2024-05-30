@@ -214,7 +214,8 @@ void Interpreter::visit(const AssignStmt &stmt) {
         if (!scopes.back()->match_type(value, arg->type)) {
           throw RuntimeError("Tried assigning value with different type to '" + arg->name + "'");
         }
-        scopes.back()->assign(arg->name, value);
+        arg->value = std::move(value);
+//        scopes.back()->assign(arg->name, value);
       },
       [this, &value](const std::shared_ptr<VariantObject>& arg) {
         if (!arg->mut) {
