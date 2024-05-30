@@ -33,14 +33,7 @@ eval_value_t Interpreter::evaluate_var(const VisitType *visited) {
   return var;
 }
 
-template <typename VisitType>
-void Interpreter::evaluate_return(const VisitType *visited) {
-  evaluation = std::nullopt;  // ignore existing value
-  evaluate_var(visited);
-}
-
 void Interpreter::set_evaluation(eval_value_t value) {
-  assert(!evaluation.has_value());
   evaluation = std::move(value);
 }
 
@@ -104,8 +97,14 @@ void Interpreter::visit(const IfStmt &stmt) {
 }
 
 void Interpreter::visit(const BlockStmt &stmt) {
-  auto new_scope = std::make_unique<Scope>(scopes.back().get());
-  scopes.push_back(std::move(new_scope));
+  std::unique_ptr<Scope> new_scope;
+  if (!call_contexts.empty()) {
+    new_scope = std::make_unique<Scope>(call_contexts.back()->scopes.back().get());
+    call_contexts.back()->scopes.push_back(std::move(new_scope));
+  } else {
+    new_scope = std::make_unique<Scope>(scopes.back().get());
+    scopes.push_back(std::move(new_scope));
+  }
   std::exception_ptr eptr = nullptr;
   try {
     for (const auto& s : stmt.statements) {
@@ -118,7 +117,11 @@ void Interpreter::visit(const BlockStmt &stmt) {
   } catch(...) {
     eptr = std::current_exception();
   }
-  scopes.pop_back();
+  if (!call_contexts.empty()) {
+    call_contexts.back()->scopes.pop_back();
+  } else {
+    scopes.pop_back();
+  }
   if (eptr) { std::rethrow_exception(eptr); }
 }
 
@@ -257,20 +260,7 @@ void Interpreter::visit(const AssignStmt &stmt) {
 }
 
 void Interpreter::visit(const CallStmt &stmt) {
-  auto func = get_function(stmt.identifier);
-  if (!func) {
-    throw RuntimeError(stmt.position, "Function '" + stmt.identifier + "' not defined");
-  }
-
-  // move creating callcontexts to separate methods
-//  ++CallContext::nested;
-//  if (CallContext::nested > MAX_RECURSION_DEPTH) {
-//    throw RuntimeError(expr.position, "Maximum recursion depth exceeded [" + std::to_string(MAX_RECURSION_DEPTH) + "]");
-//  }
-  call_contexts.push_back(std::make_unique<CallContext>(*func));
-  call_func((*func).get());
-  call_contexts.pop_back();
-//  --CallContext::nested;
+  make_call(stmt.identifier, stmt.position);
 }
 
 void Interpreter::visit(const FuncParamStmt &stmt) {
@@ -293,7 +283,7 @@ void Interpreter::visit(const FuncParamStmt &stmt) {
 }
 
 void Interpreter::visit(const FuncStmt &stmt) {
-  auto body = dynamic_cast<BlockStmt*>(stmt.body.get());
+  auto* body = dynamic_cast<BlockStmt*>(stmt.body.get());
   std::vector<eval_value_t> params {};
   for (const auto& param : stmt.params) {
     params.push_back(evaluate(param.get()));
@@ -304,9 +294,9 @@ void Interpreter::visit(const FuncStmt &stmt) {
 
 void Interpreter::visit(const ReturnStmt &stmt) {
   if (stmt.value) {
-    evaluate_return(stmt.value.get());
+    set_evaluation(evaluate_var(stmt.value.get()));
   } else {
-    evaluation = std::nullopt;
+    evaluation.reset();
   }
   return_flag = true;
 }
@@ -620,6 +610,7 @@ void Interpreter::visit(const InitalizerListExpr &expr) {
 }
 
 void Interpreter::visit(const CallExpr &expr) {
+  make_call(expr.identifier, expr.position);
 }
 
 void Interpreter::visit(const FieldAccessExpr &expr) {
@@ -642,6 +633,31 @@ void Interpreter::call_func(FunctionObject *func) {
       break;
     }
   }
+}
+
+void Interpreter::make_call(const std::string &identifier, const Position &position) {
+  auto opt_func = get_function(identifier);
+  if (!opt_func) {
+    throw RuntimeError(position, "Function '" + identifier + "' not defined");
+  }
+
+  auto func = *opt_func;
+
+  // move creating callcontexts to separate methods
+  ++CallContext::nested;
+  if (CallContext::nested > MAX_RECURSION_DEPTH) {
+    throw RuntimeError(position, "Maximum recursion depth exceeded [" + std::to_string(MAX_RECURSION_DEPTH) + "]");
+  }
+  call_contexts.push_back(std::make_unique<CallContext>(func));
+  call_func(func.get());
+  if (!evaluation && func->return_type.type != VOID) {
+    throw RuntimeError(position, "Non-void function did not return a value");
+  }
+  if (!match_type(*evaluation, func->return_type)) {
+    throw RuntimeError(position, "Function returned value with different type than declared");
+  }
+  call_contexts.pop_back();
+  --CallContext::nested;
 }
 
 void Interpreter::define_variable(const std::string &name, const eval_value_t &variable) {
@@ -670,28 +686,36 @@ void Interpreter::define_function(const std::string &name, const function_t &fun
 
 std::optional<eval_value_t> Interpreter::get_variable(const std::string &name) const {
   if (!call_contexts.empty()) {
-    return call_contexts.back()->scopes.back()->get_variable(name);
+    if (auto variable = call_contexts.back()->scopes.back()->get_variable(name)) {
+      return variable;
+    }
   }
   return scopes.back()->get_variable(name);
 }
 
 std::optional<types_t> Interpreter::get_type(const std::string &name) const {
   if (!call_contexts.empty()) {
-    return call_contexts.back()->scopes.back()->get_type(name);
+    if (auto type = call_contexts.back()->scopes.back()->get_type(name)) {
+      return type;
+    }
   }
   return scopes.back()->get_type(name);
 }
 
 std::optional<function_t> Interpreter::get_function(const std::string &name) const {
   if (!call_contexts.empty()) {
-    return call_contexts.back()->scopes.back()->get_function(name);
+    if (auto func = call_contexts.back()->scopes.back()->get_function(name)) {
+      return func;
+    }
   }
   return scopes.back()->get_function(name);
 }
 
 bool Interpreter::match_type(const eval_value_t &actual, const VarType &expected, bool check_self) const {
   if (!call_contexts.empty()) {
-    return call_contexts.back()->scopes.back()->match_type(actual, expected, check_self);
+    if (auto match = call_contexts.back()->scopes.back()->match_type(actual, expected, check_self)) {
+      return match;
+    }
   }
   return scopes.back()->match_type(actual, expected, check_self);
 }

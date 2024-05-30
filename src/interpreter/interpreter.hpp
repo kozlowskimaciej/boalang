@@ -22,9 +22,6 @@ class Interpreter : public ExprVisitor, public StmtVisitor {
   template <typename VisitType>
   eval_value_t evaluate_var(const VisitType* visited);
 
-  template <typename VisitType>
-  void evaluate_return(const VisitType* visited);
-
   void set_evaluation(eval_value_t value);
   eval_value_t get_evaluation();
 
@@ -36,6 +33,7 @@ class Interpreter : public ExprVisitor, public StmtVisitor {
   // ustawiamy na true w return statement i ustawiamy tam evaluation na wartość lub std::nullopt jak void
 
   void call_func(FunctionObject* func);
+  void make_call(const std::string& identifier, const Position& position);
   void define_variable(const std::string& name, const eval_value_t &variable);
   void define_type(const std::string& name, const types_t &type);
   void define_function(const std::string& name, const function_t &function);

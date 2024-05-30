@@ -79,8 +79,8 @@ struct FunctionObject {
   std::vector<eval_value_t> params;
   BlockStmt* body;
 
-  FunctionObject(const std::string& identifier, VarType return_type, std::vector<eval_value_t> params, BlockStmt* body) :
-      identifier(std::move(identifier)), return_type(return_type), params(std::move(params)), body(body) {};
+  FunctionObject(std::string identifier, VarType return_type, std::vector<eval_value_t> params, BlockStmt* body) :
+      identifier(std::move(identifier)), return_type(std::move(return_type)), params(std::move(params)), body(body) {};
 };
 
 class Scope {

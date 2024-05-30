@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+unsigned int CallContext::nested;
+
 template <class... Ts>
 struct overloaded : Ts... {
   using Ts::operator()...;
