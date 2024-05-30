@@ -136,14 +136,29 @@ void Interpreter::visit(const VarDeclStmt &stmt) {
               throw RuntimeError(stmt.position, "Different number of struct fields and values in initalizer list for '" + stmt.identifier + "'");
             }
 
-            auto struct_scope = std::make_unique<Scope>();
+            Scope struct_scope{};
             const auto& init_fields = arg->init_fields;
             for (auto field = init_fields.rbegin(); field != init_fields.rend(); ++field) {
               auto init_item = init_list->get()->values.back();
               if (!scopes.back()->match_type(init_item, field->type)) {
                 throw RuntimeError(stmt.position, "Type mismatch in initalizer list for '" + stmt.identifier + "." + field->name + "'");
               }
-              struct_scope->define(field->name, std::make_shared<Variable>(field->type, field->name, field->mut, init_item));
+              if (const auto& type = scopes.back()->get_type(field->type.name)) {
+                std::visit(overloaded{
+                    [&](const std::shared_ptr<VariantType>& arg) {
+                      struct_scope.define(field->name, std::make_shared<VariantObject>(arg.get(), field->mut, field->name, init_item));
+                    },
+                    [&](const std::shared_ptr<StructType>& arg) {
+                      auto struct_obj = std::get<std::shared_ptr<StructObject>>(init_item);
+                      struct_scope.define(field->name, std::make_shared<StructObject>(arg.get(), field->name, struct_obj->scope));
+                    },
+                    [&](const auto& arg) {
+                      throw RuntimeError(stmt.position, "Unsupported type in struct declaration");
+                    },
+                }, *type);
+              } else {
+                struct_scope.define(field->name, std::make_shared<Variable>(field->type, field->name, field->mut, init_item));
+              }
             }
             auto obj = std::make_shared<StructObject>(arg.get(), stmt.identifier, std::move(struct_scope));
             scopes.back()->define(stmt.identifier, obj);
@@ -561,7 +576,7 @@ void Interpreter::visit(const CallExpr &expr) {
 void Interpreter::visit(const FieldAccessExpr &expr) {
   auto parent = evaluate(expr.parent_struct.get());
   if (const auto& struct_obj = std::get_if<std::shared_ptr<StructObject>>(&parent)) {
-    if (const auto& eval = struct_obj->get()->scope->get(expr.field_name)) {
+    if (const auto& eval = struct_obj->get()->scope.get(expr.field_name)) {
       set_evaluation(*eval);
       return;
     }

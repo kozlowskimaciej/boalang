@@ -45,15 +45,6 @@ struct StructType {
   StructType(std::string type_name, std::vector<Variable> init_fields) : type_name(std::move(type_name)), init_fields(std::move(init_fields)) {};
 };
 
-struct StructObject {
-  StructType* type_def;
-  std::string name;
-  std::unique_ptr<Scope> scope;
-
-  StructObject(StructType* type_def, std::string name, std::unique_ptr<Scope> scope) :
-      type_def(type_def), name(std::move(name)), scope(std::move(scope)) {};
-};
-
 struct VariantType {
   std::string type_name;
   std::vector<VarType> types;
@@ -100,6 +91,15 @@ class Scope {
   [[nodiscard]] bool match_type(const eval_value_t& actual, const VarType& expected, bool check_self = true) const;
   [[nodiscard]] bool type_in_variant(const std::vector<VarType>& variant_types, BuiltinType type) const;
   [[nodiscard]] bool identifier_in_variant(const std::vector<VarType>& variant_types, const std::string& identifier) const;
+};
+
+struct StructObject {
+  StructType* type_def;
+  std::string name;
+  Scope scope;
+
+  StructObject(StructType* type_def, std::string name, Scope scope) :
+      type_def(type_def), name(std::move(name)), scope(std::move(scope)) {};
 };
 
 #endif  // BOALANG_SCOPE_HPP
