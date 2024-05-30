@@ -293,8 +293,7 @@ void ASTPrinter::visit(const InitalizerListExpr& expr) {
 
 void ASTPrinter::visit(const CallExpr& expr) {
   print_memory_info("CallExpr", &expr);
-  std::cout << "\nCallee:";
-  parenthesize({expr.callee.get()});
+  std::cout << "\nCallee: {" << expr.identifier << "}";
   std::cout << "\nArguments:";
   for (const auto& arg : expr.arguments) {
     parenthesize({arg.get()});

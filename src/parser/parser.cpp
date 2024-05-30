@@ -710,7 +710,11 @@ std::unique_ptr<Expr> Parser::call() {
       call_args = std::move(*args);
       consume("Excepted ')' after call arguments.", TOKEN_RPAREN);
     }
-    expr = std::make_unique<CallExpr>(std::move(expr), std::move(call_args));
+    auto* var = dynamic_cast<VarExpr*>(expr.get());
+    if (!var) {
+      throw SyntaxError(current_token_, "Expected identifier as callee.");
+    }
+    expr = std::make_unique<CallExpr>(var->identifier, var->position, std::move(call_args));
   } else if (match(TOKEN_DOT)) {
     expr = field_access(std::move(expr));
   }

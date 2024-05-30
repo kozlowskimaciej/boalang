@@ -236,12 +236,14 @@ class InitalizerListExpr : public ExprType<InitalizerListExpr> {
 
 class CallExpr : public ExprType<CallExpr> {
  public:
-  std::unique_ptr<Expr> callee;
+  std::string identifier;
+  Position position;
   std::vector<std::unique_ptr<Expr>> arguments;
 
-  explicit CallExpr(std::unique_ptr<Expr> callee,
+  explicit CallExpr(std::string identifier, Position position,
                     std::vector<std::unique_ptr<Expr>> arguments = {})
-      : callee(std::move(callee)), arguments(std::move(arguments)){};
+      : identifier(std::move(identifier)),
+        position(position), arguments(std::move(arguments)){};
 };
 
 class FieldAccessExpr : public ExprType<FieldAccessExpr> {

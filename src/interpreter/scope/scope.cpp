@@ -10,7 +10,7 @@ struct overloaded : Ts... {
 template <class... Ts>
 overloaded(Ts...) -> overloaded<Ts...>;
 
-bool Scope::type_in_variant(const std::vector<VarType>& variant_types, BuiltinType type) const {
+bool Scope::type_in_variant(const std::vector<VarType>& variant_types, BuiltinType type) {
   return std::ranges::any_of(variant_types, [&type](const VarType& param) {
     return param.type == type;
   });

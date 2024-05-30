@@ -20,7 +20,7 @@ struct Variable;
 struct StructObject;
 struct VariantObject;
 struct InitalizerList;
-//struct FunctionObject;
+struct FunctionObject;
 class Scope;
 
 using eval_value_t = std::variant<value_t, std::shared_ptr<StructObject>, std::shared_ptr<VariantObject>, std::shared_ptr<Variable>, std::shared_ptr<InitalizerList>>;  // , FunctionObject
@@ -62,9 +62,9 @@ struct VariantObject {
       type_def(type_def), mut(mut), name(std::move(name)), contained(std::move(contained)) {};
 };
 
-//struct FunctionObject {
-//
-//};
+struct FunctionObject {
+
+};
 
 struct InitalizerList {
   std::vector<eval_value_t> values;
@@ -77,6 +77,7 @@ using types_t = std::variant<std::shared_ptr<StructType>, std::shared_ptr<Varian
 class Scope {
   std::map<std::string, eval_value_t> variables{};
   std::map<std::string, types_t> types{};
+  std::map<std::string, std::shared_ptr<FunctionObject>> functions{};
   Scope* enclosing;
 
  public:
@@ -89,7 +90,7 @@ class Scope {
   [[nodiscard]] std::optional<eval_value_t> get(const std::string& name) const;
   [[nodiscard]] std::optional<types_t> get_type(const std::string& name) const;
   [[nodiscard]] bool match_type(const eval_value_t& actual, const VarType& expected, bool check_self = true) const;
-  [[nodiscard]] bool type_in_variant(const std::vector<VarType>& variant_types, BuiltinType type) const;
+  [[nodiscard]] static bool type_in_variant(const std::vector<VarType>& variant_types, BuiltinType type);
   [[nodiscard]] bool identifier_in_variant(const std::vector<VarType>& variant_types, const std::string& identifier) const;
 };
 

@@ -257,10 +257,7 @@ TEST(ParserTest, print_call_function_no_args) {
   auto call_expr = dynamic_cast<CallExpr*>(print_stmt->expr.get());
   EXPECT_TRUE(call_expr != nullptr);
   EXPECT_EQ(call_expr->arguments.size(), 0);
-
-  auto callee = dynamic_cast<VarExpr*>(call_expr->callee.get());
-  EXPECT_TRUE(callee != nullptr);
-  EXPECT_EQ(callee->identifier, "foo");
+  EXPECT_EQ(call_expr->identifier, "foo");
 }
 
 TEST(ParserTest, print_call_function_args) {
@@ -285,9 +282,7 @@ TEST(ParserTest, print_call_function_args) {
   EXPECT_TRUE(arg != nullptr);
   EXPECT_EQ(std::get<int>(arg->literal), 2);
 
-  auto callee = dynamic_cast<VarExpr*>(call_expr->callee.get());
-  EXPECT_TRUE(callee != nullptr);
-  EXPECT_EQ(callee->identifier, "foo");
+  EXPECT_EQ(call_expr->identifier, "foo");
 }
 
 TEST(ParserTest, print_call_function_args_over_limit) {
