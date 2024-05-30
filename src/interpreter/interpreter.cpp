@@ -18,17 +18,25 @@ struct overloaded : Ts... {
 template <class... Ts>
 overloaded(Ts...) -> overloaded<Ts...>;
 
-eval_value_t Interpreter::evaluate(const Expr* expr) {
-  expr->accept(*this);
+template <typename VisitType>
+eval_value_t Interpreter::evaluate(const VisitType* visited) {
+  visited->accept(*this);
   return get_evaluation();
 }
 
-eval_value_t Interpreter::evaluate_var(const Expr *expr) {
-  auto var = evaluate(expr);
+template <typename VisitType>
+eval_value_t Interpreter::evaluate_var(const VisitType *visited) {
+  auto var = evaluate(visited);
   while (const auto& v = std::get_if<std::shared_ptr<Variable>>(&var)) {
     var = *(v->get()->value);
   }
   return var;
+}
+
+template <typename VisitType>
+void Interpreter::evaluate_return(const VisitType *visited) {
+  evaluation = std::nullopt;  // ignore existing value
+  evaluate_var(visited);
 }
 
 void Interpreter::set_evaluation(eval_value_t value) {
@@ -101,6 +109,10 @@ void Interpreter::visit(const BlockStmt &stmt) {
   std::exception_ptr eptr = nullptr;
   try {
     for (const auto& s : stmt.statements) {
+      if (return_flag) {
+        return_flag = false;
+        break;
+      }
       s->accept(*this);
     }
   } catch(...) {
@@ -117,13 +129,13 @@ void Interpreter::visit(const WhileStmt &stmt) {
 }
 
 void Interpreter::visit(const VarDeclStmt &stmt) {
-  if (const auto& var = scopes.back()->get(stmt.identifier)) {
+  if (const auto& var = get_variable(stmt.identifier)) {
     throw RuntimeError(stmt.position, "Identifier '" + stmt.identifier + "' already defined");
   }
 
   auto init_value = evaluate_var(stmt.initializer.get());
 
-  auto type = scopes.back()->get_type(stmt.type.name);
+  auto type = get_type(stmt.type.name);
   if (!type && !stmt.type.name.empty()) {
     throw RuntimeError(stmt.position, "Type '" + stmt.type.name + "' is not defined");
   }
@@ -140,47 +152,47 @@ void Interpreter::visit(const VarDeclStmt &stmt) {
             const auto& init_fields = arg->init_fields;
             for (auto field = init_fields.rbegin(); field != init_fields.rend(); ++field) {
               auto init_item = init_list->get()->values.back();
-              if (!scopes.back()->match_type(init_item, field->type)) {
+              if (!match_type(init_item, field->type)) {
                 throw RuntimeError(stmt.position, "Type mismatch in initalizer list for '" + stmt.identifier + "." + field->name + "'");
               }
-              if (const auto& type = scopes.back()->get_type(field->type.name)) {
+              if (const auto& type = get_type(field->type.name)) {
                 std::visit(overloaded{
                     [&](const std::shared_ptr<VariantType>& arg) {
-                      struct_scope.define(field->name, std::make_shared<VariantObject>(arg.get(), field->mut, field->name, init_item));
+                      struct_scope.define_variable(field->name, std::make_shared<VariantObject>(arg.get(), field->mut, field->name, init_item));
                     },
                     [&](const std::shared_ptr<StructType>& arg) {
                       auto struct_obj = std::get<std::shared_ptr<StructObject>>(init_item);
-                      struct_scope.define(field->name, std::make_shared<StructObject>(arg.get(), field->name, struct_obj->scope));
+                      struct_scope.define_variable(field->name, std::make_shared<StructObject>(arg.get(), field->name, struct_obj->scope));
                     },
                     [&](const auto& arg) {
                       throw RuntimeError(stmt.position, "Unsupported type in struct declaration");
                     },
                 }, *type);
               } else {
-                struct_scope.define(field->name, std::make_shared<Variable>(field->type, field->name, field->mut, init_item));
+                struct_scope.define_variable(field->name, std::make_shared<Variable>(field->type, field->name, field->mut, init_item));
               }
             }
             auto obj = std::make_shared<StructObject>(arg.get(), stmt.identifier, std::move(struct_scope));
-            scopes.back()->define(stmt.identifier, obj);
+            define_variable(stmt.identifier, obj);
           } else {
             throw RuntimeError(stmt.position, "Expected initalizer list for '" + stmt.identifier + "'");
           }
         },
         [this, &stmt, &init_value](const std::shared_ptr<VariantType>& arg) {
-          if (!scopes.back()->match_type(init_value, stmt.type)) {
+          if (!match_type(init_value, stmt.type)) {
             throw RuntimeError(stmt.position, "Tried to initialize '" + stmt.identifier + "' with value of different type");
           }
           auto obj = std::make_shared<VariantObject>(arg.get(), stmt.mut, stmt.identifier, init_value);
-          scopes.back()->define(stmt.identifier, obj);
+          define_variable(stmt.identifier, obj);
         },
         [&stmt](auto) { throw RuntimeError(stmt.position, "Unknown type"); },
     }, *type);
   } else {
-    if (!scopes.back()->match_type(init_value, stmt.type)) {
+    if (!match_type(init_value, stmt.type)) {
       throw RuntimeError(stmt.position, "Tried to initialize '" + stmt.identifier + "' with value of different type");
     }
     auto var = std::make_shared<Variable>(stmt.type, stmt.identifier, stmt.mut, init_value);
-    scopes.back()->define(stmt.identifier, var);
+    define_variable(stmt.identifier, var);
   }
 }
 
@@ -189,7 +201,7 @@ void Interpreter::visit(const StructFieldStmt &stmt) {
 }
 
 void Interpreter::visit(const StructDeclStmt &stmt) {
-  if (const auto& var = scopes.back()->get_type(stmt.identifier)) {
+  if (const auto& var = get_type(stmt.identifier)) {
     throw RuntimeError(stmt.position, "Type '" + stmt.identifier + "' already defined");
   }
 
@@ -199,22 +211,22 @@ void Interpreter::visit(const StructDeclStmt &stmt) {
   }
 
   auto struct_def = std::make_shared<StructType>(stmt.identifier, std::move(vars));
-  scopes.back()->define_type(stmt.identifier, struct_def);
+  define_type(stmt.identifier, struct_def);
 }
 
 void Interpreter::visit(const VariantDeclStmt &stmt) {
-  if (const auto& var = scopes.back()->get_type(stmt.identifier)) {
+  if (const auto& var = get_type(stmt.identifier)) {
     throw RuntimeError(stmt.position, "Type '" + stmt.identifier + "' already defined");
   }
 
   for (const auto& param : stmt.params) {
-    if (!param.name.empty() && !scopes.back()->get_type(param.name)) {
+    if (!param.name.empty() && !get_type(param.name)) {
       throw RuntimeError(stmt.position, "Unknown type in variant '" + param.name + "'");
     }
   }
 
   auto variant_def = std::make_shared<VariantType>(stmt.identifier, stmt.params);
-  scopes.back()->define_type(stmt.identifier, variant_def);
+  define_type(stmt.identifier, variant_def);
 }
 
 void Interpreter::visit(const AssignStmt &stmt) {
@@ -226,17 +238,16 @@ void Interpreter::visit(const AssignStmt &stmt) {
         if (!arg->mut) {
           throw RuntimeError("Tried assigning value to a const '" + arg->name + "'");
         }
-        if (!scopes.back()->match_type(value, arg->type)) {
+        if (!match_type(value, arg->type)) {
           throw RuntimeError("Tried assigning value with different type to '" + arg->name + "'");
         }
         arg->value = std::move(value);
-//        scopes.back()->assign(arg->name, value);
       },
       [this, &value](const std::shared_ptr<VariantObject>& arg) {
         if (!arg->mut) {
           throw RuntimeError("Tried assigning value to a const '" + arg->name + "'");
         }
-        if (!std::ranges::any_of(arg->type_def->types, [&](const VarType& param) { return scopes.back()->match_type(value, param); } )){
+        if (!std::ranges::any_of(arg->type_def->types, [&](const VarType& param) { return match_type(value, param); } )){
             throw RuntimeError("Tried assigning value with different type to '" + arg->name + "'");
         }
         arg->contained = std::move(value);
@@ -246,19 +257,58 @@ void Interpreter::visit(const AssignStmt &stmt) {
 }
 
 void Interpreter::visit(const CallStmt &stmt) {
+  auto func = get_function(stmt.identifier);
+  if (!func) {
+    throw RuntimeError(stmt.position, "Function '" + stmt.identifier + "' not defined");
+  }
 
+  // move creating callcontexts to separate methods
+//  ++CallContext::nested;
+//  if (CallContext::nested > MAX_RECURSION_DEPTH) {
+//    throw RuntimeError(expr.position, "Maximum recursion depth exceeded [" + std::to_string(MAX_RECURSION_DEPTH) + "]");
+//  }
+  call_contexts.push_back(std::make_unique<CallContext>(*func));
+  call_func((*func).get());
+  call_contexts.pop_back();
+//  --CallContext::nested;
 }
 
 void Interpreter::visit(const FuncParamStmt &stmt) {
-
+  if (auto type = get_type(stmt.type.name)) {
+    std::visit(overloaded{
+        [&](const std::shared_ptr<StructType>& arg) {
+          auto struct_obj = std::make_shared<StructObject>(arg.get(), stmt.identifier, Scope());
+          set_evaluation(struct_obj);
+        },
+        [&](const std::shared_ptr<VariantType>& arg) {
+          auto variant_obj = std::make_shared<VariantObject>(arg.get(), true, stmt.identifier, std::monostate());
+          set_evaluation(variant_obj);
+        },
+        [&stmt](auto) { throw RuntimeError(stmt.position, "Unknown type"); },
+    }, *type);
+  } else {
+    auto var = std::make_shared<Variable>(stmt.type, stmt.identifier, true);
+    set_evaluation(var);
+  }
 }
 
 void Interpreter::visit(const FuncStmt &stmt) {
-
+  auto body = dynamic_cast<BlockStmt*>(stmt.body.get());
+  std::vector<eval_value_t> params {};
+  for (const auto& param : stmt.params) {
+    params.push_back(evaluate(param.get()));
+  }
+  auto func = std::make_shared<FunctionObject>(stmt.identifier, stmt.return_type, params, body);
+  define_function(stmt.identifier, func);
 }
 
 void Interpreter::visit(const ReturnStmt &stmt) {
-
+  if (stmt.value) {
+    evaluate_return(stmt.value.get());
+  } else {
+    evaluation = std::nullopt;
+  }
+  return_flag = true;
 }
 
 void Interpreter::visit(const LambdaFuncStmt &stmt) {
@@ -457,7 +507,7 @@ void Interpreter::visit(const LogicalNegationExpr &expr) {
 }
 
 void Interpreter::visit(const VarExpr &expr) {
-  if (const auto& var = scopes.back()->get(expr.identifier)) {
+  if (const auto& var = get_variable(expr.identifier)) {
     std::visit(overloaded{
       [this](const auto& arg) { set_evaluation(arg); },
     }, *var);
@@ -482,7 +532,7 @@ void Interpreter::visit(const IsTypeExpr &expr) {
   auto left = evaluate_var(expr.left.get());
   auto type = expr.type;
 
-  set_evaluation(scopes.back()->match_type(left, type));
+  set_evaluation(match_type(left, type));
 }
 
 void Interpreter::visit(const AsTypeExpr &expr) {
@@ -551,7 +601,7 @@ void Interpreter::visit(const AsTypeExpr &expr) {
       },
 //      [&type](const std::shared_ptr<StructObject>& arg) { return arg->type_name == type.name; },
       [&](const std::shared_ptr<VariantObject>& arg) {
-        if (scopes.back()->match_type(arg->contained, type, false)) {
+        if (match_type(arg->contained, type, false)) {
           set_evaluation(arg->contained);
           return;
         }
@@ -570,19 +620,80 @@ void Interpreter::visit(const InitalizerListExpr &expr) {
 }
 
 void Interpreter::visit(const CallExpr &expr) {
-
 }
 
 void Interpreter::visit(const FieldAccessExpr &expr) {
   auto parent = evaluate(expr.parent_struct.get());
   if (const auto& struct_obj = std::get_if<std::shared_ptr<StructObject>>(&parent)) {
-    if (const auto& eval = struct_obj->get()->scope.get(expr.field_name)) {
+    if (const auto& eval = struct_obj->get()->scope.get_variable(expr.field_name)) {
       set_evaluation(*eval);
       return;
     }
     throw RuntimeError(expr.position, "Field '" + expr.field_name +"' does not exist");
   }
   throw RuntimeError(expr.position, "Cannot access field of a non-struct variable");
+}
+
+void Interpreter::call_func(FunctionObject *func) {
+  return_flag = false;
+  for (const auto& stmt : func->body->statements) {
+    stmt->accept(*this);
+    if (return_flag) {
+      break;
+    }
+  }
+}
+
+void Interpreter::define_variable(const std::string &name, const eval_value_t &variable) {
+  if (!call_contexts.empty()) {
+    call_contexts.back()->scopes.back()->define_variable(name, variable);
+  } else {
+    scopes.back()->define_variable(name, variable);
+  }
+}
+
+void Interpreter::define_type(const std::string &name, const types_t &type) {
+  if (!call_contexts.empty()) {
+    call_contexts.back()->scopes.back()->define_type(name, type);
+  } else {
+    scopes.back()->define_type(name, type);
+  }
+}
+
+void Interpreter::define_function(const std::string &name, const function_t &function) {
+  if (!call_contexts.empty()) {
+    call_contexts.back()->scopes.back()->define_function(name, function);
+  } else {
+    scopes.back()->define_function(name, function);
+  }
+}
+
+std::optional<eval_value_t> Interpreter::get_variable(const std::string &name) const {
+  if (!call_contexts.empty()) {
+    return call_contexts.back()->scopes.back()->get_variable(name);
+  }
+  return scopes.back()->get_variable(name);
+}
+
+std::optional<types_t> Interpreter::get_type(const std::string &name) const {
+  if (!call_contexts.empty()) {
+    return call_contexts.back()->scopes.back()->get_type(name);
+  }
+  return scopes.back()->get_type(name);
+}
+
+std::optional<function_t> Interpreter::get_function(const std::string &name) const {
+  if (!call_contexts.empty()) {
+    return call_contexts.back()->scopes.back()->get_function(name);
+  }
+  return scopes.back()->get_function(name);
+}
+
+bool Interpreter::match_type(const eval_value_t &actual, const VarType &expected, bool check_self) const {
+  if (!call_contexts.empty()) {
+    return call_contexts.back()->scopes.back()->match_type(actual, expected, check_self);
+  }
+  return scopes.back()->match_type(actual, expected, check_self);
 }
 
 #pragma clang diagnostic pop

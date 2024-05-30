@@ -15,14 +15,34 @@
 
 class Interpreter : public ExprVisitor, public StmtVisitor {
   std::optional<eval_value_t> evaluation = std::nullopt;
-  eval_value_t evaluate(const Expr* expr);
-  eval_value_t evaluate_var(const Expr* expr);
+
+  template <typename VisitType>
+  eval_value_t evaluate(const VisitType* visited);
+
+  template <typename VisitType>
+  eval_value_t evaluate_var(const VisitType* visited);
+
+  template <typename VisitType>
+  void evaluate_return(const VisitType* visited);
+
   void set_evaluation(eval_value_t value);
   eval_value_t get_evaluation();
 
   static bool boolify(const eval_value_t& value);
   std::vector<std::unique_ptr<Scope>> scopes;
+  std::vector<std::unique_ptr<CallContext>> call_contexts;
 
+  bool return_flag = false;  // przy odwiedzaniu definicji funkcji ustawiamy return_flag na False i akceptujemy statementy aż do return_flaga
+  // ustawiamy na true w return statement i ustawiamy tam evaluation na wartość lub std::nullopt jak void
+
+  void call_func(FunctionObject* func);
+  void define_variable(const std::string& name, const eval_value_t &variable);
+  void define_type(const std::string& name, const types_t &type);
+  void define_function(const std::string& name, const function_t &function);
+  [[nodiscard]] std::optional<eval_value_t> get_variable(const std::string& name) const;
+  [[nodiscard]] std::optional<types_t> get_type(const std::string& name) const;
+  [[nodiscard]] std::optional<function_t> get_function(const std::string& name) const;
+  [[nodiscard]] bool match_type(const eval_value_t& actual, const VarType& expected, bool check_self = true) const;
  public:
   Interpreter() { scopes.push_back(std::make_unique<Scope>()); };
   void visit(const Program& stmt) override;

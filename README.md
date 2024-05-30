@@ -206,8 +206,8 @@ while_stmt	=	"while" "(" expression ")" statement ;
 return_stmt	=	"return" [ expression ] ";" ;
 print_stmt	=	"print" expression ";" ;
 
-inspect_stmt    =       "inspect" expression "{" { lambda_func } [ "default" "=>" statement ] "}" ;
-lambda_func     =       type identifier "=>" statement
+inspect_stmt    =       "inspect" expression "{" { lambda_func } [ "default" "=>" block_stmt ] "}" ;
+lambda_func     =       type identifier "=>" block_stmt ;
 
 block_stmt	=	"{" { statement } "}" ;
 
@@ -231,7 +231,7 @@ mut_var_decl    =	"mut" type identifier var_decl ;
 void_func_decl	=	"void" identifier func_decl ;
 
 var_decl        =       "=" expression ";" ;
-func_decl	=	"(" [ func_params ] ")" block ;
+func_decl	=	"(" [ func_params ] ")" block_stmt ;
 func_params     =	type identifier { "," type identifier } ;
 
 expression	=	logic_or ;

@@ -72,35 +72,17 @@ bool Scope::match_type(const eval_value_t& actual, const VarType& expected, bool
   return check(actual);
 }
 
-void Scope::define(const std::string& name, eval_value_t variable) {
+void Scope::define_variable(const std::string& name, eval_value_t variable) {
   variables.insert({name, std::move(variable)});
 }
 
-void Scope::assign(const std::string& name, eval_value_t new_value) {
-  auto entry = variables.find(name);
-  if (entry != variables.end()) {
-    auto& item = entry->second;
-    if (const auto &variable = std::get_if<std::shared_ptr<Variable>>(&item)) {
-      (*variable)->value = std::move(new_value);
-    }
-    return;
-  }
-
-  if (enclosing != nullptr) {
-    enclosing->assign(name, std::move(new_value));
-    return;
-  }
-
-  throw RuntimeError(name + " not found in scope");
-}
-
-std::optional<eval_value_t> Scope::get(const std::string& name) const {
+std::optional<eval_value_t> Scope::get_variable(const std::string& name) const {
   auto item = variables.find(name);
   if (item != variables.end()) {
     return item->second;
   }
   if (enclosing != nullptr) {
-    return enclosing->get(name);
+    return enclosing->get_variable(name);
   }
   return std::nullopt;
 }
@@ -116,6 +98,21 @@ std::optional<types_t> Scope::get_type(const std::string &name) const {
   return std::nullopt;
 }
 
+std::optional<function_t> Scope::get_function(const std::string &name) const {
+  auto item = functions.find(name);
+  if (item != functions.end()) {
+    return item->second;
+  }
+  if (enclosing != nullptr) {
+    return enclosing->get_function(name);
+  }
+  return std::nullopt;
+}
+
 void Scope::define_type(const std::string &name, types_t type) {
   types.insert({name, std::move(type)});
+}
+
+void Scope::define_function(const std::string &name, function_t function) {
+  functions.insert({name, std::move(function)});
 }

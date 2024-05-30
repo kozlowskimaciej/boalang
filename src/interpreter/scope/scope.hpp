@@ -12,8 +12,11 @@
 #include <variant>
 #include <vector>
 
+#include "stmt/stmt.hpp"
 #include "utils/errors.hpp"
 #include "token/token.hpp"
+
+static constexpr unsigned int MAX_RECURSION_DEPTH = 50;
 
 // forward declarations
 struct Variable;
@@ -24,7 +27,7 @@ struct FunctionObject;
 class Scope;
 
 using eval_value_t = std::variant<value_t, std::shared_ptr<StructObject>, std::shared_ptr<VariantObject>, std::shared_ptr<Variable>, std::shared_ptr<InitalizerList>>;  // , FunctionObject
-using var_t = std::variant<std::shared_ptr<Variable>, std::shared_ptr<StructObject>, std::shared_ptr<VariantObject>>;
+using function_t = std::shared_ptr<FunctionObject>;
 
 struct Variable {
   VarType type;
@@ -62,10 +65,6 @@ struct VariantObject {
       type_def(type_def), mut(mut), name(std::move(name)), contained(std::move(contained)) {};
 };
 
-struct FunctionObject {
-
-};
-
 struct InitalizerList {
   std::vector<eval_value_t> values;
 
@@ -74,21 +73,32 @@ struct InitalizerList {
 
 using types_t = std::variant<std::shared_ptr<StructType>, std::shared_ptr<VariantType>>;
 
+struct FunctionObject {
+  std::string identifier;
+  VarType return_type;
+  std::vector<eval_value_t> params;
+  BlockStmt* body;
+
+  FunctionObject(const std::string& identifier, VarType return_type, std::vector<eval_value_t> params, BlockStmt* body) :
+      identifier(std::move(identifier)), return_type(return_type), params(std::move(params)), body(body) {};
+};
+
 class Scope {
   std::map<std::string, eval_value_t> variables{};
   std::map<std::string, types_t> types{};
-  std::map<std::string, std::shared_ptr<FunctionObject>> functions{};
+  std::map<std::string, function_t> functions{};
   Scope* enclosing;
 
  public:
   Scope() : enclosing(nullptr) {};
   Scope(Scope* enclosing) : enclosing(enclosing) {};
 
-  void define(const std::string& name, eval_value_t variable);
+  void define_variable(const std::string& name, eval_value_t variable);
   void define_type(const std::string& name, types_t type);
-  void assign(const std::string& name, eval_value_t new_value);
-  [[nodiscard]] std::optional<eval_value_t> get(const std::string& name) const;
+  void define_function(const std::string& name, function_t function);
+  [[nodiscard]] std::optional<eval_value_t> get_variable(const std::string& name) const;
   [[nodiscard]] std::optional<types_t> get_type(const std::string& name) const;
+  [[nodiscard]] std::optional<function_t> get_function(const std::string& name) const;
   [[nodiscard]] bool match_type(const eval_value_t& actual, const VarType& expected, bool check_self = true) const;
   [[nodiscard]] static bool type_in_variant(const std::vector<VarType>& variant_types, BuiltinType type);
   [[nodiscard]] bool identifier_in_variant(const std::vector<VarType>& variant_types, const std::string& identifier) const;
@@ -101,6 +111,18 @@ struct StructObject {
 
   StructObject(StructType* type_def, std::string name, Scope scope) :
       type_def(type_def), name(std::move(name)), scope(std::move(scope)) {};
+};
+
+class CallContext {
+ public:
+  static unsigned int nested;
+
+  function_t function;
+  std::vector<std::unique_ptr<Scope>> scopes;
+//  std::vector<eval_value_t> args{}; to powinno iść do scope
+  // przy ustawianiu zmiennych sprawdzamy czy jest call_context i ustawiamy w nim zmienną a a jak nie ma call_context lub w call_context to sprawdzamy scope interpretera
+
+  CallContext(function_t function) : function(std::move(function)) {scopes.push_back(std::make_unique<Scope>());};
 };
 
 #endif  // BOALANG_SCOPE_HPP

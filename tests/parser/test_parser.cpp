@@ -620,9 +620,9 @@ TEST(ParserTest, block_stmt) {
 TEST(ParserTest, inspect_stmt) {
   StringSource source(
       "inspect variant_obj {"
-      "int val => print val;"
-      "float val => print val;"
-      "default => print \"default\";"
+      "int val => { print val; }"
+      "float val => { print val; }"
+      "default => { print \"default\"; }"
       "}");
   Lexer lexer(source);
   Parser parser(lexer);
@@ -643,16 +643,16 @@ TEST(ParserTest, inspect_stmt) {
   EXPECT_EQ(lambda_stmt->type.type, INT);
 
   EXPECT_EQ(lambda_stmt->identifier, "val");
-  EXPECT_TRUE(dynamic_cast<PrintStmt*>(lambda_stmt->body.get()) != nullptr);
+  EXPECT_TRUE(dynamic_cast<BlockStmt*>(lambda_stmt->body.get()) != nullptr);
 
   lambda_stmt = dynamic_cast<LambdaFuncStmt*>(inspect_stmt->lambdas[1].get());
   EXPECT_TRUE(lambda_stmt != nullptr);
   EXPECT_EQ(lambda_stmt->type.type, FLOAT);
 
   EXPECT_EQ(lambda_stmt->identifier, "val");
-  EXPECT_TRUE(dynamic_cast<PrintStmt*>(lambda_stmt->body.get()) != nullptr);
+  EXPECT_TRUE(dynamic_cast<BlockStmt*>(lambda_stmt->body.get()) != nullptr);
 
-  EXPECT_TRUE(dynamic_cast<PrintStmt*>(inspect_stmt->default_lambda.get()) !=
+  EXPECT_TRUE(dynamic_cast<BlockStmt*>(inspect_stmt->default_lambda.get()) !=
               nullptr);
 }
 
