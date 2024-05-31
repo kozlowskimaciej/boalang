@@ -569,12 +569,19 @@ void Interpreter::make_call(const std::string &identifier, const Position &posit
   bind_args_to_params(func.get(), args, position);
   call_func(func.get());
 
-  if (!evaluation && func->return_type.type != VOID) {
-    throw RuntimeError(position, "Non-void function did not return a value");
+  if (func->return_type.type == VOID) {
+    if (evaluation) {
+      throw RuntimeError(position, "Void function returned a value");
+    }
+  } else {
+    if (!evaluation) {
+      throw RuntimeError(position, "Non-void function did not return a value");
+    }
+    if (!match_type(*evaluation, func->return_type)) {
+      throw RuntimeError(position, "Function returned value with different type than declared");
+    }
   }
-  if (!match_type(*evaluation, func->return_type)) {
-    throw RuntimeError(position, "Function returned value with different type than declared");
-  }
+  
   pop_call_context();
 }
 
