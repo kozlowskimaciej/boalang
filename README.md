@@ -290,21 +290,21 @@ variant V { int, float, S };
 mut V varnt_obj = st_obj;
 
 if ( varnt_obj is S ) {
-    print varnt_obj.a;
+    print (varnt_obj as S).a;
 }
 
 inspect varnt_obj {
-    int val => print val;
-    float val => print val;
-    S val => print val.a;
-    default => print "default";
+    int val => {print val;}
+    float val => {print val;}
+    S val => {print val.a;}
+    default => {print "default";}
 }
 
 /*
     PRINT & WHILE
 */
 mut int a = 1;
-while (a < 5) {
+while (a <= 5) {
     print a;  // 1 2 3 4 5
     a = a + 1;    
 }
@@ -315,7 +315,7 @@ while (a < 5) {
 a = 1;
 mut bool b = false;
 b = a as bool;  // true
-b = not a;  // false
+b = !a;  // false
 b = a or false;  // true
 b = a and false; // false
 
@@ -330,38 +330,29 @@ b = a <= c;  // false
 variant Numeric { int, float };
 
 Numeric fib(Numeric n) {
-    if (n is int) {
-        int val = n as int;
-        if (val <= 1) {
-            return n;
-        }
-        return fib((n - 1) as Numeric) + fib((n - 2) as Numeric);
-    } else {
-        float val = n as float;
-        if (val <= 1.0) {
-            return n;
-        }
-        return fib((n - 1.0) as Numeric) + fib((n - 2.0) as Numeric);
-    }
-}
-
-Numeric fib2(Numeric n) {
     inspect n {
         int val => {
             if (val <= 1) {
                 return n;
             }
-            return fib((val - 1) as Numeric) + fib((val - 2) as Numeric);
+            Numeric n1 = val - 1;
+            Numeric n2 = val - 2;
+            Numeric result = fib(n1) as int + fib(n2) as int;
+            return result;
         }
         float val => {
             if (val <= 1.0) {
                 return n;
             }
-            return fib((val - 1) as Numeric) + fib((val - 2) as Numeric);
+            Numeric n1 = val - 1.0;
+            Numeric n2 = val - 2.0;
+            Numeric result = fib(n1) as float + fib(n2) as float;
+            return result;
         }
     }
 }
 
-int fibval = fib2(3 as Numeric) as int;
+Numeric val = 3;
+int fibval = fib(val) as int;
 print fibval;
 ```

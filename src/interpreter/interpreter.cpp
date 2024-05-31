@@ -97,32 +97,14 @@ void Interpreter::visit(const IfStmt &stmt) {
 }
 
 void Interpreter::visit(const BlockStmt &stmt) {
-  std::unique_ptr<Scope> new_scope;
-  if (!call_contexts.empty()) {
-    new_scope = std::make_unique<Scope>(call_contexts.back()->scopes.back().get());
-    call_contexts.back()->scopes.push_back(std::move(new_scope));
-  } else {
-    new_scope = std::make_unique<Scope>(scopes.back().get());
-    scopes.push_back(std::move(new_scope));
-  }
-  std::exception_ptr eptr = nullptr;
-  try {
-    for (const auto& s : stmt.statements) {
-      if (return_flag) {
-        return_flag = false;
-        break;
-      }
-      s->accept(*this);
+  create_new_scope();
+  for (const auto& s : stmt.statements) {
+    s->accept(*this);
+    if (return_flag) {
+      break;
     }
-  } catch(...) {
-    eptr = std::current_exception();
   }
-  if (!call_contexts.empty()) {
-    call_contexts.back()->scopes.pop_back();
-  } else {
-    scopes.pop_back();
-  }
-  if (eptr) { std::rethrow_exception(eptr); }
+  pop_last_scope();
 }
 
 void Interpreter::visit(const WhileStmt &stmt) {
@@ -270,27 +252,12 @@ void Interpreter::visit(const AssignStmt &stmt) {
 }
 
 void Interpreter::visit(const CallStmt &stmt) {
-  auto& args = stmt.arguments;
+  const auto& args = stmt.arguments;
   make_call(stmt.identifier, stmt.position, args);
 }
 
 void Interpreter::visit(const FuncParamStmt &stmt) {
-//  if (auto type = get_type(stmt.type.name)) {
-//    std::visit(overloaded{
-//        [&](const std::shared_ptr<StructType>& arg) {
-//          auto struct_obj = std::make_shared<StructObject>(arg.get(), stmt.identifier, Scope());
-//          set_evaluation(struct_obj);
-//        },
-//        [&](const std::shared_ptr<VariantType>& arg) {
-//          auto variant_obj = std::make_shared<VariantObject>(arg.get(), true, stmt.identifier, std::monostate());
-//          set_evaluation(variant_obj);
-//        },
-//        [&stmt](auto) { throw RuntimeError(stmt.position, "Unknown type"); },
-//    }, *type);
-//  } else {
-//    auto var = std::make_shared<Variable>(stmt.type, stmt.identifier, true);
-//    set_evaluation(var);
-//  }
+
 }
 
 void Interpreter::visit(const FuncStmt &stmt) {
@@ -317,7 +284,41 @@ void Interpreter::visit(const LambdaFuncStmt &stmt) {
 }
 
 void Interpreter::visit(const InspectStmt &stmt) {
-
+  auto inspected = evaluate_var(stmt.inspected.get());
+  if (const auto& variant_obj = std::get_if<std::shared_ptr<VariantObject>>(&inspected)) {
+    create_new_scope();
+    for (const auto& lambda : stmt.lambdas) {
+      const auto& contained = (*variant_obj)->contained;
+      if (match_type(contained, lambda->type)) {
+        if (auto type = get_type(lambda->type.name)) {
+          std::visit(overloaded{
+              [&](const std::shared_ptr<StructType>& arg) {
+                const auto& struct_arg = std::get<std::shared_ptr<StructObject>>(contained);
+                define_variable(lambda->identifier, std::make_shared<StructObject>(arg.get(), true, lambda->identifier, struct_arg->scope));
+              },
+              [&](const std::shared_ptr<VariantType>& arg) {
+                const auto& variant_arg = std::get<std::shared_ptr<VariantObject>>(contained);
+                define_variable(lambda->identifier, std::make_shared<VariantObject>(arg.get(), true, lambda->identifier, variant_arg->contained));
+              },
+              [&](auto) { throw RuntimeError(lambda->position, "Unknown type"); },
+          }, *type);
+        } else {
+          auto var = std::make_shared<Variable>(lambda->type, lambda->identifier, true, contained);
+          define_variable(lambda->identifier, var);
+        }
+        lambda->body->accept(*this);
+        pop_last_scope();
+        return;
+      }
+    }
+    if (!stmt.default_lambda) {
+      throw RuntimeError("Inspect did not match any types and default not present");
+    }
+    stmt.default_lambda->accept(*this);
+    pop_last_scope();
+  } else {
+    throw RuntimeError("Cannot inspect non-variant objects");
+  }
 }
 
 void Interpreter::visit(const AdditionExpr &expr) {
@@ -503,6 +504,26 @@ void Interpreter::visit(const FieldAccessExpr &expr) {
   throw RuntimeError(expr.position, "Cannot access field of a non-struct variable");
 }
 
+Scope *Interpreter::create_new_scope() {
+  std::unique_ptr<Scope> new_scope;
+  if (!call_contexts.empty()) {
+    new_scope = std::make_unique<Scope>(call_contexts.back()->scopes.back().get());
+    call_contexts.back()->scopes.push_back(std::move(new_scope));
+    return call_contexts.back()->scopes.back().get();
+  }
+  new_scope = std::make_unique<Scope>(scopes.back().get());
+  scopes.push_back(std::move(new_scope));
+  return scopes.back().get();
+}
+
+void Interpreter::pop_last_scope() {
+  if (!call_contexts.empty()) {
+    call_contexts.back()->scopes.pop_back();
+  } else {
+    scopes.pop_back();
+  }
+}
+
 void Interpreter::call_func(FunctionObject *func) {
   return_flag = false;
   for (const auto& stmt : func->body->statements) {
@@ -511,17 +532,19 @@ void Interpreter::call_func(FunctionObject *func) {
       break;
     }
   }
+  return_flag = false;
 }
 
 std::vector<eval_value_t> Interpreter::get_call_args_values(const std::vector<std::unique_ptr<Expr>> &arguments) {
   std::vector<eval_value_t> args{};
+  args.reserve(arguments.size());
   for (const auto& arg : arguments) {
     args.push_back(evaluate_var(arg.get()));
   }
   return args;
 }
 
-void Interpreter::create_call_context(std::shared_ptr<FunctionObject> func, const Position &position) {
+void Interpreter::create_call_context(const std::shared_ptr<FunctionObject>& func, const Position &position) {
   ++CallContext::nested;
   if (CallContext::nested > MAX_RECURSION_DEPTH) {
     throw RuntimeError(position, "Maximum recursion depth exceeded [" + std::to_string(MAX_RECURSION_DEPTH) + "]");
@@ -550,7 +573,8 @@ void Interpreter::bind_args_to_params(const FunctionObject *func, const std::vec
             define_variable(param.first, struct_obj);
           },
           [&](const std::shared_ptr<VariantType>& arg) {
-            auto variant_obj = std::make_shared<VariantObject>(arg.get(), true, param.first, args.at(i));
+            const auto& variant_arg = std::get<std::shared_ptr<VariantObject>>(args.at(i));
+            auto variant_obj = std::make_shared<VariantObject>(arg.get(), true, param.first, variant_arg->contained);
             define_variable(param.first, variant_obj);
           },
           [&](auto) { throw RuntimeError(position, "Unknown type"); },
