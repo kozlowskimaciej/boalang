@@ -34,6 +34,9 @@ class Interpreter : public ExprVisitor, public StmtVisitor {
 
   void call_func(FunctionObject* func);
   std::vector<eval_value_t> get_call_args_values(const std::vector<std::unique_ptr<Expr>>& arguments);
+  void create_call_context(std::shared_ptr<FunctionObject> func, const Position& position);
+  void pop_call_context();
+  void bind_args_to_params(const FunctionObject* func, const std::vector<eval_value_t>& args, const Position& position);
   void make_call(const std::string& identifier, const Position& position, const std::vector<std::unique_ptr<Expr>>& arguments);
   void define_variable(const std::string& name, const eval_value_t &variable);
   void define_type(const std::string& name, const types_t &type);

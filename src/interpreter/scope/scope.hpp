@@ -120,8 +120,6 @@ class CallContext {
 
   function_t function;
   std::vector<std::unique_ptr<Scope>> scopes;
-//  std::vector<eval_value_t> args{}; to powinno iść do scope
-  // przy ustawianiu zmiennych sprawdzamy czy jest call_context i ustawiamy w nim zmienną a a jak nie ma call_context lub w call_context to sprawdzamy scope interpretera
 
   CallContext(function_t function) : function(std::move(function)) {scopes.push_back(std::make_unique<Scope>());};
 };

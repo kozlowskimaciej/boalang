@@ -644,20 +644,7 @@ std::vector<eval_value_t> Interpreter::get_call_args_values(const std::vector<st
   return args;
 }
 
-void Interpreter::make_call(const std::string &identifier, const Position &position, const std::vector<std::unique_ptr<Expr>>& arguments) {
-  auto opt_func = get_function(identifier);
-  if (!opt_func) {
-    throw RuntimeError(position, "Function '" + identifier + "' not defined");
-  }
-
-  auto func = *opt_func;
-
-  auto args = get_call_args_values(arguments);
-  if (args.size() != func->params.size()) {
-    throw RuntimeError(position, "Invalid number of arguments in '" + identifier + "' call");
-  }
-
-  // move creating callcontexts to separate methods
+void Interpreter::create_call_context(std::shared_ptr<FunctionObject> func, const Position &position) {
   ++CallContext::nested;
   if (CallContext::nested > MAX_RECURSION_DEPTH) {
     throw RuntimeError(position, "Maximum recursion depth exceeded [" + std::to_string(MAX_RECURSION_DEPTH) + "]");
@@ -665,11 +652,18 @@ void Interpreter::make_call(const std::string &identifier, const Position &posit
 
   auto call_context = std::make_unique<CallContext>(func);
   call_contexts.push_back(std::move(call_context));
+}
 
+void Interpreter::pop_call_context() {
+  call_contexts.pop_back();
+  --CallContext::nested;
+}
+
+void Interpreter::bind_args_to_params(const FunctionObject *func, const std::vector<eval_value_t>& args, const Position& position) {
   for (size_t i = 0; i < args.size(); ++i) {
     const auto& param = func->params.at(i);
     if (!match_type(args.at(i), param.second)) {
-      throw RuntimeError(position, "Type mismatch in call arguments for '" + identifier + "'");
+      throw RuntimeError(position, "Type mismatch in call arguments for '" + func->identifier + "'");
     }
     if (auto type = get_type(param.second.name)) {
       std::visit(overloaded{
@@ -689,15 +683,32 @@ void Interpreter::make_call(const std::string &identifier, const Position &posit
       define_variable(param.first, var);
     }
   }
+}
+
+void Interpreter::make_call(const std::string &identifier, const Position &position, const std::vector<std::unique_ptr<Expr>>& arguments) {
+  auto opt_func = get_function(identifier);
+  if (!opt_func) {
+    throw RuntimeError(position, "Function '" + identifier + "' not defined");
+  }
+
+  auto func = *opt_func;
+
+  auto args = get_call_args_values(arguments);
+  if (args.size() != func->params.size()) {
+    throw RuntimeError(position, "Invalid number of arguments in '" + identifier + "' call");
+  }
+
+  create_call_context(func, position);
+  bind_args_to_params(func.get(), args, position);
   call_func(func.get());
+
   if (!evaluation && func->return_type.type != VOID) {
     throw RuntimeError(position, "Non-void function did not return a value");
   }
   if (!match_type(*evaluation, func->return_type)) {
     throw RuntimeError(position, "Function returned value with different type than declared");
   }
-  call_contexts.pop_back();
-  --CallContext::nested;
+  pop_call_context();
 }
 
 void Interpreter::define_variable(const std::string &name, const eval_value_t &variable) {
