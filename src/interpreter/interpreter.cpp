@@ -311,176 +311,43 @@ void Interpreter::visit(const InspectStmt &stmt) {
 }
 
 void Interpreter::visit(const AdditionExpr &expr) {
-  auto leftValue = evaluate_var(expr.left.get());
-  auto rightValue = evaluate_var(expr.right.get());
-
-  std::visit(overloaded{
-    [this, &expr](const value_t& lhs, const value_t& rhs) {
-      std::visit(overloaded{
-        [this](int lhs, int rhs) { set_evaluation(lhs + rhs); },
-        [this](float lhs, float rhs) { set_evaluation(lhs + rhs); },
-        [this](const std::string& lhs, const std::string& rhs) { set_evaluation(lhs + rhs); },
-        [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot add different types"); }
-      }, lhs, rhs);
-    },
-    [&expr](auto, auto) { throw RuntimeError(expr.position, "Unsupported types for addition"); },
-  }, leftValue, rightValue);
+  perform_arithmetic_operation(expr.left.get(), expr.right.get(), std::plus<>(), expr.position);
 }
 
 void Interpreter::visit(const SubtractionExpr &expr) {
-  auto leftValue = evaluate_var(expr.left.get());
-  auto rightValue = evaluate_var(expr.right.get());
-
-  std::visit(overloaded{
-    [this, &expr](const value_t& lhs, const value_t& rhs) {
-      std::visit(overloaded{
-          [this](int lhs, int rhs) { set_evaluation(lhs - rhs); },
-          [this](float lhs, float rhs) { set_evaluation(lhs - rhs); },
-          [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot substract different types"); }
-      }, lhs, rhs);
-    },
-    [&expr](auto, auto) { throw RuntimeError(expr.position, "Unsupported types for subtraction"); },
-  }, leftValue, rightValue);
+  perform_arithmetic_operation(expr.left.get(), expr.right.get(), std::minus<>(), expr.position);
 }
 
 void Interpreter::visit(const DivisionExpr &expr) {
-  auto leftValue = evaluate_var(expr.left.get());
-  auto rightValue = evaluate_var(expr.right.get());
-
-  std::visit(overloaded{
-      [this, &expr](const value_t& lhs, const value_t& rhs) {
-        std::visit(overloaded{
-            [this](int lhs, int rhs) { set_evaluation(lhs / rhs); },
-            [this](float lhs, float rhs) { set_evaluation(lhs / rhs); },
-            [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot divide different types"); }
-        }, lhs, rhs);
-      },
-      [&expr](auto, auto) { throw RuntimeError(expr.position, "Unsupported types for division"); },
-  }, leftValue, rightValue);
+  perform_arithmetic_operation(expr.left.get(), expr.right.get(), std::divides<>(), expr.position);
 }
 
 void Interpreter::visit(const MultiplicationExpr &expr) {
-  auto leftValue = evaluate_var(expr.left.get());
-  auto rightValue = evaluate_var(expr.right.get());
-
-  std::visit(overloaded{
-      [this, &expr](const value_t& lhs, const value_t& rhs) {
-        std::visit(overloaded{
-            [this](int lhs, int rhs) { set_evaluation(lhs * rhs); },
-            [this](float lhs, float rhs) { set_evaluation(lhs * rhs); },
-            [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot multiply different types"); }
-        }, lhs, rhs);
-      },
-      [&expr](auto, auto) { throw RuntimeError(expr.position, "Unsupported types for multiplication"); },
-  }, leftValue, rightValue);
+  perform_arithmetic_operation(expr.left.get(), expr.right.get(), std::multiplies<>(), expr.position);
 }
 
 void Interpreter::visit(const EqualCompExpr &expr) {
-  auto leftValue = evaluate_var(expr.left.get());
-  auto rightValue = evaluate_var(expr.right.get());
-
-  std::visit(overloaded{
-      [this](const value_t& lhs, const value_t& rhs) {
-        std::visit(overloaded{
-            [this](int lhs, int rhs) { set_evaluation(lhs == rhs); },
-            [this](float lhs, float rhs) { set_evaluation(lhs == rhs); },
-            [this](bool lhs, bool rhs) { set_evaluation(lhs == rhs); },
-            [this](const std::string& lhs, const std::string& rhs) { set_evaluation(lhs == rhs); },
-            [this](auto, auto) { set_evaluation(false); },
-        }, lhs, rhs);
-      },
-      [&expr](auto, auto) { throw RuntimeError(expr.position, "Unsupported types for comparison"); },
-  }, leftValue, rightValue);
+  perform_comparison_operation(expr.left.get(), expr.right.get(), std::equal_to<>(), expr.position);
 }
 
 void Interpreter::visit(const NotEqualCompExpr &expr) {
-  auto leftValue = evaluate_var(expr.left.get());
-  auto rightValue = evaluate_var(expr.right.get());
-
-  std::visit(overloaded{
-      [this](const value_t& lhs, const value_t& rhs) {
-        std::visit(overloaded{
-            [this](int lhs, int rhs) { set_evaluation(lhs != rhs); },
-            [this](float lhs, float rhs) { set_evaluation(lhs != rhs); },
-            [this](bool lhs, bool rhs) { set_evaluation(lhs != rhs); },
-            [this](const std::string& lhs, const std::string& rhs) { set_evaluation(lhs != rhs); },
-            [this](auto, auto) { set_evaluation(true); },
-        }, lhs, rhs);
-      },
-      [&expr](auto, auto) { throw RuntimeError(expr.position, "Unsupported types for comparison"); },
-  }, leftValue, rightValue);
+  perform_comparison_operation(expr.left.get(), expr.right.get(), std::not_equal_to<>(), expr.position);
 }
 
 void Interpreter::visit(const GreaterCompExpr &expr) {
-  auto leftValue = evaluate_var(expr.left.get());
-  auto rightValue = evaluate_var(expr.right.get());
-
-  std::visit(overloaded{
-      [&expr, this](const value_t& lhs, const value_t& rhs) {
-        std::visit(overloaded{
-            [this](int lhs, int rhs) { set_evaluation(lhs > rhs); },
-            [this](float lhs, float rhs) { set_evaluation(lhs > rhs); },
-            [this](bool lhs, bool rhs) { set_evaluation(lhs > rhs); },
-            [this](const std::string& lhs, const std::string& rhs) { set_evaluation(lhs > rhs); },
-            [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot compare different types"); },
-        }, lhs, rhs);
-      },
-      [&expr](auto, auto) { throw RuntimeError(expr.position, "Unsupported types for comparison"); },
-  }, leftValue, rightValue);
+  perform_comparison_operation(expr.left.get(), expr.right.get(), std::greater<>(), expr.position);
 }
 
 void Interpreter::visit(const GreaterEqualCompExpr &expr) {
-  auto leftValue = evaluate_var(expr.left.get());
-  auto rightValue = evaluate_var(expr.right.get());
-
-  std::visit(overloaded{
-      [&expr, this](const value_t& lhs, const value_t& rhs) {
-        std::visit(overloaded{
-            [this](int lhs, int rhs) { set_evaluation(lhs >= rhs); },
-            [this](float lhs, float rhs) { set_evaluation(lhs >= rhs); },
-            [this](bool lhs, bool rhs) { set_evaluation(lhs >= rhs); },
-            [this](const std::string& lhs, const std::string& rhs) { set_evaluation(lhs >= rhs); },
-            [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot compare different types"); },
-        }, lhs, rhs);
-      },
-      [&expr](auto, auto) { throw RuntimeError(expr.position, "Unsupported types for comparison"); },
-  }, leftValue, rightValue);
+  perform_comparison_operation(expr.left.get(), expr.right.get(), std::greater_equal<>(), expr.position);
 }
 
 void Interpreter::visit(const LessCompExpr &expr) {
-  auto leftValue = evaluate_var(expr.left.get());
-  auto rightValue = evaluate_var(expr.right.get());
-
-  std::visit(overloaded{
-      [&expr, this](const value_t& lhs, const value_t& rhs) {
-        std::visit(overloaded{
-            [this](int lhs, int rhs) { set_evaluation(lhs < rhs); },
-            [this](float lhs, float rhs) { set_evaluation(lhs < rhs); },
-            [this](bool lhs, bool rhs) { set_evaluation(lhs < rhs); },
-            [this](const std::string& lhs, const std::string& rhs) { set_evaluation(lhs < rhs); },
-            [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot compare different types"); },
-        }, lhs, rhs);
-      },
-      [&expr](auto, auto) { throw RuntimeError(expr.position, "Unsupported types for comparison"); },
-  }, leftValue, rightValue);
+  perform_comparison_operation(expr.left.get(), expr.right.get(), std::less<>(), expr.position);
 }
 
 void Interpreter::visit(const LessEqualCompExpr &expr) {
-  auto leftValue = evaluate_var(expr.left.get());
-  auto rightValue = evaluate_var(expr.right.get());
-
-  std::visit(overloaded{
-      [&expr, this](const value_t& lhs, const value_t& rhs) {
-        std::visit(overloaded{
-            [this](int lhs, int rhs) { set_evaluation(lhs <= rhs); },
-            [this](float lhs, float rhs) { set_evaluation(lhs <= rhs); },
-            [this](bool lhs, bool rhs) { set_evaluation(lhs <= rhs); },
-            [this](const std::string& lhs, const std::string& rhs) { set_evaluation(lhs <= rhs); },
-            [&expr](auto, auto) { throw RuntimeError(expr.position, "Cannot compare different types"); },
-        }, lhs, rhs);
-      },
-      [&expr](auto, auto) { throw RuntimeError(expr.position, "Unsupported types for comparison"); },
-  }, leftValue, rightValue);
+  perform_comparison_operation(expr.left.get(), expr.right.get(), std::less_equal<>(), expr.position);
 }
 
 void Interpreter::visit(const GroupingExpr &expr) {
@@ -769,6 +636,42 @@ bool Interpreter::match_type(const eval_value_t &actual, const VarType &expected
     }
   }
   return scopes.back()->match_type(actual, expected, check_self);
+}
+
+template<typename Operation>
+void Interpreter::perform_arithmetic_operation(Expr* left, Expr* right, Operation op, const Position& position) {
+  auto leftValue = evaluate_var(left);
+  auto rightValue = evaluate_var(right);
+
+  std::visit(overloaded{
+      [&](const value_t& lhs, const value_t& rhs) {
+        std::visit(overloaded{
+            [&](int lhs, int rhs) { set_evaluation(op(lhs, rhs)); },
+            [&](float lhs, float rhs) { set_evaluation(op(lhs, rhs)); },
+            [&](auto, auto) { throw RuntimeError(position, "Operation cannot be applied to different types"); }
+        }, lhs, rhs);
+      },
+      [&](auto, auto) { throw RuntimeError(position, "Unsupported types for operation"); },
+  }, leftValue, rightValue);
+}
+
+template<typename Operation>
+void Interpreter::perform_comparison_operation(Expr* left, Expr* right, Operation op, const Position& position) {
+  auto leftValue = evaluate_var(left);
+  auto rightValue = evaluate_var(right);
+
+  std::visit(overloaded{
+      [&](const value_t& lhs, const value_t& rhs) {
+        std::visit(overloaded{
+            [&](int lhs, int rhs) { set_evaluation(op(lhs, rhs)); },
+            [&](float lhs, float rhs) { set_evaluation(op(lhs, rhs)); },
+            [&](bool lhs, bool rhs) { set_evaluation(op(lhs, rhs)); },
+            [&](const std::string& lhs, const std::string& rhs) { set_evaluation(op(lhs, rhs)); },
+            [&](auto, auto) { throw RuntimeError(position, "Cannot compare different types"); },
+        }, lhs, rhs);
+      },
+      [&](auto, auto) { throw RuntimeError(position, "Unsupported types for comparison"); },
+  }, leftValue, rightValue);
 }
 
 #pragma clang diagnostic pop

@@ -45,6 +45,12 @@ class Interpreter : public ExprVisitor, public StmtVisitor {
   [[nodiscard]] std::optional<types_t> get_type(const std::string& name) const;
   [[nodiscard]] std::optional<function_t> get_function(const std::string& name) const;
   [[nodiscard]] bool match_type(const eval_value_t& actual, const VarType& expected, bool check_self = true) const;
+
+  template<typename Operation>
+  void perform_arithmetic_operation(Expr* left, Expr* right, Operation op, const Position& position);
+
+  template<typename Operation>
+  void perform_comparison_operation(Expr* left, Expr* right, Operation op, const Position& position);
  public:
   Interpreter() { scopes.push_back(std::make_unique<Scope>()); };
   void visit(const Program& stmt) override;
