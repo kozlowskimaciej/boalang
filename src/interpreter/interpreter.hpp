@@ -29,8 +29,7 @@ class Interpreter : public ExprVisitor, public StmtVisitor {
   std::vector<std::unique_ptr<Scope>> scopes;
   std::vector<std::unique_ptr<CallContext>> call_contexts;
 
-  bool return_flag = false;  // przy odwiedzaniu definicji funkcji ustawiamy return_flag na False i akceptujemy statementy aż do return_flaga
-  // ustawiamy na true w return statement i ustawiamy tam evaluation na wartość lub std::nullopt jak void
+  bool return_flag = false;
 
   void call_func(FunctionObject* func);
   std::vector<eval_value_t> get_call_args_values(const std::vector<std::unique_ptr<Expr>>& arguments);

@@ -107,11 +107,12 @@ class Scope {
 
 struct StructObject {
   StructType* type_def;
+  bool mut;
   std::string name;
   Scope scope;
 
-  StructObject(StructType* type_def, std::string name, Scope scope) :
-      type_def(type_def), name(std::move(name)), scope(std::move(scope)) {};
+  StructObject(StructType* type_def, bool mut, std::string name, Scope scope) :
+      type_def(type_def), mut(mut), name(std::move(name)), scope(std::move(scope)) {};
 };
 
 class CallContext {

@@ -165,7 +165,7 @@ void Interpreter::visit(const VarDeclStmt &stmt) {
                     },
                     [&](const std::shared_ptr<StructType>& arg) {
                       auto struct_obj = std::get<std::shared_ptr<StructObject>>(init_item);
-                      struct_scope.define_variable(field->name, std::make_shared<StructObject>(arg.get(), field->name, struct_obj->scope));
+                      struct_scope.define_variable(field->name, std::make_shared<StructObject>(arg.get(), field->mut, field->name, struct_obj->scope));
                     },
                     [&](const auto& arg) {
                       throw RuntimeError(stmt.position, "Unsupported type in struct declaration");
@@ -175,7 +175,7 @@ void Interpreter::visit(const VarDeclStmt &stmt) {
                 struct_scope.define_variable(field->name, std::make_shared<Variable>(field->type, field->name, field->mut, init_item));
               }
             }
-            auto obj = std::make_shared<StructObject>(arg.get(), stmt.identifier, std::move(struct_scope));
+            auto obj = std::make_shared<StructObject>(arg.get(), stmt.mut, stmt.identifier, std::move(struct_scope));
             define_variable(stmt.identifier, obj);
           } else {
             throw RuntimeError(stmt.position, "Expected initalizer list for '" + stmt.identifier + "'");
@@ -254,6 +254,15 @@ void Interpreter::visit(const AssignStmt &stmt) {
             throw RuntimeError("Tried assigning value with different type to '" + arg->name + "'");
         }
         arg->contained = std::move(value);
+      },
+      [this, &value](const std::shared_ptr<StructObject>& arg) {
+        if (!arg->mut) {
+          throw RuntimeError("Tried assigning value to a const '" + arg->name + "'");
+        }
+        if (!match_type(value, VarType(arg->type_def->type_name, IDENTIFIER))){
+          throw RuntimeError("Tried assigning value with different type to '" + arg->name + "'");
+        }
+        arg->scope = std::get<std::shared_ptr<StructObject>>(value)->scope;
       },
       [](auto) { throw RuntimeError("Invalid assignment"); },
   }, var);
@@ -536,7 +545,7 @@ void Interpreter::bind_args_to_params(const FunctionObject *func, const std::vec
       std::visit(overloaded{
           [&](const std::shared_ptr<StructType>& arg) {
             const auto& struct_arg = std::get<std::shared_ptr<StructObject>>(args.at(i));
-            auto struct_obj = std::make_shared<StructObject>(arg.get(), param.first, struct_arg->scope);
+            auto struct_obj = std::make_shared<StructObject>(arg.get(), true, param.first, struct_arg->scope);
             define_variable(param.first, struct_obj);
           },
           [&](const std::shared_ptr<VariantType>& arg) {
