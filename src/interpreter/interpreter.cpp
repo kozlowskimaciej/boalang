@@ -155,6 +155,7 @@ void Interpreter::visit(const VarDeclStmt &stmt) {
             const auto& init_fields = arg->init_fields;
             for (auto field = init_fields.rbegin(); field != init_fields.rend(); ++field) {
               auto init_item = init_list->get()->values.back();
+              init_list->get()->values.pop_back();
               if (!match_type(init_item, field->type)) {
                 throw RuntimeError(stmt.position, "Type mismatch in initalizer list for '" + stmt.identifier + "." + field->name + "'");
               }
