@@ -33,7 +33,8 @@ class Interpreter : public ExprVisitor, public StmtVisitor {
   // ustawiamy na true w return statement i ustawiamy tam evaluation na wartość lub std::nullopt jak void
 
   void call_func(FunctionObject* func);
-  void make_call(const std::string& identifier, const Position& position);
+  std::vector<eval_value_t> get_call_args_values(const std::vector<std::unique_ptr<Expr>>& arguments);
+  void make_call(const std::string& identifier, const Position& position, const std::vector<std::unique_ptr<Expr>>& arguments);
   void define_variable(const std::string& name, const eval_value_t &variable);
   void define_type(const std::string& name, const types_t &type);
   void define_function(const std::string& name, const function_t &function);

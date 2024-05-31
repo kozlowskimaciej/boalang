@@ -260,33 +260,34 @@ void Interpreter::visit(const AssignStmt &stmt) {
 }
 
 void Interpreter::visit(const CallStmt &stmt) {
-  make_call(stmt.identifier, stmt.position);
+  auto& args = stmt.arguments;
+  make_call(stmt.identifier, stmt.position, args);
 }
 
 void Interpreter::visit(const FuncParamStmt &stmt) {
-  if (auto type = get_type(stmt.type.name)) {
-    std::visit(overloaded{
-        [&](const std::shared_ptr<StructType>& arg) {
-          auto struct_obj = std::make_shared<StructObject>(arg.get(), stmt.identifier, Scope());
-          set_evaluation(struct_obj);
-        },
-        [&](const std::shared_ptr<VariantType>& arg) {
-          auto variant_obj = std::make_shared<VariantObject>(arg.get(), true, stmt.identifier, std::monostate());
-          set_evaluation(variant_obj);
-        },
-        [&stmt](auto) { throw RuntimeError(stmt.position, "Unknown type"); },
-    }, *type);
-  } else {
-    auto var = std::make_shared<Variable>(stmt.type, stmt.identifier, true);
-    set_evaluation(var);
-  }
+//  if (auto type = get_type(stmt.type.name)) {
+//    std::visit(overloaded{
+//        [&](const std::shared_ptr<StructType>& arg) {
+//          auto struct_obj = std::make_shared<StructObject>(arg.get(), stmt.identifier, Scope());
+//          set_evaluation(struct_obj);
+//        },
+//        [&](const std::shared_ptr<VariantType>& arg) {
+//          auto variant_obj = std::make_shared<VariantObject>(arg.get(), true, stmt.identifier, std::monostate());
+//          set_evaluation(variant_obj);
+//        },
+//        [&stmt](auto) { throw RuntimeError(stmt.position, "Unknown type"); },
+//    }, *type);
+//  } else {
+//    auto var = std::make_shared<Variable>(stmt.type, stmt.identifier, true);
+//    set_evaluation(var);
+//  }
 }
 
 void Interpreter::visit(const FuncStmt &stmt) {
   auto* body = dynamic_cast<BlockStmt*>(stmt.body.get());
-  std::vector<eval_value_t> params {};
+  std::vector<std::pair<std::string, VarType>> params {};
   for (const auto& param : stmt.params) {
-    params.push_back(evaluate(param.get()));
+    params.emplace_back(param->identifier, param->type);
   }
   auto func = std::make_shared<FunctionObject>(stmt.identifier, stmt.return_type, params, body);
   define_function(stmt.identifier, func);
@@ -610,7 +611,7 @@ void Interpreter::visit(const InitalizerListExpr &expr) {
 }
 
 void Interpreter::visit(const CallExpr &expr) {
-  make_call(expr.identifier, expr.position);
+  make_call(expr.identifier, expr.position, expr.arguments);
 }
 
 void Interpreter::visit(const FieldAccessExpr &expr) {
@@ -635,7 +636,15 @@ void Interpreter::call_func(FunctionObject *func) {
   }
 }
 
-void Interpreter::make_call(const std::string &identifier, const Position &position) {
+std::vector<eval_value_t> Interpreter::get_call_args_values(const std::vector<std::unique_ptr<Expr>> &arguments) {
+  std::vector<eval_value_t> args{};
+  for (const auto& arg : arguments) {
+    args.push_back(evaluate_var(arg.get()));
+  }
+  return args;
+}
+
+void Interpreter::make_call(const std::string &identifier, const Position &position, const std::vector<std::unique_ptr<Expr>>& arguments) {
   auto opt_func = get_function(identifier);
   if (!opt_func) {
     throw RuntimeError(position, "Function '" + identifier + "' not defined");
@@ -643,12 +652,43 @@ void Interpreter::make_call(const std::string &identifier, const Position &posit
 
   auto func = *opt_func;
 
+  auto args = get_call_args_values(arguments);
+  if (args.size() != func->params.size()) {
+    throw RuntimeError(position, "Invalid number of arguments in '" + identifier + "' call");
+  }
+
   // move creating callcontexts to separate methods
   ++CallContext::nested;
   if (CallContext::nested > MAX_RECURSION_DEPTH) {
     throw RuntimeError(position, "Maximum recursion depth exceeded [" + std::to_string(MAX_RECURSION_DEPTH) + "]");
   }
-  call_contexts.push_back(std::make_unique<CallContext>(func));
+
+  auto call_context = std::make_unique<CallContext>(func);
+  call_contexts.push_back(std::move(call_context));
+
+  for (size_t i = 0; i < args.size(); ++i) {
+    const auto& param = func->params.at(i);
+    if (!match_type(args.at(i), param.second)) {
+      throw RuntimeError(position, "Type mismatch in call arguments for '" + identifier + "'");
+    }
+    if (auto type = get_type(param.second.name)) {
+      std::visit(overloaded{
+          [&](const std::shared_ptr<StructType>& arg) {
+            const auto& struct_arg = std::get<std::shared_ptr<StructObject>>(args.at(i));
+            auto struct_obj = std::make_shared<StructObject>(arg.get(), param.first, struct_arg->scope);
+            define_variable(param.first, struct_obj);
+          },
+          [&](const std::shared_ptr<VariantType>& arg) {
+            auto variant_obj = std::make_shared<VariantObject>(arg.get(), true, param.first, args.at(i));
+            define_variable(param.first, variant_obj);
+          },
+          [&](auto) { throw RuntimeError(position, "Unknown type"); },
+      }, *type);
+    } else {
+      auto var = std::make_shared<Variable>(param.second.type, param.first, true, args.at(i));
+      define_variable(param.first, var);
+    }
+  }
   call_func(func.get());
   if (!evaluation && func->return_type.type != VOID) {
     throw RuntimeError(position, "Non-void function did not return a value");

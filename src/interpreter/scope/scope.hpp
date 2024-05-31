@@ -6,6 +6,7 @@
 #define BOALANG_SCOPE_HPP
 
 #include <string>
+#include <utility>
 #include <map>
 #include <memory>
 #include <optional>
@@ -76,10 +77,10 @@ using types_t = std::variant<std::shared_ptr<StructType>, std::shared_ptr<Varian
 struct FunctionObject {
   std::string identifier;
   VarType return_type;
-  std::vector<eval_value_t> params;
+  std::vector<std::pair<std::string, VarType>> params;
   BlockStmt* body;
 
-  FunctionObject(std::string identifier, VarType return_type, std::vector<eval_value_t> params, BlockStmt* body) :
+  FunctionObject(std::string identifier, VarType return_type, std::vector<std::pair<std::string, VarType>> params, BlockStmt* body) :
       identifier(std::move(identifier)), return_type(std::move(return_type)), params(std::move(params)), body(body) {};
 };
 
