@@ -332,8 +332,8 @@ variant Numeric { int, float };
 Numeric fib(Numeric n) {
     inspect n {
         int val => {
-            if (val <= 1) {
-                return n;
+            if (val == 1 or val == 2) {
+                return 1;
             }
             Numeric n1 = val - 1;
             Numeric n2 = val - 2;
@@ -341,8 +341,8 @@ Numeric fib(Numeric n) {
             return result;
         }
         float val => {
-            if (val <= 1.0) {
-                return n;
+            if (val == 1.0 or val == 2.0) {
+                return 1.0;
             }
             Numeric n1 = val - 1.0;
             Numeric n2 = val - 2.0;
