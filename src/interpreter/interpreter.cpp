@@ -141,8 +141,11 @@ void Interpreter::visit(const VarDeclStmt &stmt) {
               if (const auto& type = get_type(field->type.name)) {
                 std::visit(overloaded{
                     [&](const std::shared_ptr<VariantType>& arg) {
-                      auto variant_obj = std::get<std::shared_ptr<VariantObject>>(init_item);
-                      struct_scope.define_variable(field->name, std::make_shared<VariantObject>(arg.get(), field->mut, field->name, variant_obj->contained));
+                      eval_value_t value = init_item;
+                      if (auto* variant_obj = std::get_if<std::shared_ptr<VariantObject>>(&init_item)) {
+                        value = (*variant_obj)->contained;
+                      }
+                      struct_scope.define_variable(field->name, std::make_shared<VariantObject>(arg.get(), field->mut, field->name, value));
                     },
                     [&](const std::shared_ptr<StructType>& arg) {
                       auto struct_obj = std::get<std::shared_ptr<StructObject>>(init_item);
@@ -678,6 +681,13 @@ void Interpreter::perform_arithmetic_operation(Expr* left, Expr* right, Operatio
         std::visit(overloaded{
             [&](int lhs, int rhs) { set_evaluation(op(lhs, rhs)); },
             [&](float lhs, float rhs) { set_evaluation(op(lhs, rhs)); },
+            [&](const std::string& lhs, const std::string& rhs) {
+              if constexpr (std::is_same_v<Operation, std::plus<>>) {
+                set_evaluation(lhs + rhs);
+              } else {
+                throw RuntimeError(position, "Unsupported operation for strings");
+              }
+            },
             [&](auto, auto) { throw RuntimeError(position, "Operation cannot be applied to different types"); }
         }, lhs, rhs);
       },
