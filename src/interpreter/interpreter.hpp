@@ -9,8 +9,8 @@
 #include <vector>
 
 #include "expr/expr.hpp"
-#include "stmt/stmt.hpp"
 #include "interpreter/scope/scope.hpp"
+#include "stmt/stmt.hpp"
 #include "utils/errors.hpp"
 
 class Interpreter : public ExprVisitor, public StmtVisitor {
@@ -34,26 +34,38 @@ class Interpreter : public ExprVisitor, public StmtVisitor {
   void pop_last_scope();
 
   void call_func(FunctionObject* func);
-  std::vector<eval_value_t> get_call_args_values(const std::vector<std::unique_ptr<Expr>>& arguments);
-  void create_call_context(const std::shared_ptr<FunctionObject>& func, const Position& position);
+  std::vector<eval_value_t> get_call_args_values(
+      const std::vector<std::unique_ptr<Expr>>& arguments);
+  void create_call_context(const std::shared_ptr<FunctionObject>& func,
+                           const Position& position);
   void pop_call_context();
-  void bind_args_to_params(const FunctionObject* func, const std::vector<eval_value_t>& args, const Position& position);
-  void make_call(const std::string& identifier, const Position& position, const std::vector<std::unique_ptr<Expr>>& arguments);
+  void bind_args_to_params(const FunctionObject* func,
+                           const std::vector<eval_value_t>& args,
+                           const Position& position);
+  void make_call(const std::string& identifier, const Position& position,
+                 const std::vector<std::unique_ptr<Expr>>& arguments);
 
-  void define_variable(const std::string& name, const eval_value_t &variable);
-  void define_type(const std::string& name, const types_t &type);
-  void define_function(const std::string& name, const function_t &function);
-  [[nodiscard]] std::optional<eval_value_t> get_variable(const std::string& name) const;
+  void define_variable(const std::string& name, const eval_value_t& variable);
+  void define_type(const std::string& name, const types_t& type);
+  void define_function(const std::string& name, const function_t& function);
+  [[nodiscard]] std::optional<eval_value_t> get_variable(
+      const std::string& name) const;
   [[nodiscard]] std::optional<types_t> get_type(const std::string& name) const;
-  [[nodiscard]] std::optional<function_t> get_function(const std::string& name) const;
+  [[nodiscard]] std::optional<function_t> get_function(
+      const std::string& name) const;
 
-  [[nodiscard]] bool match_type(const eval_value_t& actual, const VarType& expected, bool check_self = true) const;
+  [[nodiscard]] bool match_type(const eval_value_t& actual,
+                                const VarType& expected,
+                                bool check_self = true) const;
 
-  template<typename Operation>
-  void perform_arithmetic_operation(Expr* left, Expr* right, Operation op, const Position& position);
+  template <typename Operation>
+  void perform_arithmetic_operation(Expr* left, Expr* right, Operation op,
+                                    const Position& position);
 
-  template<typename Operation>
-  void perform_comparison_operation(Expr* left, Expr* right, Operation op, const Position& position);
+  template <typename Operation>
+  void perform_comparison_operation(Expr* left, Expr* right, Operation op,
+                                    const Position& position);
+
  public:
   Interpreter() { scopes.push_back(std::make_unique<Scope>()); };
   void visit(const Program& stmt) override;

@@ -85,9 +85,9 @@ enum TokenType {
  * Holds type, value and position in source.
  */
 class Token {
-  TokenType type;      /**< Token's type. */
-  value_t value; /**< Stored value. */
-  Position position;   /**< Position in source. */
+  TokenType type;    /**< Token's type. */
+  value_t value;     /**< Stored value. */
+  Position position; /**< Position in source. */
 
  public:
   /**

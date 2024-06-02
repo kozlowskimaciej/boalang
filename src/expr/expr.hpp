@@ -257,7 +257,8 @@ class CallExpr : public ExprType<CallExpr> {
   explicit CallExpr(std::string identifier, Position position,
                     std::vector<std::unique_ptr<Expr>> arguments = {})
       : identifier(std::move(identifier)),
-        position(position), arguments(std::move(arguments)){};
+        position(position),
+        arguments(std::move(arguments)){};
 };
 
 class FieldAccessExpr : public ExprType<FieldAccessExpr> {

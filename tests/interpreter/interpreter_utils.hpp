@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 
 #include "../utils.hpp"
+#include "interpreter/interpreter.hpp"
 #include "lexer/lexer.hpp"
 #include "parser/parser.hpp"
-#include "interpreter/interpreter.hpp"
 
 inline static std::unique_ptr<Program> get_ast(const std::string &code) {
   StringSource source(code);

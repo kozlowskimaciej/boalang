@@ -13,8 +13,9 @@ struct VarType {
   std::string name;
   BuiltinType type;
 
-  VarType(BuiltinType type) : type(type) {};
-  VarType(std::string name, BuiltinType type) : name(std::move(name)), type(type) {};
+  VarType(BuiltinType type) : type(type){};
+  VarType(std::string name, BuiltinType type)
+      : name(std::move(name)), type(type){};
 };
 
 /**
