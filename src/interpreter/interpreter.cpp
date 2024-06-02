@@ -7,9 +7,6 @@
 
 #include "utils/position.hpp"
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-parameter"
-
 template <class... Ts>
 struct overloaded : Ts... {
   using Ts::operator()...;
@@ -144,13 +141,14 @@ void Interpreter::visit(const VarDeclStmt &stmt) {
               if (const auto& type = get_type(field->type.name)) {
                 std::visit(overloaded{
                     [&](const std::shared_ptr<VariantType>& arg) {
-                      struct_scope.define_variable(field->name, std::make_shared<VariantObject>(arg.get(), field->mut, field->name, init_item));
+                      auto variant_obj = std::get<std::shared_ptr<VariantObject>>(init_item);
+                      struct_scope.define_variable(field->name, std::make_shared<VariantObject>(arg.get(), field->mut, field->name, variant_obj->contained));
                     },
                     [&](const std::shared_ptr<StructType>& arg) {
                       auto struct_obj = std::get<std::shared_ptr<StructObject>>(init_item);
                       struct_scope.define_variable(field->name, std::make_shared<StructObject>(arg.get(), field->mut, field->name, struct_obj->scope));
                     },
-                    [&](const auto& arg) {
+                    [&](const auto&) {
                       throw RuntimeError(stmt.position, "Unsupported type in struct declaration");
                     },
                 }, *type);
@@ -182,9 +180,7 @@ void Interpreter::visit(const VarDeclStmt &stmt) {
   }
 }
 
-void Interpreter::visit(const StructFieldStmt &stmt) {
-
-}
+void Interpreter::visit(const StructFieldStmt &) {}
 
 void Interpreter::visit(const StructDeclStmt &stmt) {
   if (const auto& var = get_type(stmt.identifier)) {
@@ -256,9 +252,7 @@ void Interpreter::visit(const CallStmt &stmt) {
   make_call(stmt.identifier, stmt.position, args);
 }
 
-void Interpreter::visit(const FuncParamStmt &stmt) {
-
-}
+void Interpreter::visit(const FuncParamStmt &) {}
 
 void Interpreter::visit(const FuncStmt &stmt) {
   auto* body = dynamic_cast<BlockStmt*>(stmt.body.get());
@@ -279,9 +273,7 @@ void Interpreter::visit(const ReturnStmt &stmt) {
   return_flag = true;
 }
 
-void Interpreter::visit(const LambdaFuncStmt &stmt) {
-
-}
+void Interpreter::visit(const LambdaFuncStmt &) {}
 
 void Interpreter::visit(const InspectStmt &stmt) {
   auto inspected = evaluate_var(stmt.inspected.get());
@@ -468,7 +460,6 @@ void Interpreter::visit(const AsTypeExpr &expr) {
             },
         }, v);
       },
-//      [&type](const std::shared_ptr<StructObject>& arg) { return arg->type_name == type.name; },
       [&](const std::shared_ptr<VariantObject>& arg) {
         if (match_type(arg->contained, type, false)) {
           set_evaluation(arg->contained);
@@ -712,5 +703,3 @@ void Interpreter::perform_comparison_operation(Expr* left, Expr* right, Operatio
       [&](auto, auto) { throw RuntimeError(position, "Unsupported types for comparison"); },
   }, leftValue, rightValue);
 }
-
-#pragma clang diagnostic pop

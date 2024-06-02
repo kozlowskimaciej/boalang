@@ -15,6 +15,11 @@
 
 class Interpreter : public ExprVisitor, public StmtVisitor {
   std::optional<eval_value_t> evaluation = std::nullopt;
+  std::vector<std::unique_ptr<Scope>> scopes;
+  std::vector<std::unique_ptr<CallContext>> call_contexts;
+  bool return_flag = false;
+
+  static bool boolify(const eval_value_t& value);
 
   template <typename VisitType>
   eval_value_t evaluate(const VisitType* visited);
@@ -25,12 +30,6 @@ class Interpreter : public ExprVisitor, public StmtVisitor {
   void set_evaluation(eval_value_t value);
   eval_value_t get_evaluation();
 
-  static bool boolify(const eval_value_t& value);
-  std::vector<std::unique_ptr<Scope>> scopes;
-  std::vector<std::unique_ptr<CallContext>> call_contexts;
-
-  bool return_flag = false;
-
   Scope* create_new_scope();
   void pop_last_scope();
 
@@ -40,12 +39,14 @@ class Interpreter : public ExprVisitor, public StmtVisitor {
   void pop_call_context();
   void bind_args_to_params(const FunctionObject* func, const std::vector<eval_value_t>& args, const Position& position);
   void make_call(const std::string& identifier, const Position& position, const std::vector<std::unique_ptr<Expr>>& arguments);
+
   void define_variable(const std::string& name, const eval_value_t &variable);
   void define_type(const std::string& name, const types_t &type);
   void define_function(const std::string& name, const function_t &function);
   [[nodiscard]] std::optional<eval_value_t> get_variable(const std::string& name) const;
   [[nodiscard]] std::optional<types_t> get_type(const std::string& name) const;
   [[nodiscard]] std::optional<function_t> get_function(const std::string& name) const;
+
   [[nodiscard]] bool match_type(const eval_value_t& actual, const VarType& expected, bool check_self = true) const;
 
   template<typename Operation>

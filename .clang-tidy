@@ -10,6 +10,7 @@ Checks: '
   -readability-identifier-length,
   -readability-avoid-const-params-in-decls,
   -readability-implicit-bool-conversion,
+  -readability-named-parameter,
   -cppcoreguidelines-avoid-c-arrays,
   -modernize-avoid-c-arrays,
   -bugprone-exception-escape,
