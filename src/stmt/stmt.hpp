@@ -31,6 +31,13 @@ class StmtVisitor {
  public:
   virtual ~StmtVisitor() = default;
 
+  StmtVisitor() = default;
+  StmtVisitor(const StmtVisitor&) = delete;
+  StmtVisitor& operator=(const StmtVisitor&) = delete;
+
+  StmtVisitor(StmtVisitor&&) = default;
+  StmtVisitor& operator=(StmtVisitor&&) = default;
+
   virtual void visit(const Program& stmt) = 0;
   virtual void visit(const PrintStmt& stmt) = 0;
   virtual void visit(const IfStmt& stmt) = 0;
@@ -53,6 +60,13 @@ class Stmt {
  public:
   virtual ~Stmt() = default;
   virtual void accept(StmtVisitor& stmt_visitor) const = 0;
+
+  Stmt() = default;
+  Stmt(const Stmt&) = delete;
+  Stmt& operator=(const Stmt&) = delete;
+
+  Stmt(Stmt&&) = default;
+  Stmt& operator=(Stmt&&) = default;
 };
 
 template <typename Derived>

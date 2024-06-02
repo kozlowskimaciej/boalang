@@ -545,8 +545,7 @@ std::vector<eval_value_t> Interpreter::get_call_args_values(const std::vector<st
 }
 
 void Interpreter::create_call_context(const std::shared_ptr<FunctionObject>& func, const Position &position) {
-  ++CallContext::nested;
-  if (CallContext::nested > MAX_RECURSION_DEPTH) {
+  if (call_contexts.size() > MAX_RECURSION_DEPTH) {
     throw RuntimeError(position, "Maximum recursion depth exceeded [" + std::to_string(MAX_RECURSION_DEPTH) + "]");
   }
 
@@ -556,7 +555,6 @@ void Interpreter::create_call_context(const std::shared_ptr<FunctionObject>& fun
 
 void Interpreter::pop_call_context() {
   call_contexts.pop_back();
-  --CallContext::nested;
 }
 
 void Interpreter::bind_args_to_params(const FunctionObject *func, const std::vector<eval_value_t>& args, const Position& position) {

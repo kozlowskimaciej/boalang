@@ -27,7 +27,7 @@ struct InitalizerList;
 struct FunctionObject;
 class Scope;
 
-using eval_value_t = std::variant<value_t, std::shared_ptr<StructObject>, std::shared_ptr<VariantObject>, std::shared_ptr<Variable>, std::shared_ptr<InitalizerList>>;  // , FunctionObject
+using eval_value_t = std::variant<value_t, std::shared_ptr<StructObject>, std::shared_ptr<VariantObject>, std::shared_ptr<Variable>, std::shared_ptr<InitalizerList>>;
 using function_t = std::shared_ptr<FunctionObject>;
 
 struct Variable {
@@ -117,8 +117,6 @@ struct StructObject {
 
 class CallContext {
  public:
-  static unsigned int nested;
-
   function_t function;
   std::vector<std::unique_ptr<Scope>> scopes;
 

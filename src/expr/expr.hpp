@@ -38,6 +38,13 @@ class ExprVisitor {
  public:
   virtual ~ExprVisitor() = default;
 
+  ExprVisitor() = default;
+  ExprVisitor(const ExprVisitor&) = delete;
+  ExprVisitor& operator=(const ExprVisitor&) = delete;
+
+  ExprVisitor(ExprVisitor&&) = default;
+  ExprVisitor& operator=(ExprVisitor&&) = default;
+
   virtual void visit(const AdditionExpr& expr) = 0;
   virtual void visit(const SubtractionExpr& expr) = 0;
   virtual void visit(const DivisionExpr& expr) = 0;
@@ -66,6 +73,13 @@ class Expr {
  public:
   virtual ~Expr() = default;
   virtual void accept(ExprVisitor& visitor) const = 0;
+
+  Expr() = default;
+  Expr(const Expr&) = delete;
+  Expr& operator=(const Expr&) = delete;
+
+  Expr(Expr&&) = default;
+  Expr& operator=(Expr&&) = default;
 };
 
 template <typename Derived>
