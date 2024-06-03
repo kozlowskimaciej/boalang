@@ -147,15 +147,13 @@ Przykład:
 
 **Błędy interpretera**
 
-`RuntimeError: Line {number} column {number} at '{lexeme}': {message}`
+`RuntimeError: Line {number} column {number}: {message}`
 
 Przykład:
 
-`RuntimeError: Line 25 column 15 at 'obj': Cannot cast type B to float.`
+`RuntimeError: Line 4 column 8: Non-void function did not return a value`
 
-`RuntimeError: Line 25 column 15 at '"10"': Cannot assign value of type str to variable 'b' of type int.`
-
-`RuntimeError: Line 25 column 15 at 'a': Variable undefined.`
+`RuntimeError: Line 4 column 7: Type mismatch in initalizer list for 'a.number'`
 
 ### Inne założenia
 
