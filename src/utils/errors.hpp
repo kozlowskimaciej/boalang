@@ -1,5 +1,5 @@
 /*! @file errors.hpp
-    @brief Interpreter related errors.
+    @brief Errors.
 */
 
 #ifndef BOALANG_ERRORS_HPP
@@ -8,8 +8,8 @@
 #include <stdexcept>
 #include <string>
 
-#include "utils/position.hpp"
 #include "token/token.hpp"
+#include "utils/position.hpp"
 
 /**
  * @brief Represents a lexer related error.
@@ -20,13 +20,12 @@ class LexerError : public std::runtime_error {
  public:
   LexerError(const Token& token, const std::string& message)
       : runtime_error("Line " + std::to_string(token.get_position().line) +
-      " column " + std::to_string(token.get_position().column) +
-      " at '" + token.stringify() + "': " + message),
+                      " column " + std::to_string(token.get_position().column) +
+                      " at '" + token.stringify() + "': " + message),
         token_(token){};
 
   [[nodiscard]] const Token& get_token() const { return token_; }
 };
-
 
 /**
  * @brief Represents a parser related error.

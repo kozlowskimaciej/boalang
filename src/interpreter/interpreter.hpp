@@ -13,19 +13,34 @@
 #include "stmt/stmt.hpp"
 #include "utils/errors.hpp"
 
+/**
+ * @brief Interprets statements and expressions.
+ */
 class Interpreter : public ExprVisitor, public StmtVisitor {
-  std::optional<eval_value_t> evaluation = std::nullopt;
-  std::vector<std::unique_ptr<Scope>> scopes;
-  std::vector<std::unique_ptr<CallContext>> call_contexts;
-  bool return_flag = false;
+  std::optional<eval_value_t> evaluation =
+      std::nullopt;                           /**< Evaluated value. */
+  std::vector<std::unique_ptr<Scope>> scopes; /**< Vector of existing scopes. */
+  std::vector<std::unique_ptr<CallContext>>
+      call_contexts;        /**< Vector of existing call contexts. */
+  bool return_flag = false; /**< Is currently returning from a function. */
 
-  static bool boolify(const eval_value_t& value);
+  static bool boolify(
+      const eval_value_t& value); /**< Boolifies eval_value_t. */
 
   template <typename VisitType>
-  eval_value_t evaluate(const VisitType* visited);
+  typename std::enable_if<std::is_same<VisitType, Stmt>::value ||
+                              std::is_same<VisitType, Expr>::value,
+                          eval_value_t>::type
+  evaluate(
+      const VisitType* visited); /**< Evaluates statements and expressions. */
 
   template <typename VisitType>
-  eval_value_t evaluate_var(const VisitType* visited);
+  typename std::enable_if<std::is_same<VisitType, Stmt>::value ||
+                              std::is_same<VisitType, Expr>::value,
+                          eval_value_t>::type
+  evaluate_var(
+      const VisitType* visited); /**< Evaluates statements and expressions, and
+                                    extracts value from Variable. */
 
   void set_evaluation(eval_value_t value);
   eval_value_t get_evaluation();
@@ -35,15 +50,17 @@ class Interpreter : public ExprVisitor, public StmtVisitor {
 
   void call_func(FunctionObject* func);
   std::vector<eval_value_t> get_call_args_values(
-      const std::vector<std::unique_ptr<Expr>>& arguments);
+      const std::vector<std::unique_ptr<Expr>>&
+          arguments); /**< Evaluates call args. */
   void create_call_context(const std::shared_ptr<FunctionObject>& func,
                            const Position& position);
   void pop_call_context();
-  void bind_args_to_params(const FunctionObject* func,
-                           const std::vector<eval_value_t>& args,
-                           const Position& position);
+  void bind_args_to_params(
+      const FunctionObject* func, const std::vector<eval_value_t>& args,
+      const Position& position); /**< Adds call args to call context. */
   void make_call(const std::string& identifier, const Position& position,
-                 const std::vector<std::unique_ptr<Expr>>& arguments);
+                 const std::vector<std::unique_ptr<Expr>>&
+                     arguments); /** Handles calling functions */
 
   void define_variable(const std::string& name, const eval_value_t& variable);
   void define_type(const std::string& name, const types_t& type);

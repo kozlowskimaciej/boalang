@@ -10,13 +10,14 @@
 #include <type_traits>
 #include <vector>
 
-#include "utils/errors.hpp"
 #include "expr/expr.hpp"
-#include "stmt/stmt.hpp"
 #include "lexer/lexer.hpp"
+#include "stmt/stmt.hpp"
+#include "utils/errors.hpp"
 
 /**
- * @brief Generates abstract syntax tree from tokens with Program statement as root.
+ * @brief Generates abstract syntax tree from tokens with Program statement as
+ * root.
  */
 class Parser {
   ILexer& lexer_;

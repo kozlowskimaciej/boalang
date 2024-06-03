@@ -15,6 +15,7 @@ void parse_args(int& argc, char* argv[], argparse::ArgumentParser& program) {
       .help("program passed in as string")
       .default_value(false)
       .implicit_value(true);
+  program.add_argument("--ast").help("print AST before interpreting").flag();
 
   try {
     program.parse_args(argc, argv);
@@ -39,7 +40,9 @@ int main(int argc, char* argv[]) {
   Lexer lexer(*src);
   LexerCommentFilter filter(lexer);
   Parser parser(filter);
-  //  ASTPrinter().print(parser.parse().get());
+  if (program.is_used("--ast")) {
+    ASTPrinter().print(parser.parse().get());
+  }
   Interpreter().visit(*parser.parse());
 
   return 0;

@@ -34,6 +34,9 @@ class InitalizerListExpr;
 class CallExpr;
 class FieldAccessExpr;
 
+/**
+ * @brief Interface for expressions visitor.
+ */
 class ExprVisitor {
  public:
   virtual ~ExprVisitor() = default;
@@ -69,6 +72,9 @@ class ExprVisitor {
   virtual void visit(const FieldAccessExpr& expr) = 0;
 };
 
+/**
+ * @brief Interface for expressions.
+ */
 class Expr {
  public:
   virtual ~Expr() = default;

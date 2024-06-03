@@ -7,9 +7,9 @@
 
 #include <optional>
 
-#include "utils/errors.hpp"
 #include "source/source.hpp"
 #include "token/token.hpp"
+#include "utils/errors.hpp"
 
 constexpr unsigned int MAX_IDENTIFIER_LENGTH =
     64; /**< Maximum identifier length supported by lexer. */

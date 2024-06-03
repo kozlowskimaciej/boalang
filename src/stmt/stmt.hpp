@@ -27,6 +27,9 @@ class ReturnStmt;
 class LambdaFuncStmt;
 class InspectStmt;
 
+/**
+ * @brief Interface for statements visitor.
+ */
 class StmtVisitor {
  public:
   virtual ~StmtVisitor() = default;
@@ -56,6 +59,9 @@ class StmtVisitor {
   virtual void visit(const InspectStmt& stmt) = 0;
 };
 
+/**
+ * @brief Interface for statements.
+ */
 class Stmt {
  public:
   virtual ~Stmt() = default;

@@ -8,13 +8,19 @@
 #include "utils/position.hpp"
 
 template <typename VisitType>
-eval_value_t Interpreter::evaluate(const VisitType* visited) {
+typename std::enable_if<std::is_same<VisitType, Stmt>::value ||
+                            std::is_same<VisitType, Expr>::value,
+                        eval_value_t>::type
+Interpreter::evaluate(const VisitType* visited) {
   visited->accept(*this);
   return get_evaluation();
 }
 
 template <typename VisitType>
-eval_value_t Interpreter::evaluate_var(const VisitType* visited) {
+typename std::enable_if<std::is_same<VisitType, Stmt>::value ||
+                            std::is_same<VisitType, Expr>::value,
+                        eval_value_t>::type
+Interpreter::evaluate_var(const VisitType* visited) {
   auto var = evaluate(visited);
   while (const auto& v = std::get_if<std::shared_ptr<Variable>>(&var)) {
     var = *(v->get()->value);
