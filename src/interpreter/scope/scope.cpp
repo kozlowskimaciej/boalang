@@ -23,51 +23,8 @@ bool Scope::identifier_in_variant(const std::vector<VarType>& variant_types,
 
 bool Scope::match_type(const eval_value_t& actual, const VarType& expected,
                        bool check_self) const {
-  if (check_self && !expected.name.empty() && expected.type == IDENTIFIER) {
-    if (const auto& type = get_type(expected.name)) {
-      if (const auto& variant =
-              std::get_if<std::shared_ptr<VariantType>>(&*type)) {
-        return std::visit(
-            overloaded{
-                [&](const value_t& value) {
-                  return std::visit(
-                      overloaded{
-                          [&](std::monostate) {
-                            return type_in_variant(variant->get()->types, VOID);
-                          },
-                          [&](const std::string&) {
-                            return type_in_variant(variant->get()->types, STR);
-                          },
-                          [&](int) {
-                            return type_in_variant(variant->get()->types, INT);
-                          },
-                          [&](float) {
-                            return type_in_variant(variant->get()->types,
-                                                   FLOAT);
-                          },
-                          [&](bool) {
-                            return type_in_variant(variant->get()->types, BOOL);
-                          },
-                      },
-                      value);
-                },
-                [&](const std::shared_ptr<Variable>& obj) {
-                  return identifier_in_variant(variant->get()->types,
-                                               obj->type.name);
-                },
-                [&](const std::shared_ptr<StructObject>& obj) {
-                  return identifier_in_variant(variant->get()->types,
-                                               obj->type_def->type_name);
-                },
-                [&](const std::shared_ptr<VariantObject>& obj) {
-                  return identifier_in_variant(variant->get()->types,
-                                               obj->type_def->type_name) ||
-                         obj->type_def->type_name == expected.name;
-                },
-                [](auto) { return false; }},
-            actual);
-      }
-    }
+  if (is_in_variant(actual, expected, check_self)) {
+    return true;
   }
 
   std::function<bool(const eval_value_t&)> check =
@@ -147,4 +104,53 @@ void Scope::define_type(const std::string& name, types_t type) {
 
 void Scope::define_function(const std::string& name, function_t function) {
   functions.insert({name, std::move(function)});
+}
+bool Scope::is_in_variant(const eval_value_t &actual, const VarType &expected, bool check_self) const {
+  if (check_self && !expected.name.empty() && expected.type == IDENTIFIER) {
+    if (const auto& type = get_type(expected.name)) {
+      if (const auto& variant =
+          std::get_if<std::shared_ptr<VariantType>>(&*type)) {
+        return std::visit(
+            overloaded{
+                [&](const value_t& value) {
+                  return std::visit(
+                      overloaded{
+                          [&](std::monostate) {
+                            return type_in_variant(variant->get()->types, VOID);
+                          },
+                          [&](const std::string&) {
+                            return type_in_variant(variant->get()->types, STR);
+                          },
+                          [&](int) {
+                            return type_in_variant(variant->get()->types, INT);
+                          },
+                          [&](float) {
+                            return type_in_variant(variant->get()->types,
+                                                   FLOAT);
+                          },
+                          [&](bool) {
+                            return type_in_variant(variant->get()->types, BOOL);
+                          },
+                      },
+                      value);
+                },
+                [&](const std::shared_ptr<Variable>& obj) {
+                  return identifier_in_variant(variant->get()->types,
+                                               obj->type.name);
+                },
+                [&](const std::shared_ptr<StructObject>& obj) {
+                  return identifier_in_variant(variant->get()->types,
+                                               obj->type_def->type_name);
+                },
+                [&](const std::shared_ptr<VariantObject>& obj) {
+                  return identifier_in_variant(variant->get()->types,
+                                               obj->type_def->type_name) ||
+                      obj->type_def->type_name == expected.name;
+                },
+                [](auto) { return false; }},
+            actual);
+      }
+    }
+  }
+  return false;
 }

@@ -53,6 +53,10 @@ class Scope {
       functions{};  /**< Functions defined in scope. */
   Scope* enclosing; /**< Parent Scope. */
 
+  [[nodiscard]] bool is_in_variant(const eval_value_t& actual,
+                                const VarType& expected,
+                                bool check_self = true) const;
+
  public:
   /**
    * @brief Constructs a new Scope object with no enclosing Scope.

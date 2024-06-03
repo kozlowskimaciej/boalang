@@ -136,77 +136,7 @@ void Interpreter::visit(const VarDeclStmt& stmt) {
     std::visit(
         overloaded{
             [&](const std::shared_ptr<StructType>& arg) {
-              if (const auto& init_list =
-                      std::get_if<std::shared_ptr<InitalizerList>>(
-                          &init_value)) {
-                if (init_list->get()->values.size() !=
-                    arg->init_fields.size()) {
-                  throw RuntimeError(stmt.position,
-                                     "Different number of struct fields and "
-                                     "values in initalizer list for '" +
-                                         stmt.identifier + "'");
-                }
-
-                Scope struct_scope{};
-                const auto& init_fields = arg->init_fields;
-                for (auto field = init_fields.rbegin();
-                     field != init_fields.rend(); ++field) {
-                  auto init_item = init_list->get()->values.back();
-                  init_list->get()->values.pop_back();
-                  if (!match_type(init_item, field->type)) {
-                    throw RuntimeError(
-                        stmt.position,
-                        "Type mismatch in initalizer list for '" +
-                            stmt.identifier + "." + field->name + "'");
-                  }
-                  if (const auto& type = get_type(field->type.name)) {
-                    std::visit(
-                        overloaded{
-                            [&](const std::shared_ptr<VariantType>& arg) {
-                              eval_value_t value = init_item;
-                              if (auto* variant_obj = std::get_if<
-                                      std::shared_ptr<VariantObject>>(
-                                      &init_item)) {
-                                value = (*variant_obj)->contained;
-                              }
-                              struct_scope.define_variable(
-                                  field->name, std::make_shared<VariantObject>(
-                                                   arg.get(), field->mut,
-                                                   field->name, value));
-                            },
-                            [&](const std::shared_ptr<StructType>& arg) {
-                              auto struct_obj =
-                                  std::get<std::shared_ptr<StructObject>>(
-                                      init_item);
-                              struct_scope.define_variable(
-                                  field->name,
-                                  std::make_shared<StructObject>(
-                                      arg.get(), field->mut, field->name,
-                                      struct_obj->scope));
-                            },
-                            [&](const auto&) {
-                              throw RuntimeError(
-                                  stmt.position,
-                                  "Unsupported type in struct declaration");
-                            },
-                        },
-                        *type);
-                  } else {
-                    struct_scope.define_variable(
-                        field->name,
-                        std::make_shared<Variable>(field->type, field->name,
-                                                   field->mut, init_item));
-                  }
-                }
-                auto obj = std::make_shared<StructObject>(
-                    arg.get(), stmt.mut, stmt.identifier,
-                    std::move(struct_scope));
-                define_variable(stmt.identifier, obj);
-              } else {
-                throw RuntimeError(
-                    stmt.position,
-                    "Expected initalizer list for '" + stmt.identifier + "'");
-              }
+              assign_init_list(&stmt, arg, init_value);
             },
             [this, &stmt,
              &init_value](const std::shared_ptr<VariantType>& arg) {
@@ -638,6 +568,80 @@ void Interpreter::pop_last_scope() {
     call_contexts.back()->scopes.pop_back();
   } else {
     scopes.pop_back();
+  }
+}
+
+void Interpreter::assign_init_list(const VarDeclStmt* stmt, const std::shared_ptr<StructType> &type, const eval_value_t& init_value) {
+  if (const auto& init_list =
+      std::get_if<std::shared_ptr<InitalizerList>>(
+          &init_value)) {
+    if (init_list->get()->values.size() !=
+        type->init_fields.size()) {
+      throw RuntimeError(stmt->position,
+                         "Different number of struct fields and "
+                         "values in initalizer list for '" +
+                             stmt->identifier + "'");
+    }
+
+    Scope struct_scope{};
+    const auto& init_fields = type->init_fields;
+    for (auto init_field = init_fields.rbegin();
+         init_field != init_fields.rend(); ++init_field) {
+      auto init_item = init_list->get()->values.back();
+      init_list->get()->values.pop_back();
+      if (!match_type(init_item, init_field->type)) {
+        throw RuntimeError(
+            stmt->position,
+            "Type mismatch in initalizer list for '" +
+                stmt->identifier + "." + init_field->name + "'");
+      }
+      if (const auto& init_field_type = get_type(init_field->type.name)) {
+        std::visit(
+            overloaded{
+                [&](const std::shared_ptr<VariantType>& arg) {
+                  eval_value_t value = init_item;
+                  if (auto* variant_obj = std::get_if<
+                      std::shared_ptr<VariantObject>>(
+                      &init_item)) {
+                    value = (*variant_obj)->contained;
+                  }
+                  struct_scope.define_variable(
+                      init_field->name, std::make_shared<VariantObject>(
+                          arg.get(), init_field->mut,
+                          init_field->name, value));
+                },
+                [&](const std::shared_ptr<StructType>& arg) {
+                  auto struct_obj =
+                      std::get<std::shared_ptr<StructObject>>(
+                          init_item);
+                  struct_scope.define_variable(
+                      init_field->name,
+                      std::make_shared<StructObject>(
+                          arg.get(), init_field->mut, init_field->name,
+                          struct_obj->scope));
+                },
+                [&](const auto&) {
+                  throw RuntimeError(
+                      stmt->position,
+                      "Unsupported type in struct declaration");
+                },
+            },
+            *init_field_type);
+      } else {
+        struct_scope.define_variable(
+            init_field->name,
+            std::make_shared<Variable>(init_field->type, init_field->name,
+                                       init_field->mut, init_item));
+      }
+    }
+    auto obj = std::make_shared<StructObject>(
+        type.get(), stmt->mut, stmt->identifier,
+        std::move(struct_scope));
+    define_variable(stmt->identifier, obj);
+  } else {
+    throw RuntimeError(
+        stmt->position,
+        "Expected initalizer list for '" + stmt->identifier + "'");
   }
 }
 
