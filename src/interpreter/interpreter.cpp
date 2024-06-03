@@ -842,14 +842,15 @@ void Interpreter::perform_arithmetic_operation(Expr* left, Expr* right,
                       }
                     },
                     [&](auto, auto) {
-                      throw RuntimeError(
-                          position,
-                          "Operation cannot be applied to different types");
+                      throw RuntimeError(position,
+                                         "Arithmetic operation cannot be "
+                                         "applied to different types");
                     }},
                 lhs, rhs);
           },
           [&](auto, auto) {
-            throw RuntimeError(position, "Unsupported types for operation");
+            throw RuntimeError(position,
+                               "Unsupported types for arithmetic operation");
           },
       },
       leftValue, rightValue);
@@ -875,13 +876,15 @@ void Interpreter::perform_comparison_operation(Expr* left, Expr* right,
                     },
                     [&](auto, auto) {
                       throw RuntimeError(position,
-                                         "Cannot compare different types");
+                                         "Comparison operation cannot be "
+                                         "applied to different types");
                     },
                 },
                 lhs, rhs);
           },
           [&](auto, auto) {
-            throw RuntimeError(position, "Unsupported types for comparison");
+            throw RuntimeError(position,
+                               "Unsupported types for comparison operation");
           },
       },
       leftValue, rightValue);
