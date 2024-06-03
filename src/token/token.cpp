@@ -1,15 +1,6 @@
 #include "token.hpp"
 
-#include <exception>
 #include <magic_enum/magic_enum.hpp>
-
-template <class... Ts>
-struct overloaded : Ts... {
-  using Ts::operator()...;
-};
-
-template <class... Ts>
-overloaded(Ts...) -> overloaded<Ts...>;
 
 VarType Token::get_var_type() const {
   switch (this->get_type()) {

@@ -3,14 +3,6 @@
 #include <iostream>
 #include <magic_enum/magic_enum.hpp>
 
-template <class... Ts>
-struct overloaded : Ts... {
-  using Ts::operator()...;
-};
-
-template <class... Ts>
-overloaded(Ts...) -> overloaded<Ts...>;
-
 void ASTPrinter::parenthesize(
     std::initializer_list<std::variant<const Expr*, const Stmt*>> exprstmts,
     std::optional<Token> token) {

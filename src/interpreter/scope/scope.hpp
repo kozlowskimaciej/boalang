@@ -16,6 +16,7 @@
 #include "stmt/stmt.hpp"
 #include "token/token.hpp"
 #include "utils/errors.hpp"
+#include "utils/overloaded.tpp"
 
 static constexpr unsigned int MAX_RECURSION_DEPTH = 50;
 

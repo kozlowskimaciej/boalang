@@ -10,10 +10,22 @@
 #include <variant>
 
 #include "utils/position.hpp"
+#include "utils/overloaded.tpp"
 
 using value_t =
     std::variant<std::monostate, std::string, int, float,
                  bool>; /**< Variant of all available value types. */
+
+enum BuiltinType { IDENTIFIER, INT, FLOAT, STR, BOOL, VOID };
+
+struct VarType {
+  std::string name;
+  BuiltinType type;
+
+  VarType(BuiltinType type) : type(type){};
+  VarType(std::string name, BuiltinType type)
+      : name(std::move(name)), type(type){};
+};
 
 /**
  * @brief Represents all available token types.

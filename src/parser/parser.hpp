@@ -1,5 +1,5 @@
 /*! @file parser.hpp
-    @brief Parser.
+    @brief boalang parser.
 */
 
 #ifndef BOALANG_PARSER_HPP
@@ -15,6 +15,9 @@
 #include "stmt/stmt.hpp"
 #include "lexer/lexer.hpp"
 
+/**
+ * @brief Generates abstract syntax tree from tokens with Program statement as root.
+ */
 class Parser {
   ILexer& lexer_;
   Token current_token_;
@@ -79,6 +82,12 @@ class Parser {
  public:
   explicit Parser(ILexer& lexer)
       : lexer_(lexer), current_token_(lexer.next_token()){};
+
+  /**
+   * @brief Parses tokens from \refParser.lexer_ and produces AST.
+   *
+   * @return Unique_ptr to Program statement (root of the AST).
+   */
   std::unique_ptr<Program> parse();
 };
 
