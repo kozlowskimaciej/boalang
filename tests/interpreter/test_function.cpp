@@ -58,3 +58,42 @@ TEST(InterpreterFunctionTests, recursion) {
 
   EXPECT_TRUE(str_contains(capture_interpreted_stdout(code), "55"));
 }
+
+TEST(InterpreterFunctionTests, call_context_redefinitions) {
+  std::string code = R"V0G0N(
+    void func(int n) {
+      variant V{int, float};
+      void nested_func(){}
+      int var = 1;
+      if (n < 5) {
+        n = n + 1;
+        func(n);
+      }
+      return;
+    }
+    func(1);
+  )V0G0N";
+
+  capture_interpreted_stdout(code);
+}
+
+TEST(InterpreterFunctionTests, max_recursion_depth_exceeded) {
+  std::string code = R"V0G0N(
+    void func() {
+      func();
+    }
+    func();
+  )V0G0N";
+
+  EXPECT_THROW(
+      {
+        try {
+          capture_interpreted_stdout(code);
+        } catch (const RuntimeError& e) {
+          EXPECT_TRUE(
+              str_contains(e.what(), "Maximum recursion depth exceeded"));
+          throw;
+        }
+      },
+      RuntimeError);
+}

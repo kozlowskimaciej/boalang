@@ -89,18 +89,25 @@ obj.b = 3;  // BŁĄD, PRÓBA PRZYPISANIA NOWEJ WARTOŚCI DO STAŁEJ
 
 ### Zasady przykrywania zmiennych
 
-Zmienne mogą być przykrywane jedynie w podrzędnych scope'ach.
+Zmienne, funkcje oraz typy nie mogą być przykrywane w podrzędnych scope'ach, jedynie w oddzielnych kontekstach zawołań.
 
 ```
 int a = 5;
 {
-    int a = 10;
-    print a == 10;  // PRAWDA   
+    int a = 10; // BŁĄD, ZMIENNA 'a' JUŻ ISTNIEJE
 }
-print a == 10;  // FAŁSZ
-print a == 5;  // PRAWDA
 
-float a = 1.0; // BŁĄD, ZMIENNA 'a' JUŻ ISTNIEJE
+void func(int n) {
+   variant V{int, float};  // rekursywne tworzenie typu w funkcji
+   void nested_func(){}  // rekursywne tworzenie funkcji w funkcji
+   int var = 1;  // rekursywne tworzenie zmiennej w funkcji
+   if (n < 5) {
+     n = n + 1;
+     func(n);
+   }
+   return;
+}
+func(1);
 ```
 
 ### Funkcje

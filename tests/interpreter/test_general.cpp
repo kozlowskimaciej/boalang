@@ -167,19 +167,22 @@ TEST(InterpreterGeneralTests, else_statement) {
   EXPECT_TRUE(str_contains(stdout, "1"));
 }
 
-TEST(InterpreterGeneralTests, block_scope) {
+TEST(InterpreterGeneralTests, variable_block_redefinition) {
   std::string code = R"V0G0N(
     int a = 5;
-    print "outer was: " + a as str;
     {
         int a = 10;
-        print "inner is: " + a as str;
     }
-    print "outer is: " + a as str;
   )V0G0N";
 
-  auto stdout = capture_interpreted_stdout(code);
-  EXPECT_TRUE(str_contains(stdout, "outer was: 5"));
-  EXPECT_TRUE(str_contains(stdout, "inner is: 10"));
-  EXPECT_TRUE(str_contains(stdout, "outer is: 5"));
+  EXPECT_THROW(
+      {
+        try {
+          capture_interpreted_stdout(code);
+        } catch (const RuntimeError& e) {
+          EXPECT_TRUE(str_contains(e.what(), "Identifier 'a' already defined"));
+          throw;
+        }
+      },
+      RuntimeError);
 }
