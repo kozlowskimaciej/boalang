@@ -19,6 +19,8 @@ Opcjonalnie: `Clang-Format`, `Doxygen Graphviz`
    - generowanie dokumentacji `sudo apt install doxygen graphviz && cd build && make docs`
    - uruchamianie testów `cd build && make test`
 
+`Clang-Tidy` uruchamiane jest automatycznie na plikach źródłowych w trakcie kompilacji.
+
 ## Sposób uruchamiania
 
 ### Windows + WSL / Linux (Ubuntu 22.04)
