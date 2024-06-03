@@ -1,8 +1,7 @@
 #include "interpreter_utils.hpp"
 
 TEST(InterpreterFunctionTests, void_function) {
-  std::string code =
-      R"V0G0N(
+  std::string code = R"V0G0N(
     void func() {
         print "func called";
     }
@@ -13,8 +12,7 @@ TEST(InterpreterFunctionTests, void_function) {
 }
 
 TEST(InterpreterFunctionTests, params) {
-  std::string code =
-      R"V0G0N(
+  std::string code = R"V0G0N(
     void func(int c, str d) {
         print c as str;
         print d;
@@ -30,8 +28,7 @@ TEST(InterpreterFunctionTests, params) {
 }
 
 TEST(InterpreterFunctionTests, mutate_args) {
-  std::string code =
-      R"V0G0N(
+  std::string code = R"V0G0N(
     void func(str a) {
         a = "b";
         print "inner is: " + a;
@@ -49,8 +46,7 @@ TEST(InterpreterFunctionTests, mutate_args) {
 }
 
 TEST(InterpreterFunctionTests, recursion) {
-  std::string code =
-      R"V0G0N(
+  std::string code = R"V0G0N(
     int fib(int n) {
         if (n == 1 or n == 2) {
           return 1;

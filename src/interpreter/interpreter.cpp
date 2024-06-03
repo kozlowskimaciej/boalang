@@ -333,6 +333,10 @@ void Interpreter::visit(const CallStmt& stmt) {
 void Interpreter::visit(const FuncParamStmt&) {}
 
 void Interpreter::visit(const FuncStmt& stmt) {
+  if (const auto& var = get_function(stmt.identifier)) {
+    throw RuntimeError(stmt.position,
+                       "Function '" + stmt.identifier + "' already defined");
+  }
   auto* body = dynamic_cast<BlockStmt*>(stmt.body.get());
   std::vector<std::pair<std::string, VarType>> params{};
   for (const auto& param : stmt.params) {
