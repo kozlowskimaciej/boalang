@@ -5,13 +5,15 @@
 #ifndef BOALANG_PARSER_HPP
 #define BOALANG_PARSER_HPP
 
-#include <expr/expr.hpp>
 #include <functional>
-#include <lexer/lexer.hpp>
 #include <memory>
-#include <stmt/stmt.hpp>
 #include <type_traits>
 #include <vector>
+
+#include "utils/errors.hpp"
+#include "expr/expr.hpp"
+#include "stmt/stmt.hpp"
+#include "lexer/lexer.hpp"
 
 class Parser {
   ILexer& lexer_;
@@ -78,25 +80,6 @@ class Parser {
   explicit Parser(ILexer& lexer)
       : lexer_(lexer), current_token_(lexer.next_token()){};
   std::unique_ptr<Program> parse();
-};
-
-/**
- * @brief Represents a parser related error.
- */
-class SyntaxError : public std::runtime_error {
-  Token token_;
-
- public:
-  SyntaxError(const Token& token, const std::string& message)
-      : runtime_error("Line " + std::to_string(token.get_position().line) +
-                      " column " + std::to_string(token.get_position().column) +
-                      " at '" +
-                      (token.stringify().empty() ? token.stringify_type()
-                                                 : token.stringify()) +
-                      "': " + message),
-        token_(token){};
-
-  [[nodiscard]] const Token& get_token() const { return token_; }
 };
 
 #endif  // BOALANG_PARSER_HPP
