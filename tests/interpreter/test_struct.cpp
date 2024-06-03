@@ -18,21 +18,21 @@ TEST(InterpreterStructTests, mutate_field) {
   EXPECT_TRUE(str_contains(stdout, "1.0"));
 }
 
-// TEST(InterpreterStructTests, struct_assign) {
-// std::string code = R"(
-//     struct S {mut int a;}
-//     mut S s = {1};
-//     S d = {2};
-//     s = d;
-//     s.a=3;
-//     print d.a;
-//     print s.a;
-//   )";
-//
-// auto stdout = capture_interpreted_stdout(code);
-// EXPECT_TRUE(str_contains(stdout, "2"));
-// EXPECT_TRUE(str_contains(stdout, "3"));
-// }
+TEST(InterpreterStructTests, struct_assign) {
+  std::string code = R"(
+     struct S {mut int a;}
+     mut S s = {1};
+     S d = {2};
+     s = d;
+     s.a=3;
+     print d.a;
+     print s.a;
+   )";
+
+  auto stdout = capture_interpreted_stdout(code);
+  EXPECT_TRUE(str_contains(stdout, "2"));
+  EXPECT_TRUE(str_contains(stdout, "3"));
+}
 
 TEST(InterpreterStructTests, nested_struct) {
   std::string code = R"(

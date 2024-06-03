@@ -124,7 +124,7 @@ void Interpreter::visit(const VarDeclStmt& stmt) {
                        "Identifier '" + stmt.identifier + "' already defined");
   }
 
-  auto init_value = evaluate_var(stmt.initializer.get());
+  auto init_value = clone_value(evaluate_var(stmt.initializer.get()));
 
   auto type = get_type(stmt.type.name);
   if (!type && !stmt.type.name.empty()) {
@@ -133,27 +133,27 @@ void Interpreter::visit(const VarDeclStmt& stmt) {
   }
 
   if (type) {
-    std::visit(
-        overloaded{
-            [&](const std::shared_ptr<StructType>& arg) {
-              assign_init_list(&stmt, arg, init_value);
-            },
-            [this, &stmt,
-             &init_value](const std::shared_ptr<VariantType>& arg) {
-              if (!match_type(init_value, stmt.type)) {
-                throw RuntimeError(stmt.position,
-                                   "Tried to initialize '" + stmt.identifier +
-                                       "' with value of different type");
-              }
-              auto obj = std::make_shared<VariantObject>(
-                  arg.get(), stmt.mut, stmt.identifier, init_value);
-              define_variable(stmt.identifier, obj);
-            },
-            [&stmt](auto) {
-              throw RuntimeError(stmt.position, "Unknown type");
-            },
-        },
-        *type);
+    std::visit(overloaded{
+                   [&](const std::shared_ptr<StructType>& arg) {
+                     assign_init_list(&stmt, arg, init_value);
+                   },
+                   [this, &stmt,
+                    &init_value](const std::shared_ptr<VariantType>& arg) {
+                     if (!match_type(init_value, stmt.type)) {
+                       throw RuntimeError(stmt.position,
+                                          "Tried to initialize '" +
+                                              stmt.identifier +
+                                              "' with value of different type");
+                     }
+                     auto obj = std::make_shared<VariantObject>(
+                         arg.get(), stmt.mut, stmt.identifier, init_value);
+                     define_variable(stmt.identifier, obj);
+                   },
+                   [&stmt](auto) {
+                     throw RuntimeError(stmt.position, "Unknown type");
+                   },
+               },
+               *type);
   } else {
     if (!match_type(init_value, stmt.type)) {
       throw RuntimeError(stmt.position, "Tried to initialize '" +
@@ -204,7 +204,7 @@ void Interpreter::visit(const VariantDeclStmt& stmt) {
 
 void Interpreter::visit(const AssignStmt& stmt) {
   auto var = evaluate(stmt.var.get());
-  auto value = evaluate_var(stmt.value.get());
+  auto value = clone_value(evaluate_var(stmt.value.get()));
 
   std::visit(
       overloaded{
@@ -218,7 +218,7 @@ void Interpreter::visit(const AssignStmt& stmt) {
                   "Tried assigning value with different type to '" + arg->name +
                   "'");
             }
-            arg->value = std::move(value);
+            arg->value = value;
           },
           [this, &value](const std::shared_ptr<VariantObject>& arg) {
             if (!arg->mut) {
@@ -233,7 +233,7 @@ void Interpreter::visit(const AssignStmt& stmt) {
                   "Tried assigning value with different type to '" + arg->name +
                   "'");
             }
-            arg->contained = std::move(value);
+            arg->contained = value;
           },
           [this, &value](const std::shared_ptr<StructObject>& arg) {
             if (!arg->mut) {
@@ -571,12 +571,12 @@ void Interpreter::pop_last_scope() {
   }
 }
 
-void Interpreter::assign_init_list(const VarDeclStmt* stmt, const std::shared_ptr<StructType> &type, const eval_value_t& init_value) {
+void Interpreter::assign_init_list(const VarDeclStmt* stmt,
+                                   const std::shared_ptr<StructType>& type,
+                                   const eval_value_t& init_value) {
   if (const auto& init_list =
-      std::get_if<std::shared_ptr<InitalizerList>>(
-          &init_value)) {
-    if (init_list->get()->values.size() !=
-        type->init_fields.size()) {
+          std::get_if<std::shared_ptr<InitalizerList>>(&init_value)) {
+    if (init_list->get()->values.size() != type->init_fields.size()) {
       throw RuntimeError(stmt->position,
                          "Different number of struct fields and "
                          "values in initalizer list for '" +
@@ -587,43 +587,40 @@ void Interpreter::assign_init_list(const VarDeclStmt* stmt, const std::shared_pt
     const auto& init_fields = type->init_fields;
     for (auto init_field = init_fields.rbegin();
          init_field != init_fields.rend(); ++init_field) {
-      auto init_item = init_list->get()->values.back();
+      auto init_item = clone_value(init_list->get()->values.back());
       init_list->get()->values.pop_back();
       if (!match_type(init_item, init_field->type)) {
-        throw RuntimeError(
-            stmt->position,
-            "Type mismatch in initalizer list for '" +
-                stmt->identifier + "." + init_field->name + "'");
+        throw RuntimeError(stmt->position,
+                           "Type mismatch in initalizer list for '" +
+                               stmt->identifier + "." + init_field->name + "'");
       }
       if (const auto& init_field_type = get_type(init_field->type.name)) {
         std::visit(
             overloaded{
                 [&](const std::shared_ptr<VariantType>& arg) {
                   eval_value_t value = init_item;
-                  if (auto* variant_obj = std::get_if<
-                      std::shared_ptr<VariantObject>>(
-                      &init_item)) {
+                  if (auto* variant_obj =
+                          std::get_if<std::shared_ptr<VariantObject>>(
+                              &init_item)) {
                     value = (*variant_obj)->contained;
                   }
                   struct_scope.define_variable(
-                      init_field->name, std::make_shared<VariantObject>(
-                          arg.get(), init_field->mut,
-                          init_field->name, value));
+                      init_field->name,
+                      std::make_shared<VariantObject>(
+                          arg.get(), init_field->mut, init_field->name, value));
                 },
                 [&](const std::shared_ptr<StructType>& arg) {
                   auto struct_obj =
-                      std::get<std::shared_ptr<StructObject>>(
-                          init_item);
+                      std::get<std::shared_ptr<StructObject>>(init_item);
                   struct_scope.define_variable(
                       init_field->name,
-                      std::make_shared<StructObject>(
-                          arg.get(), init_field->mut, init_field->name,
-                          struct_obj->scope));
+                      std::make_shared<StructObject>(arg.get(), init_field->mut,
+                                                     init_field->name,
+                                                     struct_obj->scope));
                 },
                 [&](const auto&) {
-                  throw RuntimeError(
-                      stmt->position,
-                      "Unsupported type in struct declaration");
+                  throw RuntimeError(stmt->position,
+                                     "Unsupported type in struct declaration");
                 },
             },
             *init_field_type);
@@ -635,13 +632,11 @@ void Interpreter::assign_init_list(const VarDeclStmt* stmt, const std::shared_pt
       }
     }
     auto obj = std::make_shared<StructObject>(
-        type.get(), stmt->mut, stmt->identifier,
-        std::move(struct_scope));
+        type.get(), stmt->mut, stmt->identifier, std::move(struct_scope));
     define_variable(stmt->identifier, obj);
   } else {
-    throw RuntimeError(
-        stmt->position,
-        "Expected initalizer list for '" + stmt->identifier + "'");
+    throw RuntimeError(stmt->position, "Expected initalizer list for '" +
+                                           stmt->identifier + "'");
   }
 }
 
@@ -691,18 +686,18 @@ void Interpreter::bind_args_to_params(const FunctionObject* func,
     if (auto type = get_type(param.second.name)) {
       std::visit(
           overloaded{
-              [&](const std::shared_ptr<StructType>& arg) {
-                const auto& struct_arg =
-                    std::get<std::shared_ptr<StructObject>>(args.at(i));
-                auto struct_obj = std::make_shared<StructObject>(
-                    arg.get(), true, param.first, struct_arg->scope);
+              [&](const std::shared_ptr<StructType>&) {
+                auto struct_obj = std::get<std::shared_ptr<StructObject>>(
+                    clone_value(args.at(i)));
+                struct_obj->mut = true;
+                struct_obj->name = param.first;
                 define_variable(param.first, struct_obj);
               },
-              [&](const std::shared_ptr<VariantType>& arg) {
-                const auto& variant_arg =
-                    std::get<std::shared_ptr<VariantObject>>(args.at(i));
-                auto variant_obj = std::make_shared<VariantObject>(
-                    arg.get(), true, param.first, variant_arg->contained);
+              [&](const std::shared_ptr<VariantType>&) {
+                auto variant_obj = std::get<std::shared_ptr<VariantObject>>(
+                    clone_value(args.at(i)));
+                variant_obj->mut = true;
+                variant_obj->name = param.first;
                 define_variable(param.first, variant_obj);
               },
               [&](auto) { throw RuntimeError(position, "Unknown type"); },
@@ -710,7 +705,7 @@ void Interpreter::bind_args_to_params(const FunctionObject* func,
           *type);
     } else {
       auto var = std::make_shared<Variable>(param.second.type, param.first,
-                                            true, args.at(i));
+                                            true, clone_value(args.at(i)));
       define_variable(param.first, var);
     }
   }

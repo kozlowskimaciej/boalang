@@ -15,7 +15,9 @@ void parse_args(int& argc, char* argv[], argparse::ArgumentParser& program) {
       .help("program passed in as string")
       .default_value(false)
       .implicit_value(true);
-  program.add_argument("--ast").help("print AST instead of interpreting").flag();
+  program.add_argument("--ast")
+      .help("print AST instead of interpreting")
+      .flag();
 
   try {
     program.parse_args(argc, argv);

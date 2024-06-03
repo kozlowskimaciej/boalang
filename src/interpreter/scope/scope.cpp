@@ -65,6 +65,10 @@ void Scope::define_variable(const std::string& name, eval_value_t variable) {
   variables.insert({name, std::move(variable)});
 }
 
+const std::map<std::string, eval_value_t>& Scope::get_variables() const {
+  return variables;
+}
+
 std::optional<eval_value_t> Scope::get_variable(const std::string& name) const {
   auto item = variables.find(name);
   if (item != variables.end()) {
@@ -105,11 +109,12 @@ void Scope::define_type(const std::string& name, types_t type) {
 void Scope::define_function(const std::string& name, function_t function) {
   functions.insert({name, std::move(function)});
 }
-bool Scope::is_in_variant(const eval_value_t &actual, const VarType &expected, bool check_self) const {
+bool Scope::is_in_variant(const eval_value_t& actual, const VarType& expected,
+                          bool check_self) const {
   if (check_self && !expected.name.empty() && expected.type == IDENTIFIER) {
     if (const auto& type = get_type(expected.name)) {
       if (const auto& variant =
-          std::get_if<std::shared_ptr<VariantType>>(&*type)) {
+              std::get_if<std::shared_ptr<VariantType>>(&*type)) {
         return std::visit(
             overloaded{
                 [&](const value_t& value) {
@@ -145,7 +150,7 @@ bool Scope::is_in_variant(const eval_value_t &actual, const VarType &expected, b
                 [&](const std::shared_ptr<VariantObject>& obj) {
                   return identifier_in_variant(variant->get()->types,
                                                obj->type_def->type_name) ||
-                      obj->type_def->type_name == expected.name;
+                         obj->type_def->type_name == expected.name;
                 },
                 [](auto) { return false; }},
             actual);
@@ -153,4 +158,51 @@ bool Scope::is_in_variant(const eval_value_t &actual, const VarType &expected, b
     }
   }
   return false;
+}
+
+Variable Variable::clone() const {
+  if (value) {
+    return {type, name, mut, clone_value(*value)};
+  }
+  return {type, name, mut};
+}
+
+VariantObject VariantObject::clone() const {
+  return {type_def, mut, name, clone_value(contained)};
+}
+
+StructObject StructObject::clone() const {
+  return {type_def, mut, name, clone_scope()};
+}
+
+Scope StructObject::clone_scope() const {
+  Scope new_scope;
+  const auto& variables = scope.get_variables();
+
+  std::for_each(
+      variables.begin(), variables.end(), [&new_scope](const auto& pair) {
+        new_scope.define_variable(pair.first, clone_value(pair.second));
+      });
+  return new_scope;
+}
+
+eval_value_t clone_value(const eval_value_t& value) {
+  eval_value_t cloned;
+  std::visit(
+      overloaded{[&](const value_t& value) {
+                   std::visit(overloaded{[&](auto arg) { cloned = arg; }},
+                              value);
+                 },
+                 [&](const std::shared_ptr<Variable>& obj) {
+                   cloned = std::make_shared<Variable>(obj->clone());
+                 },
+                 [&](const std::shared_ptr<StructObject>& obj) {
+                   cloned = std::make_shared<StructObject>(obj->clone());
+                 },
+                 [&](const std::shared_ptr<VariantObject>& obj) {
+                   cloned = std::make_shared<VariantObject>(obj->clone());
+                 },
+                 [&](auto arg) { cloned = arg; }},
+      value);
+  return cloned;
 }

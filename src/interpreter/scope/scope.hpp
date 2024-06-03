@@ -43,6 +43,11 @@ using types_t =
                  std::shared_ptr<VariantType>>; /**< Types declared in code. */
 
 /**
+* @brief Clones eval_value_t object.
+*/
+eval_value_t clone_value(const eval_value_t& value);
+
+/**
  * @brief Scope representation.
  */
 class Scope {
@@ -54,8 +59,8 @@ class Scope {
   Scope* enclosing; /**< Parent Scope. */
 
   [[nodiscard]] bool is_in_variant(const eval_value_t& actual,
-                                const VarType& expected,
-                                bool check_self = true) const;
+                                   const VarType& expected,
+                                   bool check_self = true) const;
 
  public:
   /**
@@ -82,6 +87,12 @@ class Scope {
    * @brief Defines new function in current scope.
    */
   void define_function(const std::string& name, function_t function);
+
+  /**
+   * @brief Gets all variables from current scope.
+   */
+  [[nodiscard]] const std::map<std::string, eval_value_t>& get_variables()
+      const;
 
   /**
    * @brief Gets variable from current scope.
@@ -144,6 +155,8 @@ struct Variable {
    */
   Variable(VarType type, std::string name, bool mut)
       : type(std::move(type)), name(std::move(name)), mut(mut){};
+
+  [[nodiscard]] Variable clone() const;
 };
 
 /**
@@ -183,6 +196,8 @@ struct VariantObject {
         mut(mut),
         name(std::move(name)),
         contained(std::move(contained)){};
+
+  [[nodiscard]] VariantObject clone() const;
 };
 
 /**
@@ -209,6 +224,13 @@ struct StructObject {
         mut(mut),
         name(std::move(name)),
         scope(std::move(scope)){};
+
+  [[nodiscard]] StructObject clone() const;
+
+  /**
+   * @brief Clones scope only.
+   */
+  [[nodiscard]] Scope clone_scope() const;
 };
 
 /**

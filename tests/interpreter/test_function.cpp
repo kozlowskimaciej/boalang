@@ -53,6 +53,46 @@ TEST(InterpreterFunctionTests, return_struct) {
   EXPECT_TRUE(str_contains(capture_interpreted_stdout(code), "5"));
 }
 
+TEST(InterpreterFunctionTests, pass_by_value_struct) {
+  std::string code = R"(
+    struct S {
+        mut int number;
+    }
+
+    void func(S s) {
+        s.number = 2;
+    }
+
+    mut S s = {1};
+    func(s);
+    print s.number;
+  )";
+
+  EXPECT_TRUE(str_contains(capture_interpreted_stdout(code), "1"));
+}
+
+TEST(InterpreterFunctionTests, pass_by_value_variant) {
+  std::string code = R"(
+    struct S {
+        mut int number;
+    }
+
+    variant V {S};
+
+    void func(V v2) {
+      S s2 = {5};
+      v2 = s2;
+    }
+
+    S s = {1};
+    mut V v1 = s;
+    func(v1);
+    print (v1 as S).number;
+  )";
+
+  EXPECT_TRUE(str_contains(capture_interpreted_stdout(code), "1"));
+}
+
 TEST(InterpreterFunctionTests, params) {
   std::string code = R"(
     void func(int c, str d) {

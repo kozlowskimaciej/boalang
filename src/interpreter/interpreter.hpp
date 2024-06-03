@@ -48,7 +48,9 @@ class Interpreter : public ExprVisitor, public StmtVisitor {
   Scope* create_new_scope();
   void pop_last_scope();
 
-  void assign_init_list(const VarDeclStmt* stmt, const std::shared_ptr<StructType>& type, const eval_value_t& init_value);  /**< Assigns init list to struct. */
+  void assign_init_list(
+      const VarDeclStmt* stmt, const std::shared_ptr<StructType>& type,
+      const eval_value_t& init_value); /**< Assigns init list to struct. */
 
   void call_func(FunctionObject* func);
   std::vector<eval_value_t> get_call_args_values(
