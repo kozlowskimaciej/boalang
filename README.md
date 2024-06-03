@@ -27,6 +27,12 @@ Opcjonalnie: `Clang-Format`, `Doxygen Graphviz`
 1. Kompilacja: `./build.sh`
 2. Uruchamianie: `./build/src/boalang <ścieżka_do_pliku>` lub `./build/src/boalang --cmd "<kod>"`
 
+## Statystyki
+
+- liczba linii kodu: **6510** (`find . -type f \( -name "*.cpp" -o -name "*.hpp" -o -name "*.tpp" \) -print0 | xargs -0 wc -l`)
+- procentowe pokrycie kodu testami: **93%** (mierzone przy użyciu `llvm-cov`)
+- liczba testów: **223**
+
 ## Zasady działania języka
 
 ### Konwersja typów
@@ -185,6 +191,8 @@ Długość identyfikatorów i zakres wartości zmiennych `int` i `float` ogranic
 `Parser` - konsumuje tokeny wygenerowane przez `Lexer`, tworzy `drzewo AST`
 
 `Interpreter` - wykonuje instrukcje z `drzewa AST`
+
+![Architecture](docs/img/architecture.jpg)
 
 ## Testownie
 
