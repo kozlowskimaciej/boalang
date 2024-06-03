@@ -371,3 +371,7 @@ Numeric val = 3;
 int fibval = fib(val) as int;
 print fibval;
 ```
+
+## Podsumowanie
+
+Udało się zaimplementować wszystkie planowane funkcjonalności języka. W stosunku do planowanego rozwiązania zmienił się sposób zapisu kilku reguł z gramatyki. Produkt końcowy umożliwia uruchomienie kodu napisanego w języku `boalang`.
