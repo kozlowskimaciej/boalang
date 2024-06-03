@@ -38,12 +38,12 @@ INSTANTIATE_TEST_SUITE_P(
                       "!(true is str)", "\"Hello World!\" is str"));
 
 TEST(InterpreterGeneralTests, mutable_variables) {
-  std::string code = R"V0G0N(
+  std::string code = R"(
     mut int a = 1;
     print a;
     a = 2;
     print a;
-  )V0G0N";
+  )";
 
   auto stdout = capture_interpreted_stdout(code);
   EXPECT_TRUE(str_contains(stdout, "1"));
@@ -51,11 +51,11 @@ TEST(InterpreterGeneralTests, mutable_variables) {
 }
 
 TEST(InterpreterGeneralTests, mutating_const) {
-  std::string code = R"V0G0N(
+  std::string code = R"(
     int a = 1;
     print a;
     a = 2;
-  )V0G0N";
+  )";
 
   EXPECT_THROW(
       {
@@ -71,10 +71,10 @@ TEST(InterpreterGeneralTests, mutating_const) {
 }
 
 TEST(InterpreterGeneralTests, variable_redefinition) {
-  std::string code = R"V0G0N(
+  std::string code = R"(
     int a = 1;
     int a = 2;
-  )V0G0N";
+  )";
 
   EXPECT_THROW(
       {
@@ -89,10 +89,10 @@ TEST(InterpreterGeneralTests, variable_redefinition) {
 }
 
 TEST(InterpreterGeneralTests, function_redefinition) {
-  std::string code = R"V0G0N(
+  std::string code = R"(
     void a(){}
     int a(){}
-  )V0G0N";
+  )";
 
   EXPECT_THROW(
       {
@@ -107,10 +107,10 @@ TEST(InterpreterGeneralTests, function_redefinition) {
 }
 
 TEST(InterpreterGeneralTests, type_redefinition) {
-  std::string code = R"V0G0N(
+  std::string code = R"(
     variant a{int};
     variant a{float};
-  )V0G0N";
+  )";
 
   EXPECT_THROW(
       {
@@ -125,13 +125,13 @@ TEST(InterpreterGeneralTests, type_redefinition) {
 }
 
 TEST(InterpreterGeneralTests, while_loop) {
-  std::string code = R"V0G0N(
+  std::string code = R"(
     mut int a = 1;
     while (a <= 5) {
         print a;
         a = a + 1;
     }
-  )V0G0N";
+  )";
 
   std::cerr << "1";
   auto stdout = capture_interpreted_stdout(code);
@@ -144,36 +144,36 @@ TEST(InterpreterGeneralTests, while_loop) {
 }
 
 TEST(InterpreterGeneralTests, if_statement) {
-  std::string code = R"V0G0N(
+  std::string code = R"(
     if (true) {
       print 0;
     }
-  )V0G0N";
+  )";
 
   auto stdout = capture_interpreted_stdout(code);
   EXPECT_TRUE(str_contains(stdout, "0"));
 }
 
 TEST(InterpreterGeneralTests, else_statement) {
-  std::string code = R"V0G0N(
+  std::string code = R"(
     if (false) {
       print 0;
     } else {
       print 1;
     }
-  )V0G0N";
+  )";
 
   auto stdout = capture_interpreted_stdout(code);
   EXPECT_TRUE(str_contains(stdout, "1"));
 }
 
 TEST(InterpreterGeneralTests, variable_block_redefinition) {
-  std::string code = R"V0G0N(
+  std::string code = R"(
     int a = 5;
     {
         int a = 10;
     }
-  )V0G0N";
+  )";
 
   EXPECT_THROW(
       {

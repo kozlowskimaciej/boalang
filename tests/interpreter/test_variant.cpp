@@ -1,7 +1,7 @@
 #include "interpreter_utils.hpp"
 
 TEST(InterpreterVariantTests, assigning) {
-  std::string code = R"V0G0N(
+  std::string code = R"(
     variant V {int, float, str};
 
     mut V v = "string";
@@ -12,7 +12,7 @@ TEST(InterpreterVariantTests, assigning) {
 
     v = 2.5;
     print v as float;
-  )V0G0N";
+  )";
 
   auto stdout = capture_interpreted_stdout(code);
   EXPECT_TRUE(str_contains(stdout, "string"));
@@ -21,25 +21,25 @@ TEST(InterpreterVariantTests, assigning) {
 }
 
 TEST(InterpreterVariantTests, struct_in_variant) {
-  std::string code = R"V0G0N(
+  std::string code = R"(
     struct S {int a;}
     variant V {S};
     S s = {1};
     V v = s;
     print (v as S).a;
-  )V0G0N";
+  )";
 
   auto stdout = capture_interpreted_stdout(code);
   EXPECT_TRUE(str_contains(stdout, "1"));
 }
 
 TEST(InterpreterVariantTests, invalid_variant_cast) {
-  std::string code = R"V0G0N(
+  std::string code = R"(
     variant V {int, float, str};
 
     V v = "string";
     print v as int;
-  )V0G0N";
+  )";
 
   EXPECT_THROW(
       {
@@ -55,11 +55,11 @@ TEST(InterpreterVariantTests, invalid_variant_cast) {
 }
 
 TEST(InterpreterVariantTests, invalid_variant_initalization) {
-  std::string code = R"V0G0N(
+  std::string code = R"(
     variant V {int};
 
     V v = "string";
-  )V0G0N";
+  )";
 
   EXPECT_THROW(
       {
@@ -76,12 +76,12 @@ TEST(InterpreterVariantTests, invalid_variant_initalization) {
 }
 
 TEST(InterpreterVariantTests, invalid_variant_assign) {
-  std::string code = R"V0G0N(
+  std::string code = R"(
     variant V {int};
 
     mut V v = 1;
     v = "string";
-  )V0G0N";
+  )";
 
   EXPECT_THROW(
       {
@@ -97,12 +97,12 @@ TEST(InterpreterVariantTests, invalid_variant_assign) {
 }
 
 TEST(InterpreterVariantTests, variant_const_assign) {
-  std::string code = R"V0G0N(
+  std::string code = R"(
     variant V {int};
 
     V v = 1;
     v = 2;
-  )V0G0N";
+  )";
 
   EXPECT_THROW(
       {
@@ -118,20 +118,20 @@ TEST(InterpreterVariantTests, variant_const_assign) {
 }
 
 TEST(InterpreterVariantTests, inspect) {
-  std::string code = R"V0G0N(
+  std::string code = R"(
     variant V {int, float};
     V v = 1.0;
     inspect v {
       int val => {print "I'm an integer";}
       float val => {print "I'm a float";}
     }
-  )V0G0N";
+  )";
 
   EXPECT_TRUE(str_contains(capture_interpreted_stdout(code), "I'm a float"));
 }
 
 TEST(InterpreterVariantTests, inspect_default) {
-  std::string code = R"V0G0N(
+  std::string code = R"(
     variant V {int, float, str};
     V v = "just a string";
     inspect v {
@@ -139,20 +139,20 @@ TEST(InterpreterVariantTests, inspect_default) {
       float val => {print "I'm a float";}
       default => {print "Who am I?";}
     }
-  )V0G0N";
+  )";
 
   EXPECT_TRUE(str_contains(capture_interpreted_stdout(code), "Who am I?"));
 }
 
 TEST(InterpreterVariantTests, inspect_nonexhaustive) {
-  std::string code = R"V0G0N(
+  std::string code = R"(
     variant V {int, float, str};
     V v = "just a string";
     inspect v {
       int val => {print "I'm an integer";}
       float val => {print "I'm a float";}
     }
-  )V0G0N";
+  )";
 
   EXPECT_THROW(
       {
@@ -169,13 +169,13 @@ TEST(InterpreterVariantTests, inspect_nonexhaustive) {
 }
 
 TEST(InterpreterVariantTests, inspect_non_variant) {
-  std::string code = R"V0G0N(
+  std::string code = R"(
     int a = 1;
     inspect a {
       int val => {print "I'm an integer";}
       float val => {print "I'm a float";}
     }
-  )V0G0N";
+  )";
 
   EXPECT_THROW(
       {

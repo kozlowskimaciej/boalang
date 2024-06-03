@@ -1,18 +1,18 @@
 #include "interpreter_utils.hpp"
 
 TEST(InterpreterFunctionTests, void_function) {
-  std::string code = R"V0G0N(
+  std::string code = R"(
     void func() {
         print "func called";
     }
     func();
-  )V0G0N";
+  )";
 
   EXPECT_TRUE(str_contains(capture_interpreted_stdout(code), "func called"));
 }
 
 TEST(InterpreterFunctionTests, params) {
-  std::string code = R"V0G0N(
+  std::string code = R"(
     void func(int c, str d) {
         print c as str;
         print d;
@@ -20,7 +20,7 @@ TEST(InterpreterFunctionTests, params) {
     int a = 1;
     str b = "string";
     func(a, b);
-  )V0G0N";
+  )";
 
   auto stdout = capture_interpreted_stdout(code);
   EXPECT_TRUE(str_contains(stdout, "1"));
@@ -28,7 +28,7 @@ TEST(InterpreterFunctionTests, params) {
 }
 
 TEST(InterpreterFunctionTests, mutate_args) {
-  std::string code = R"V0G0N(
+  std::string code = R"(
     void func(str a) {
         a = "b";
         print "inner is: " + a;
@@ -37,7 +37,7 @@ TEST(InterpreterFunctionTests, mutate_args) {
     print "outer was: " + a;
     func(a);
     print "outer is: " + a;
-  )V0G0N";
+  )";
 
   auto stdout = capture_interpreted_stdout(code);
   EXPECT_TRUE(str_contains(stdout, "outer was: a"));
@@ -46,7 +46,7 @@ TEST(InterpreterFunctionTests, mutate_args) {
 }
 
 TEST(InterpreterFunctionTests, recursion) {
-  std::string code = R"V0G0N(
+  std::string code = R"(
     int fib(int n) {
         if (n == 1 or n == 2) {
           return 1;
@@ -54,13 +54,13 @@ TEST(InterpreterFunctionTests, recursion) {
         return fib(n - 1) + fib(n - 2);
     }
     print fib(10);
-  )V0G0N";
+  )";
 
   EXPECT_TRUE(str_contains(capture_interpreted_stdout(code), "55"));
 }
 
 TEST(InterpreterFunctionTests, call_context_redefinitions) {
-  std::string code = R"V0G0N(
+  std::string code = R"(
     void func(int n) {
       variant V{int, float};
       void nested_func(){}
@@ -72,18 +72,18 @@ TEST(InterpreterFunctionTests, call_context_redefinitions) {
       return;
     }
     func(1);
-  )V0G0N";
+  )";
 
   capture_interpreted_stdout(code);
 }
 
 TEST(InterpreterFunctionTests, max_recursion_depth_exceeded) {
-  std::string code = R"V0G0N(
+  std::string code = R"(
     void func() {
       func();
     }
     func();
-  )V0G0N";
+  )";
 
   EXPECT_THROW(
       {
