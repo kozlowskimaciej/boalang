@@ -17,12 +17,13 @@
  * @brief Interprets statements and expressions.
  */
 class Interpreter : public ExprVisitor, public StmtVisitor {
-  std::optional<eval_value_t> evaluation =
-      std::nullopt;                           /**< Evaluated value. */
-  std::vector<std::unique_ptr<Scope>> scopes; /**< Vector of existing scopes. */
+  std::optional<eval_value_t> evaluation_ =
+      std::nullopt; /**< Evaluated value. */
+  std::vector<std::unique_ptr<Scope>>
+      scopes_; /**< Vector of existing scopes. */
   std::vector<std::unique_ptr<CallContext>>
-      call_contexts;        /**< Vector of existing call contexts. */
-  bool return_flag = false; /**< Is currently returning from a function. */
+      call_contexts_;        /**< Vector of existing call contexts. */
+  bool return_flag_ = false; /**< Is currently returning from a function. */
 
   static bool boolify(
       const eval_value_t& value); /**< Boolifies eval_value_t. */
@@ -88,7 +89,7 @@ class Interpreter : public ExprVisitor, public StmtVisitor {
                                     const Position& position);
 
  public:
-  Interpreter() { scopes.push_back(std::make_unique<Scope>()); };
+  Interpreter() { scopes_.push_back(std::make_unique<Scope>()); };
   void visit(const Program& stmt) override;
   void visit(const PrintStmt& stmt) override;
   void visit(const IfStmt& stmt) override;

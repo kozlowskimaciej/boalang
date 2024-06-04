@@ -34,7 +34,7 @@ using eval_value_t =
     std::variant<value_t, std::shared_ptr<StructObject>,
                  std::shared_ptr<VariantObject>, std::shared_ptr<Variable>,
                  std::shared_ptr<InitalizerList>>; /**< Possible values returned
-                                                      from evaluation. */
+                                                      from evaluation_. */
 
 using function_t = std::shared_ptr<FunctionObject>; /**< Callable objects. */
 
@@ -43,8 +43,8 @@ using types_t =
                  std::shared_ptr<VariantType>>; /**< Types declared in code. */
 
 /**
-* @brief Clones eval_value_t object.
-*/
+ * @brief Clones eval_value_t object.
+ */
 eval_value_t clone_value(const eval_value_t& value);
 
 /**
@@ -52,11 +52,11 @@ eval_value_t clone_value(const eval_value_t& value);
  */
 class Scope {
   std::map<std::string, eval_value_t>
-      variables{};                        /**< Variables defined in scope. */
-  std::map<std::string, types_t> types{}; /**< Types defined in scope. */
+      variables_{};                        /**< Variables defined in scope. */
+  std::map<std::string, types_t> types_{}; /**< Types defined in scope. */
   std::map<std::string, function_t>
-      functions{};  /**< Functions defined in scope. */
-  Scope* enclosing; /**< Parent Scope. */
+      functions_{};  /**< Functions defined in scope. */
+  Scope* enclosing_; /**< Parent Scope. */
 
   [[nodiscard]] bool is_in_variant(const eval_value_t& actual,
                                    const VarType& expected,
@@ -64,14 +64,14 @@ class Scope {
 
  public:
   /**
-   * @brief Constructs a new Scope object with no enclosing Scope.
+   * @brief Constructs a new Scope object with no enclosing_ Scope.
    */
-  Scope() : enclosing(nullptr){};
+  Scope() : enclosing_(nullptr){};
 
   /**
-   * @brief Constructs a new Scope object with enclosing Scope.
+   * @brief Constructs a new Scope object with enclosing_ Scope.
    */
-  Scope(Scope* enclosing) : enclosing(enclosing){};
+  Scope(Scope* enclosing) : enclosing_(enclosing){};
 
   /**
    * @brief Defines new variable in current scope.

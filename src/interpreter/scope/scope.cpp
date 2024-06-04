@@ -62,52 +62,52 @@ bool Scope::match_type(const eval_value_t& actual, const VarType& expected,
 }
 
 void Scope::define_variable(const std::string& name, eval_value_t variable) {
-  variables.insert({name, std::move(variable)});
+  variables_.insert({name, std::move(variable)});
 }
 
 const std::map<std::string, eval_value_t>& Scope::get_variables() const {
-  return variables;
+  return variables_;
 }
 
 std::optional<eval_value_t> Scope::get_variable(const std::string& name) const {
-  auto item = variables.find(name);
-  if (item != variables.end()) {
+  auto item = variables_.find(name);
+  if (item != variables_.end()) {
     return item->second;
   }
-  if (enclosing != nullptr) {
-    return enclosing->get_variable(name);
+  if (enclosing_ != nullptr) {
+    return enclosing_->get_variable(name);
   }
   return std::nullopt;
 }
 
 std::optional<types_t> Scope::get_type(const std::string& name) const {
-  auto item = types.find(name);
-  if (item != types.end()) {
+  auto item = types_.find(name);
+  if (item != types_.end()) {
     return item->second;
   }
-  if (enclosing != nullptr) {
-    return enclosing->get_type(name);
+  if (enclosing_ != nullptr) {
+    return enclosing_->get_type(name);
   }
   return std::nullopt;
 }
 
 std::optional<function_t> Scope::get_function(const std::string& name) const {
-  auto item = functions.find(name);
-  if (item != functions.end()) {
+  auto item = functions_.find(name);
+  if (item != functions_.end()) {
     return item->second;
   }
-  if (enclosing != nullptr) {
-    return enclosing->get_function(name);
+  if (enclosing_ != nullptr) {
+    return enclosing_->get_function(name);
   }
   return std::nullopt;
 }
 
 void Scope::define_type(const std::string& name, types_t type) {
-  types.insert({name, std::move(type)});
+  types_.insert({name, std::move(type)});
 }
 
 void Scope::define_function(const std::string& name, function_t function) {
-  functions.insert({name, std::move(function)});
+  functions_.insert({name, std::move(function)});
 }
 bool Scope::is_in_variant(const eval_value_t& actual, const VarType& expected,
                           bool check_self) const {

@@ -29,13 +29,13 @@ Interpreter::evaluate_var(const VisitType* visited) {
 }
 
 void Interpreter::set_evaluation(eval_value_t value) {
-  evaluation = std::move(value);
+  evaluation_ = std::move(value);
 }
 
 eval_value_t Interpreter::get_evaluation() {
-  assert(evaluation.has_value());
-  auto value = evaluation;
-  evaluation.reset();
+  assert(evaluation_.has_value());
+  auto value = evaluation_;
+  evaluation_.reset();
   return *value;
 }
 
@@ -105,7 +105,7 @@ void Interpreter::visit(const BlockStmt& stmt) {
   create_new_scope();
   for (const auto& s : stmt.statements) {
     s->accept(*this);
-    if (return_flag) {
+    if (return_flag_) {
       break;
     }
   }
@@ -279,9 +279,9 @@ void Interpreter::visit(const ReturnStmt& stmt) {
   if (stmt.value) {
     set_evaluation(evaluate_var(stmt.value.get()));
   } else {
-    evaluation.reset();
+    evaluation_.reset();
   }
-  return_flag = true;
+  return_flag_ = true;
 }
 
 void Interpreter::visit(const LambdaFuncStmt&) {}
@@ -552,22 +552,22 @@ void Interpreter::visit(const FieldAccessExpr& expr) {
 
 Scope* Interpreter::create_new_scope() {
   std::unique_ptr<Scope> new_scope;
-  if (!call_contexts.empty()) {
+  if (!call_contexts_.empty()) {
     new_scope =
-        std::make_unique<Scope>(call_contexts.back()->scopes.back().get());
-    call_contexts.back()->scopes.push_back(std::move(new_scope));
-    return call_contexts.back()->scopes.back().get();
+        std::make_unique<Scope>(call_contexts_.back()->scopes.back().get());
+    call_contexts_.back()->scopes.push_back(std::move(new_scope));
+    return call_contexts_.back()->scopes.back().get();
   }
-  new_scope = std::make_unique<Scope>(scopes.back().get());
-  scopes.push_back(std::move(new_scope));
-  return scopes.back().get();
+  new_scope = std::make_unique<Scope>(scopes_.back().get());
+  scopes_.push_back(std::move(new_scope));
+  return scopes_.back().get();
 }
 
 void Interpreter::pop_last_scope() {
-  if (!call_contexts.empty()) {
-    call_contexts.back()->scopes.pop_back();
+  if (!call_contexts_.empty()) {
+    call_contexts_.back()->scopes.pop_back();
   } else {
-    scopes.pop_back();
+    scopes_.pop_back();
   }
 }
 
@@ -641,14 +641,14 @@ void Interpreter::assign_init_list(const VarDeclStmt* stmt,
 }
 
 void Interpreter::call_func(FunctionObject* func) {
-  return_flag = false;
+  return_flag_ = false;
   for (const auto& stmt : func->body->statements) {
     stmt->accept(*this);
-    if (return_flag) {
+    if (return_flag_) {
       break;
     }
   }
-  return_flag = false;
+  return_flag_ = false;
 }
 
 std::vector<eval_value_t> Interpreter::get_call_args_values(
@@ -663,16 +663,16 @@ std::vector<eval_value_t> Interpreter::get_call_args_values(
 
 void Interpreter::create_call_context(
     const std::shared_ptr<FunctionObject>& func, const Position& position) {
-  if (call_contexts.size() > MAX_RECURSION_DEPTH) {
+  if (call_contexts_.size() > MAX_RECURSION_DEPTH) {
     throw RuntimeError(position, "Maximum recursion depth exceeded [" +
                                      std::to_string(MAX_RECURSION_DEPTH) + "]");
   }
 
   auto call_context = std::make_unique<CallContext>(func);
-  call_contexts.push_back(std::move(call_context));
+  call_contexts_.push_back(std::move(call_context));
 }
 
-void Interpreter::pop_call_context() { call_contexts.pop_back(); }
+void Interpreter::pop_call_context() { call_contexts_.pop_back(); }
 
 void Interpreter::bind_args_to_params(const FunctionObject* func,
                                       const std::vector<eval_value_t>& args,
@@ -732,14 +732,14 @@ void Interpreter::make_call(
   call_func(func.get());
 
   if (func->return_type.type == VOID) {
-    if (evaluation) {
+    if (evaluation_) {
       throw RuntimeError(position, "Void function returned a value");
     }
   } else {
-    if (!evaluation) {
+    if (!evaluation_) {
       throw RuntimeError(position, "Non-void function did not return a value");
     }
-    if (!match_type(*evaluation, func->return_type)) {
+    if (!match_type(*evaluation_, func->return_type)) {
       throw RuntimeError(
           position,
           "Function returned value with different type than declared");
@@ -751,69 +751,69 @@ void Interpreter::make_call(
 
 void Interpreter::define_variable(const std::string& name,
                                   const eval_value_t& variable) {
-  if (!call_contexts.empty()) {
-    call_contexts.back()->scopes.back()->define_variable(name, variable);
+  if (!call_contexts_.empty()) {
+    call_contexts_.back()->scopes.back()->define_variable(name, variable);
   } else {
-    scopes.back()->define_variable(name, variable);
+    scopes_.back()->define_variable(name, variable);
   }
 }
 
 void Interpreter::define_type(const std::string& name, const types_t& type) {
-  if (!call_contexts.empty()) {
-    call_contexts.back()->scopes.back()->define_type(name, type);
+  if (!call_contexts_.empty()) {
+    call_contexts_.back()->scopes.back()->define_type(name, type);
   } else {
-    scopes.back()->define_type(name, type);
+    scopes_.back()->define_type(name, type);
   }
 }
 
 void Interpreter::define_function(const std::string& name,
                                   const function_t& function) {
-  if (!call_contexts.empty()) {
-    call_contexts.back()->scopes.back()->define_function(name, function);
+  if (!call_contexts_.empty()) {
+    call_contexts_.back()->scopes.back()->define_function(name, function);
   } else {
-    scopes.back()->define_function(name, function);
+    scopes_.back()->define_function(name, function);
   }
 }
 
 std::optional<eval_value_t> Interpreter::get_variable(
     const std::string& name) const {
-  if (!call_contexts.empty()) {
+  if (!call_contexts_.empty()) {
     if (auto variable =
-            call_contexts.back()->scopes.back()->get_variable(name)) {
+            call_contexts_.back()->scopes.back()->get_variable(name)) {
       return variable;
     }
   }
-  return scopes.back()->get_variable(name);
+  return scopes_.back()->get_variable(name);
 }
 
 std::optional<types_t> Interpreter::get_type(const std::string& name) const {
-  if (!call_contexts.empty()) {
-    if (auto type = call_contexts.back()->scopes.back()->get_type(name)) {
+  if (!call_contexts_.empty()) {
+    if (auto type = call_contexts_.back()->scopes.back()->get_type(name)) {
       return type;
     }
   }
-  return scopes.back()->get_type(name);
+  return scopes_.back()->get_type(name);
 }
 
 std::optional<function_t> Interpreter::get_function(
     const std::string& name) const {
-  if (!call_contexts.empty()) {
-    if (auto func = call_contexts.back()->scopes.back()->get_function(name)) {
+  if (!call_contexts_.empty()) {
+    if (auto func = call_contexts_.back()->scopes.back()->get_function(name)) {
       return func;
     }
   }
-  return scopes.back()->get_function(name);
+  return scopes_.back()->get_function(name);
 }
 
 bool Interpreter::match_type(const eval_value_t& actual,
                              const VarType& expected, bool check_self) const {
-  if (!call_contexts.empty()) {
-    if (auto match = call_contexts.back()->scopes.back()->match_type(
+  if (!call_contexts_.empty()) {
+    if (auto match = call_contexts_.back()->scopes.back()->match_type(
             actual, expected, check_self)) {
       return match;
     }
   }
-  return scopes.back()->match_type(actual, expected, check_self);
+  return scopes_.back()->match_type(actual, expected, check_self);
 }
 
 template <typename Operation>
