@@ -1,7 +1,28 @@
-struct S {
-    mut int a;
-    float b;
+variant Numeric { int, float };
+
+Numeric fib(Numeric n) {
+    inspect n {
+        int val => {
+            if (val == 1 or val == 2) {
+                return 1;
+            }
+            Numeric n1 = val - 1;
+            Numeric n2 = val - 2;
+            Numeric result = fib(n1) as int + fib(n2) as int;
+            return result;
+        }
+        float val => {
+            if (val == 1.0 or val == 2.0) {
+                return 1.0;
+            }
+            Numeric n1 = val - 1.0;
+            Numeric n2 = val - 2.0;
+            Numeric result = fib(n1) as float + fib(n2) as float;
+            return result;
+        }
+    }
 }
 
-mut S st_obj = {121.5, 10};
-st_obj.a = st_obj.b as int;
+Numeric val = 3;
+int fibval = fib(val) as int;
+print fibval;
