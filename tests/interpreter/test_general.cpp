@@ -102,6 +102,41 @@ INSTANTIATE_TEST_SUITE_P(
                       "false is bool", "!(true is int)", "!(true is float)",
                       "!(true is str)", "\"Hello World!\" is str"));
 
+TEST(InterpreterGeneralTests, negation) {
+  std::string code = R"(
+    print !true;
+  )";
+  EXPECT_TRUE(str_contains(capture_interpreted_stdout(code), "false"));
+}
+
+TEST(InterpreterGeneralTests, addition) {
+  std::string code = R"(
+    print 3 + 3;
+  )";
+  EXPECT_TRUE(str_contains(capture_interpreted_stdout(code), "6"));
+}
+
+TEST(InterpreterGeneralTests, subtraction) {
+  std::string code = R"(
+    print 3 - 3;
+  )";
+  EXPECT_TRUE(str_contains(capture_interpreted_stdout(code), "0"));
+}
+
+TEST(InterpreterGeneralTests, multiplication) {
+  std::string code = R"(
+    print 3 * 3;
+  )";
+  EXPECT_TRUE(str_contains(capture_interpreted_stdout(code), "9"));
+}
+
+TEST(InterpreterGeneralTests, division) {
+  std::string code = R"(
+    print 3 / 3;
+  )";
+  EXPECT_TRUE(str_contains(capture_interpreted_stdout(code), "1"));
+}
+
 TEST(InterpreterGeneralTests, as_cast) {
   std::string code = R"(
     print 1 as float;
@@ -265,6 +300,57 @@ TEST(InterpreterGeneralTests, variable_block_redefinition) {
           capture_interpreted_stdout(code);
         } catch (const RuntimeError& e) {
           EXPECT_TRUE(str_contains(e.what(), "Identifier 'a' already defined"));
+          throw;
+        }
+      },
+      RuntimeError);
+}
+
+TEST(InterpreterGeneralTests, variable_undefined) {
+  std::string code = R"(
+    print a;
+  )";
+
+  EXPECT_THROW(
+      {
+        try {
+          capture_interpreted_stdout(code);
+        } catch (const RuntimeError& e) {
+          EXPECT_TRUE(str_contains(e.what(), "Identifier 'a' not defined"));
+          throw;
+        }
+      },
+      RuntimeError);
+}
+
+TEST(InterpreterGeneralTests, type_undefined) {
+  std::string code = R"(
+    A a = 1;
+  )";
+
+  EXPECT_THROW(
+      {
+        try {
+          capture_interpreted_stdout(code);
+        } catch (const RuntimeError& e) {
+          EXPECT_TRUE(str_contains(e.what(), "Type 'A' not defined"));
+          throw;
+        }
+      },
+      RuntimeError);
+}
+
+TEST(InterpreterGeneralTests, function_undefined) {
+  std::string code = R"(
+    A();
+  )";
+
+  EXPECT_THROW(
+      {
+        try {
+          capture_interpreted_stdout(code);
+        } catch (const RuntimeError& e) {
+          EXPECT_TRUE(str_contains(e.what(), "Function 'A' not defined"));
           throw;
         }
       },

@@ -2,7 +2,7 @@
 
 TEST(InterpreterVariantTests, assigning) {
   std::string code = R"(
-    variant V {int, float, str};
+    variant V {int, float, str, bool};
 
     mut V v = "string";
     print v as str;
@@ -12,12 +12,16 @@ TEST(InterpreterVariantTests, assigning) {
 
     v = 2.5;
     print v as float;
+
+    v = true;
+    print v as bool;
   )";
 
   auto stdout = capture_interpreted_stdout(code);
   EXPECT_TRUE(str_contains(stdout, "string"));
   EXPECT_TRUE(str_contains(stdout, "1"));
   EXPECT_TRUE(str_contains(stdout, "2.5"));
+  EXPECT_TRUE(str_contains(stdout, "true"));
 }
 
 TEST(InterpreterVariantTests, struct_in_variant) {
@@ -27,6 +31,47 @@ TEST(InterpreterVariantTests, struct_in_variant) {
     S s = {1};
     V v = s;
     print (v as S).a;
+  )";
+
+  auto stdout = capture_interpreted_stdout(code);
+  EXPECT_TRUE(str_contains(stdout, "1"));
+}
+
+TEST(InterpreterVariantTests, nested_variant) {
+  std::string code = R"(
+    variant V1 {int};
+    variant V2 {V1};
+    V1 v1 = 1;
+    V2 v2 = v1;
+    print (v2 as V1) as int;
+  )";
+
+  auto stdout = capture_interpreted_stdout(code);
+  EXPECT_TRUE(str_contains(stdout, "1"));
+}
+
+TEST(InterpreterVariantTests, variant_assign_by_value) {
+  std::string code = R"(
+    variant V1 {int};
+    variant V2 {V1, float};
+    V1 v1 = 1;
+    mut V2 v2 = v1;
+    v2 = 2.0;  // assigning 2.0 to v2 should not affect v1 (1)
+    print v1 as int;
+  )";
+
+  auto stdout = capture_interpreted_stdout(code);
+  EXPECT_TRUE(str_contains(stdout, "1"));
+}
+
+TEST(InterpreterVariantTests, variant_assign_by_value_2) {
+  std::string code = R"(
+    variant V1 {int};
+    variant V2 {V1};
+    mut V1 v1 = 1;
+    V2 v2 = v1;
+    v1 = 2;  // assigning 2 to v1 should not affect v2 (1)
+    print (v2 as V1) as int;
   )";
 
   auto stdout = capture_interpreted_stdout(code);
@@ -188,4 +233,33 @@ TEST(InterpreterVariantTests, inspect_non_variant) {
         }
       },
       RuntimeError);
+}
+
+TEST(InterpreterVariantTests, inspect_complex_types) {
+  std::string code = R"(
+    struct S {
+      int a;
+    }
+    variant V2 {int};
+    variant V {V2, S};
+
+    V2 v2 = 1;
+    mut V v = v2;
+    inspect v {
+      V2 val => {print val as int;}
+      default => {print false;}
+    }
+
+    S s = {2};
+    v = s;
+    inspect v {
+      S val => {print val.a;}
+      default => {print false;}
+    }
+  )";
+
+  auto stdout = capture_interpreted_stdout(code);
+  EXPECT_TRUE(str_contains(stdout, "1"));
+  EXPECT_TRUE(str_contains(stdout, "2"));
+  EXPECT_TRUE(!str_contains(stdout, "false"));
 }

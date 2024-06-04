@@ -8,7 +8,8 @@
 inline static std::unique_ptr<Program> get_ast(const std::string &code) {
   StringSource source(code);
   Lexer lexer(source);
-  Parser parser(lexer);
+  LexerCommentFilter filter(lexer);
+  Parser parser(filter);
   return parser.parse();
 }
 

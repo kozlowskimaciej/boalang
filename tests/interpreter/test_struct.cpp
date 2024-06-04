@@ -179,3 +179,49 @@ TEST(InterpreterStructTests, field_assign_type_mismatch) {
       },
       RuntimeError);
 }
+
+TEST(InterpreterStructTests, arithmetic_operations_on_structs_fails) {
+  std::string code = R"(
+    struct A {
+      mut int number;
+    }
+    A a1 = {1};
+    A a2 = {2};
+    print a1 + a2;
+  )";
+
+  EXPECT_THROW(
+      {
+        try {
+          capture_interpreted_stdout(code);
+        } catch (const RuntimeError& e) {
+          EXPECT_TRUE(str_contains(
+              e.what(), "Unsupported types for arithmetic operation"));
+          throw;
+        }
+      },
+      RuntimeError);
+}
+
+TEST(InterpreterStructTests, comparison_operations_on_structs_fails) {
+  std::string code = R"(
+    struct A {
+      mut int number;
+    }
+    A a1 = {1};
+    A a2 = {2};
+    print a1 > a2;
+  )";
+
+  EXPECT_THROW(
+      {
+        try {
+          capture_interpreted_stdout(code);
+        } catch (const RuntimeError& e) {
+          EXPECT_TRUE(str_contains(
+              e.what(), "Unsupported types for comparison operation"));
+          throw;
+        }
+      },
+      RuntimeError);
+}

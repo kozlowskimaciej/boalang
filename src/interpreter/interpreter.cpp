@@ -129,7 +129,7 @@ void Interpreter::visit(const VarDeclStmt& stmt) {
   auto type = get_type(stmt.type.name);
   if (!type && !stmt.type.name.empty()) {
     throw RuntimeError(stmt.position,
-                       "Type '" + stmt.type.name + "' is not defined");
+                       "Type '" + stmt.type.name + "' not defined");
   }
 
   if (type) {
@@ -413,7 +413,7 @@ void Interpreter::visit(const VarExpr& expr) {
     return;
   }
   throw RuntimeError(expr.position,
-                     "Identifier '" + expr.identifier + "' not found");
+                     "Identifier '" + expr.identifier + "' not defined");
 }
 
 void Interpreter::visit(const LogicalOrExpr& expr) {
