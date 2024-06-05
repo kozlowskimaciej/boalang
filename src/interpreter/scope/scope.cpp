@@ -189,20 +189,17 @@ Scope StructObject::clone_scope() const {
 eval_value_t clone_value(const eval_value_t& value) {
   eval_value_t cloned;
   std::visit(
-      overloaded{[&](const value_t& value) {
-                   std::visit(overloaded{[&](auto arg) { cloned = arg; }},
-                              value);
-                 },
-                 [&](const std::shared_ptr<Variable>& obj) {
-                   cloned = std::make_shared<Variable>(obj->clone());
-                 },
-                 [&](const std::shared_ptr<StructObject>& obj) {
-                   cloned = std::make_shared<StructObject>(obj->clone());
-                 },
-                 [&](const std::shared_ptr<VariantObject>& obj) {
-                   cloned = std::make_shared<VariantObject>(obj->clone());
-                 },
-                 [&](auto arg) { cloned = arg; }},
+      overloaded{
+         [&](const std::shared_ptr<Variable>& obj) {
+           cloned = std::make_shared<Variable>(obj->clone());
+         },
+         [&](const std::shared_ptr<StructObject>& obj) {
+           cloned = std::make_shared<StructObject>(obj->clone());
+         },
+         [&](const std::shared_ptr<VariantObject>& obj) {
+           cloned = std::make_shared<VariantObject>(obj->clone());
+         },
+         [&](auto arg) { cloned = arg; }},
       value);
   return cloned;
 }

@@ -141,7 +141,6 @@ TEST(InterpreterGeneralTests, as_cast) {
   std::string code = R"(
     print 1 as float;
     print 2.4 as int;
-    print "hi" as bool;
 
     variant V {str};
     V v = "Hello World!";
@@ -152,8 +151,28 @@ TEST(InterpreterGeneralTests, as_cast) {
   EXPECT_TRUE(str_contains(stdout, "1.0"));
   EXPECT_TRUE(str_contains(stdout, "2"));
   EXPECT_TRUE(!str_contains(stdout, "2.4"));
-  EXPECT_TRUE(str_contains(stdout, "true"));
   EXPECT_TRUE(str_contains(stdout, "Hello World!"));
+}
+
+TEST(InterpreterGeneralTests, as_bool_cast) {
+  std::string code = R"(
+    print true as bool;
+    print 1 as bool;
+    print 2.4 as bool;
+    print "hi" as bool;
+
+    variant V {str};
+    V v = "Hello World!";
+    print v as bool;
+
+    struct S {mut int a;}
+    S s = {1};
+    print s as bool;
+  )";
+
+  auto stdout = capture_interpreted_stdout(code);
+  EXPECT_TRUE(str_contains(stdout, "true"));
+  EXPECT_TRUE(!str_contains(stdout, "false"));
 }
 
 TEST(InterpreterGeneralTests, mutable_variables) {

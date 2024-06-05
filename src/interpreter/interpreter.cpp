@@ -439,17 +439,16 @@ void Interpreter::visit(const AsTypeExpr& expr) {
   auto left = evaluate_var(expr.left.get());
   auto type = expr.type;
 
-  if (type.type == BOOL) {
-    set_evaluation(boolify(left));
-    return;
-  }
-
   std::visit(
       overloaded{
           [this, &expr, &type](const value_t& v) {
             std::visit(
                 overloaded{
-                    [&expr](auto) {
+                    [&](auto arg) {
+                      if (type.type == BOOL) {
+                        set_evaluation(boolify(arg));
+                        return;
+                      }
                       throw RuntimeError(expr.position, "Invalid type cast");
                     },
                     [this, &type](int arg) {
@@ -462,6 +461,9 @@ void Interpreter::visit(const AsTypeExpr& expr) {
                           break;
                         case STR:
                           set_evaluation(std::to_string(arg));
+                          break;
+                        case BOOL:
+                          set_evaluation(boolify(arg));
                           break;
                         default:
                           set_evaluation(arg);
@@ -479,6 +481,9 @@ void Interpreter::visit(const AsTypeExpr& expr) {
                         case STR:
                           set_evaluation(std::to_string(arg));
                           break;
+                        case BOOL:
+                          set_evaluation(boolify(arg));
+                          break;
                         default:
                           throw RuntimeError(expr.position,
                                              "Invalid type cast");
@@ -489,6 +494,9 @@ void Interpreter::visit(const AsTypeExpr& expr) {
                         case STR:
                           set_evaluation(arg);
                           break;
+                        case BOOL:
+                          set_evaluation(boolify(arg));
+                          break;
                         default:
                           throw RuntimeError(expr.position,
                                              "Invalid type cast");
@@ -498,6 +506,9 @@ void Interpreter::visit(const AsTypeExpr& expr) {
                       switch (type.type) {
                         case STR:
                           set_evaluation(arg ? "true" : "false");
+                          break;
+                        case BOOL:
+                          set_evaluation(arg);
                           break;
                         default:
                           throw RuntimeError(expr.position,
@@ -512,10 +523,18 @@ void Interpreter::visit(const AsTypeExpr& expr) {
               set_evaluation(arg->contained);
               return;
             }
+            if (type.type == BOOL) {
+              set_evaluation(boolify(arg));
+              return;
+            }
             throw RuntimeError(expr.position,
                                "Invalid contained value type cast");
           },
-          [&expr](auto) {
+          [&](auto arg) {
+            if (type.type == BOOL) {
+              set_evaluation(boolify(arg));
+              return;
+            }
             throw RuntimeError(expr.position, "Invalid type cast");
           },
       },

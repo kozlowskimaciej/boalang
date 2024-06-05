@@ -15,6 +15,9 @@ TEST(InterpreterVariantTests, assigning) {
 
     v = true;
     print v as bool;
+
+    v = false;
+    print v as bool;
   )";
 
   auto stdout = capture_interpreted_stdout(code);
@@ -22,6 +25,7 @@ TEST(InterpreterVariantTests, assigning) {
   EXPECT_TRUE(str_contains(stdout, "1"));
   EXPECT_TRUE(str_contains(stdout, "2.5"));
   EXPECT_TRUE(str_contains(stdout, "true"));
+  EXPECT_TRUE(str_contains(stdout, "false"));
 }
 
 TEST(InterpreterVariantTests, struct_in_variant) {
