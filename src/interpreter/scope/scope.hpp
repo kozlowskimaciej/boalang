@@ -31,8 +31,9 @@ struct StructType;
 struct VariantType;
 
 using eval_value_t =
-    std::variant<value_t, std::shared_ptr<StructObject>,
-                 std::shared_ptr<VariantObject>, std::shared_ptr<Variable>,
+    std::variant<std::monostate, std::string, int, float, bool,
+                 std::shared_ptr<StructObject>, std::shared_ptr<VariantObject>,
+                 std::shared_ptr<Variable>,
                  std::shared_ptr<InitalizerList>>; /**< Possible values returned
                                                       from evaluation_. */
 
@@ -46,6 +47,11 @@ using types_t =
  * @brief Clones eval_value_t object.
  */
 eval_value_t clone_value(const eval_value_t& value);
+
+/**
+ * @brief Converts value_t variant to eval_value_t variant.
+ */
+eval_value_t convert_to_eval_value(const value_t& value);
 
 /**
  * @brief Scope representation.

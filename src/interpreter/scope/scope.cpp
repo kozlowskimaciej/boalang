@@ -31,19 +31,10 @@ bool Scope::match_type(const eval_value_t& actual, const VarType& expected,
       [&](const auto& arg) -> bool {
     return std::visit(
         overloaded{
-            [&expected](const value_t& v) {
-              return std::visit(
-                  overloaded{
-                      [](auto) { return false; },
-                      [&expected](int) { return expected.type == INT; },
-                      [&expected](float) { return expected.type == FLOAT; },
-                      [&expected](const std::string&) {
-                        return expected.type == STR;
-                      },
-                      [&expected](bool) { return expected.type == BOOL; },
-                  },
-                  v);
-            },
+            [&expected](int) { return expected.type == INT; },
+            [&expected](float) { return expected.type == FLOAT; },
+            [&expected](const std::string&) { return expected.type == STR; },
+            [&expected](bool) { return expected.type == BOOL; },
             [&expected](const std::shared_ptr<Variable>& arg) {
               return arg->type.name == expected.name;
             },
@@ -116,43 +107,36 @@ bool Scope::is_in_variant(const eval_value_t& actual, const VarType& expected,
       if (const auto& variant =
               std::get_if<std::shared_ptr<VariantType>>(&*type)) {
         return std::visit(
-            overloaded{
-                [&](const value_t& value) {
-                  return std::visit(
-                      overloaded{
-                          [&](std::monostate) {
-                            return type_in_variant(variant->get()->types, VOID);
-                          },
-                          [&](const std::string&) {
-                            return type_in_variant(variant->get()->types, STR);
-                          },
-                          [&](int) {
-                            return type_in_variant(variant->get()->types, INT);
-                          },
-                          [&](float) {
-                            return type_in_variant(variant->get()->types,
-                                                   FLOAT);
-                          },
-                          [&](bool) {
-                            return type_in_variant(variant->get()->types, BOOL);
-                          },
-                      },
-                      value);
-                },
-                [&](const std::shared_ptr<Variable>& obj) {
-                  return identifier_in_variant(variant->get()->types,
-                                               obj->type.name);
-                },
-                [&](const std::shared_ptr<StructObject>& obj) {
-                  return identifier_in_variant(variant->get()->types,
-                                               obj->type_def->type_name);
-                },
-                [&](const std::shared_ptr<VariantObject>& obj) {
-                  return identifier_in_variant(variant->get()->types,
-                                               obj->type_def->type_name) ||
-                         obj->type_def->type_name == expected.name;
-                },
-                [](auto) { return false; }},
+            overloaded{[&](std::monostate) {
+                         return type_in_variant(variant->get()->types, VOID);
+                       },
+                       [&](const std::string&) {
+                         return type_in_variant(variant->get()->types, STR);
+                       },
+                       [&](int) {
+                         return type_in_variant(variant->get()->types, INT);
+                       },
+                       [&](float) {
+                         return type_in_variant(variant->get()->types, FLOAT);
+                       },
+                       [&](bool) {
+                         return type_in_variant(variant->get()->types, BOOL);
+                       },
+                       [&](const std::shared_ptr<Variable>& obj) {
+                         return identifier_in_variant(variant->get()->types,
+                                                      obj->type.name);
+                       },
+                       [&](const std::shared_ptr<StructObject>& obj) {
+                         return identifier_in_variant(variant->get()->types,
+                                                      obj->type_def->type_name);
+                       },
+                       [&](const std::shared_ptr<VariantObject>& obj) {
+                         return identifier_in_variant(
+                                    variant->get()->types,
+                                    obj->type_def->type_name) ||
+                                obj->type_def->type_name == expected.name;
+                       },
+                       [](auto) { return false; }},
             actual);
       }
     }
@@ -188,18 +172,21 @@ Scope StructObject::clone_scope() const {
 
 eval_value_t clone_value(const eval_value_t& value) {
   eval_value_t cloned;
-  std::visit(
-      overloaded{
-         [&](const std::shared_ptr<Variable>& obj) {
-           cloned = std::make_shared<Variable>(obj->clone());
-         },
-         [&](const std::shared_ptr<StructObject>& obj) {
-           cloned = std::make_shared<StructObject>(obj->clone());
-         },
-         [&](const std::shared_ptr<VariantObject>& obj) {
-           cloned = std::make_shared<VariantObject>(obj->clone());
-         },
-         [&](auto arg) { cloned = arg; }},
-      value);
+  std::visit(overloaded{[&](const std::shared_ptr<Variable>& obj) {
+                          cloned = std::make_shared<Variable>(obj->clone());
+                        },
+                        [&](const std::shared_ptr<StructObject>& obj) {
+                          cloned = std::make_shared<StructObject>(obj->clone());
+                        },
+                        [&](const std::shared_ptr<VariantObject>& obj) {
+                          cloned =
+                              std::make_shared<VariantObject>(obj->clone());
+                        },
+                        [&](auto arg) { cloned = arg; }},
+             value);
   return cloned;
+}
+
+eval_value_t convert_to_eval_value(const value_t& value) {
+  return std::visit([](auto&& arg) -> eval_value_t { return arg; }, value);
 }

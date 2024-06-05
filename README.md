@@ -29,9 +29,9 @@ Opcjonalnie: `Clang-Format`, `Doxygen Graphviz`
 
 ## Statystyki
 
-- liczba linii kodu: **6717** (`find . -type f \( -name "*.cpp" -o -name "*.hpp" -o -name "*.tpp" \) -print0 | xargs -0 wc -l`)
-- procentowe pokrycie kodu testami: **94%** (mierzone przy użyciu `llvm-cov`)
-- liczba testów: **237**
+- liczba linii kodu: **6724** (`find . -type f \( -name "*.cpp" -o -name "*.hpp" -o -name "*.tpp" \) -print0 | xargs -0 wc -l`)
+- procentowe pokrycie kodu testami: **91%** (mierzone przy użyciu `llvm-cov`)
+- liczba testów: **238**
 
 ## Zasady działania języka
 

@@ -32,6 +32,12 @@ void Interpreter::set_evaluation(eval_value_t value) {
   evaluation_ = std::move(value);
 }
 
+template <typename T>
+typename std::enable_if<std::is_same_v<T, value_t>>::type
+Interpreter::set_evaluation(T value) {
+  set_evaluation(convert_to_eval_value(value));
+}
+
 eval_value_t Interpreter::get_evaluation() {
   assert(evaluation_.has_value());
   auto value = evaluation_;
@@ -40,22 +46,14 @@ eval_value_t Interpreter::get_evaluation() {
 }
 
 bool Interpreter::boolify(const eval_value_t& value) {
-  return std::visit(
-      overloaded{
-          [](const value_t& v) {
-            return std::visit(
-                overloaded{
-                    [](auto) { return false; },
-                    [](int arg) { return arg != 0; },
-                    [](float arg) { return arg != 0.F; },
-                    [](const std::string& arg) { return !arg.empty(); },
-                    [](bool arg) { return arg; },
-                },
-                v);
-          },
-          [](auto) { return true; },
-      },
-      value);
+  return std::visit(overloaded{
+                        [](int arg) { return arg != 0; },
+                        [](float arg) { return arg != 0.F; },
+                        [](const std::string& arg) { return !arg.empty(); },
+                        [](bool arg) { return arg; },
+                        [](auto) { return true; },
+                    },
+                    value);
 }
 
 void Interpreter::visit(const Program& stmt) {
@@ -69,20 +67,11 @@ void Interpreter::visit(const PrintStmt& stmt) {
 
   std::visit(
       overloaded{
-          [](const value_t& v) {
-            return std::visit(
-                overloaded{
-                    [](auto) { throw RuntimeError("Value unprintable"); },
-                    [](int arg) { std::cout << std::to_string(arg); },
-                    [](float arg) { std::cout << std::to_string(arg); },
-                    [](const std::string& arg) { std::cout << arg; },
-                    [](bool arg) {
-                      std::cout << std::string(arg ? "true" : "false");
-                    },
-                },
-                v);
-          },
           [](auto) { throw RuntimeError("Value unprintable"); },
+          [](int arg) { std::cout << std::to_string(arg); },
+          [](float arg) { std::cout << std::to_string(arg); },
+          [](const std::string& arg) { std::cout << arg; },
+          [](bool arg) { std::cout << std::string(arg ? "true" : "false"); },
       },
       value);
 
@@ -439,106 +428,89 @@ void Interpreter::visit(const AsTypeExpr& expr) {
   auto left = evaluate_var(expr.left.get());
   auto type = expr.type;
 
-  std::visit(
-      overloaded{
-          [this, &expr, &type](const value_t& v) {
-            std::visit(
-                overloaded{
-                    [&](auto arg) {
-                      if (type.type == BOOL) {
-                        set_evaluation(boolify(arg));
-                        return;
-                      }
-                      throw RuntimeError(expr.position, "Invalid type cast");
-                    },
-                    [this, &type](int arg) {
-                      switch (type.type) {
-                        case INT:
-                          set_evaluation(arg);
-                          break;
-                        case FLOAT:
-                          set_evaluation(static_cast<float>(arg));
-                          break;
-                        case STR:
-                          set_evaluation(std::to_string(arg));
-                          break;
-                        case BOOL:
-                          set_evaluation(boolify(arg));
-                          break;
-                        default:
-                          set_evaluation(arg);
-                          break;
-                      }
-                    },
-                    [this, &expr, &type](float arg) {
-                      switch (type.type) {
-                        case INT:
-                          set_evaluation(static_cast<int>(std::round(arg)));
-                          break;
-                        case FLOAT:
-                          set_evaluation(arg);
-                          break;
-                        case STR:
-                          set_evaluation(std::to_string(arg));
-                          break;
-                        case BOOL:
-                          set_evaluation(boolify(arg));
-                          break;
-                        default:
-                          throw RuntimeError(expr.position,
-                                             "Invalid type cast");
-                      }
-                    },
-                    [this, &expr, &type](std::string arg) {
-                      switch (type.type) {
-                        case STR:
-                          set_evaluation(arg);
-                          break;
-                        case BOOL:
-                          set_evaluation(boolify(arg));
-                          break;
-                        default:
-                          throw RuntimeError(expr.position,
-                                             "Invalid type cast");
-                      }
-                    },
-                    [this, &expr, &type](bool arg) {
-                      switch (type.type) {
-                        case STR:
-                          set_evaluation(arg ? "true" : "false");
-                          break;
-                        case BOOL:
-                          set_evaluation(arg);
-                          break;
-                        default:
-                          throw RuntimeError(expr.position,
-                                             "Invalid type cast");
-                      }
-                    },
-                },
-                v);
-          },
-          [&](const std::shared_ptr<VariantObject>& arg) {
-            if (match_type(arg->contained, type, false)) {
-              set_evaluation(arg->contained);
-              return;
-            }
-            if (type.type == BOOL) {
-              set_evaluation(boolify(arg));
-              return;
-            }
-            throw RuntimeError(expr.position,
-                               "Invalid contained value type cast");
-          },
-          [&](auto arg) {
-            if (type.type == BOOL) {
-              set_evaluation(boolify(arg));
-              return;
-            }
-            throw RuntimeError(expr.position, "Invalid type cast");
-          },
-      },
-      left);
+  std::visit(overloaded{
+                 [&](auto arg) {
+                   if (type.type == BOOL) {
+                     set_evaluation(boolify(arg));
+                     return;
+                   }
+                   throw RuntimeError(expr.position, "Invalid type cast");
+                 },
+                 [&](int arg) {
+                   switch (type.type) {
+                     case INT:
+                       set_evaluation(arg);
+                       break;
+                     case FLOAT:
+                       set_evaluation(static_cast<float>(arg));
+                       break;
+                     case STR:
+                       set_evaluation(std::to_string(arg));
+                       break;
+                     case BOOL:
+                       set_evaluation(boolify(arg));
+                       break;
+                     default:
+                       set_evaluation(arg);
+                       break;
+                   }
+                 },
+                 [&](float arg) {
+                   switch (type.type) {
+                     case INT:
+                       set_evaluation(static_cast<int>(std::round(arg)));
+                       break;
+                     case FLOAT:
+                       set_evaluation(arg);
+                       break;
+                     case STR:
+                       set_evaluation(std::to_string(arg));
+                       break;
+                     case BOOL:
+                       set_evaluation(boolify(arg));
+                       break;
+                     default:
+                       throw RuntimeError(expr.position, "Invalid type cast");
+                   }
+                 },
+                 [&](std::string arg) {
+                   switch (type.type) {
+                     case STR:
+                       set_evaluation(arg);
+                       break;
+                     case BOOL:
+                       set_evaluation(boolify(arg));
+                       break;
+                     default:
+                       throw RuntimeError(expr.position, "Invalid type cast");
+                   }
+                 },
+                 [&](bool arg) {
+                   switch (type.type) {
+                     case STR:
+                       set_evaluation(arg ? "true" : "false");
+                       break;
+                     case BOOL:
+                       set_evaluation(arg);
+                       break;
+                     default:
+                       throw RuntimeError(expr.position, "Invalid type cast");
+                   }
+                 },
+                 [&](const std::shared_ptr<VariantObject>& arg) {
+                   if (match_type(arg->contained, type, false)) {
+                     set_evaluation(arg->contained);
+                     return;
+                   }
+                   if (type.type == BOOL) {
+                     set_evaluation(boolify(arg));
+                     return;
+                   }
+                   throw RuntimeError(expr.position,
+                                      "Invalid contained value type cast");
+                 },
+             },
+             left);
 }
 
 void Interpreter::visit(const InitalizerListExpr& expr) {
@@ -844,29 +816,23 @@ void Interpreter::perform_arithmetic_operation(Expr* left, Expr* right,
 
   std::visit(
       overloaded{
-          [&](const value_t& lhs, const value_t& rhs) {
-            std::visit(
-                overloaded{
-                    [&](int lhs, int rhs) { set_evaluation(op(lhs, rhs)); },
-                    [&](float lhs, float rhs) { set_evaluation(op(lhs, rhs)); },
-                    [&](const std::string& lhs, const std::string& rhs) {
-                      if constexpr (std::is_same_v<Operation, std::plus<>>) {
-                        set_evaluation(lhs + rhs);
-                      } else {
-                        throw RuntimeError(position,
-                                           "Unsupported operation for strings");
-                      }
-                    },
-                    [&](auto, auto) {
-                      throw RuntimeError(position,
-                                         "Arithmetic operation cannot be "
-                                         "applied to different types");
-                    }},
-                lhs, rhs);
+          [&](int lhs, int rhs) { set_evaluation(op(lhs, rhs)); },
+          [&](float lhs, float rhs) { set_evaluation(op(lhs, rhs)); },
+          [&](const std::string& lhs, const std::string& rhs) {
+            if constexpr (std::is_same_v<Operation, std::plus<>>) {
+              set_evaluation(lhs + rhs);
+            } else {
+              throw RuntimeError(position, "Unsupported operation for strings");
+            }
           },
-          [&](auto, auto) {
-            throw RuntimeError(position,
-                               "Unsupported types for arithmetic operation");
+          [&](auto lhs, auto rhs) {
+            if constexpr (std::is_same_v<decltype(lhs), decltype(rhs)>) {
+              throw RuntimeError(position,
+                                 "Unsupported types for arithmetic operation");
+            }
+            throw RuntimeError(
+                position,
+                "Arithmetic operation cannot be applied to different types");
           },
       },
       leftValue, rightValue);
@@ -881,26 +847,20 @@ void Interpreter::perform_comparison_operation(Expr* left, Expr* right,
 
   std::visit(
       overloaded{
-          [&](const value_t& lhs, const value_t& rhs) {
-            std::visit(
-                overloaded{
-                    [&](int lhs, int rhs) { set_evaluation(op(lhs, rhs)); },
-                    [&](float lhs, float rhs) { set_evaluation(op(lhs, rhs)); },
-                    [&](bool lhs, bool rhs) { set_evaluation(op(lhs, rhs)); },
-                    [&](const std::string& lhs, const std::string& rhs) {
-                      set_evaluation(op(lhs, rhs));
-                    },
-                    [&](auto, auto) {
-                      throw RuntimeError(position,
-                                         "Comparison operation cannot be "
-                                         "applied to different types");
-                    },
-                },
-                lhs, rhs);
+          [&](int lhs, int rhs) { set_evaluation(op(lhs, rhs)); },
+          [&](float lhs, float rhs) { set_evaluation(op(lhs, rhs)); },
+          [&](bool lhs, bool rhs) { set_evaluation(op(lhs, rhs)); },
+          [&](const std::string& lhs, const std::string& rhs) {
+            set_evaluation(op(lhs, rhs));
           },
-          [&](auto, auto) {
-            throw RuntimeError(position,
-                               "Unsupported types for comparison operation");
+          [&](auto lhs, auto rhs) {
+            if constexpr (std::is_same_v<decltype(lhs), decltype(rhs)>) {
+              throw RuntimeError(position,
+                                 "Unsupported types for comparison operation");
+            }
+            throw RuntimeError(
+                position,
+                "Comparison operation cannot be applied to different types");
           },
       },
       leftValue, rightValue);

@@ -44,6 +44,11 @@ class Interpreter : public ExprVisitor, public StmtVisitor {
                                     extracts value from Variable. */
 
   void set_evaluation(eval_value_t value);
+
+  template <typename T>
+  typename std::enable_if<std::is_same_v<T, value_t>>::type set_evaluation(
+      T value);
+
   eval_value_t get_evaluation();
 
   Scope* create_new_scope();
