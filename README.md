@@ -181,7 +181,7 @@ Długość identyfikatorów i zakres wartości zmiennych `int` i `float` ogranic
 
 ## Testownie
 
-- testy jednostkowe analizatora leksykalnego, składniowego i interpretera
+- testy jednostkowe analizatora leksykalnego
 
 - testy integracyjne analizatora leksykalnego i składniowego
 
