@@ -29,24 +29,28 @@ void parse_args(int& argc, char* argv[], argparse::ArgumentParser& program) {
 }
 
 int main(int argc, char* argv[]) {
-  argparse::ArgumentParser program("boalang");
-  parse_args(argc, argv, program);
+  try {
+    argparse::ArgumentParser program("boalang");
+    parse_args(argc, argv, program);
 
-  std::unique_ptr<Source> src;
-  if (program.is_used("--cmd")) {
-    src = std::make_unique<StringSource>(program.get<std::string>("source"));
-  } else {
-    src = std::make_unique<FileSource>(program.get<std::string>("source"));
+    std::unique_ptr<Source> src;
+    if (program.is_used("--cmd")) {
+      src = std::make_unique<StringSource>(program.get<std::string>("source"));
+    } else {
+      src = std::make_unique<FileSource>(program.get<std::string>("source"));
+    }
+
+    Lexer lexer(*src);
+    LexerCommentFilter filter(lexer);
+    Parser parser(filter);
+    if (program.is_used("--ast")) {
+      ASTPrinter().print(parser.parse().get());
+    } else {
+      Interpreter().visit(*parser.parse());
+    }
+  } catch (const std::runtime_error& error) {
+    std::cerr << "[[[Error occurred: " << error.what() << "]]]\n";
+    return 1;
   }
-
-  Lexer lexer(*src);
-  LexerCommentFilter filter(lexer);
-  Parser parser(filter);
-  if (program.is_used("--ast")) {
-    ASTPrinter().print(parser.parse().get());
-  } else {
-    Interpreter().visit(*parser.parse());
-  }
-
   return 0;
 }

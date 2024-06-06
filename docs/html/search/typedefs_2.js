@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['token_5fvalue_5ft_81',['token_value_t',['../token_8hpp.html#af8cbbfa1eb80753c0ea157e540bd6238',1,'token.hpp']]]
+  ['opt_5ftoken_5ft_385',['opt_token_t',['../lexer_8hpp.html#a83d724984d8affdff029b3425d3e5fb9',1,'lexer.hpp']]]
 ];

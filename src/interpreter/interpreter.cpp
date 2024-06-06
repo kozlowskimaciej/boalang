@@ -8,19 +8,15 @@
 #include "utils/position.hpp"
 
 template <typename VisitType>
-typename std::enable_if<std::is_same<VisitType, Stmt>::value ||
-                            std::is_same<VisitType, Expr>::value,
-                        eval_value_t>::type
-Interpreter::evaluate(const VisitType* visited) {
+requires std::same_as<VisitType, Stmt> || std::same_as<VisitType, Expr>
+eval_value_t Interpreter::evaluate(const VisitType* visited) {
   visited->accept(*this);
   return get_evaluation();
 }
 
 template <typename VisitType>
-typename std::enable_if<std::is_same<VisitType, Stmt>::value ||
-                            std::is_same<VisitType, Expr>::value,
-                        eval_value_t>::type
-Interpreter::evaluate_var(const VisitType* visited) {
+requires std::same_as<VisitType, Stmt> || std::same_as<VisitType, Expr>
+eval_value_t Interpreter::evaluate_var(const VisitType* visited) {
   auto var = evaluate(visited);
   while (const auto& v = std::get_if<std::shared_ptr<Variable>>(&var)) {
     var = *(v->get()->value);
@@ -33,8 +29,8 @@ void Interpreter::set_evaluation(eval_value_t value) {
 }
 
 template <typename T>
-typename std::enable_if<std::is_same_v<T, value_t>>::type
-Interpreter::set_evaluation(T value) {
+requires std::same_as<T, value_t>
+void Interpreter::set_evaluation(T value) {
   set_evaluation(convert_to_eval_value(value));
 }
 
@@ -102,7 +98,7 @@ void Interpreter::visit(const BlockStmt& stmt) {
 }
 
 void Interpreter::visit(const WhileStmt& stmt) {
-  while (boolify(evaluate(stmt.condition.get()))) {
+  while (boolify(evaluate(stmt.condition.get())) && !return_flag_) {
     stmt.body->accept(*this);
   }
 }
@@ -257,6 +253,12 @@ void Interpreter::visit(const FuncStmt& stmt) {
   auto* body = dynamic_cast<BlockStmt*>(stmt.body.get());
   std::vector<std::pair<std::string, VarType>> params{};
   for (const auto& param : stmt.params) {
+    if (std::ranges::any_of(params, [&](const auto& pair) {
+        return pair.first == param->identifier;
+      })) {
+      throw RuntimeError(stmt.position,
+                         "Param '" + param->identifier + "' already defined in function");
+    }
     params.emplace_back(param->identifier, param->type);
   }
   auto func = std::make_shared<FunctionObject>(stmt.identifier,
@@ -674,6 +676,7 @@ void Interpreter::bind_args_to_params(const FunctionObject* func,
       throw RuntimeError(position, "Type mismatch in call arguments for '" +
                                        func->identifier + "'");
     }
+
     if (auto type = get_type(param.second.name)) {
       std::visit(
           overloaded{
@@ -807,6 +810,40 @@ bool Interpreter::match_type(const eval_value_t& actual,
   return scopes_.back()->match_type(actual, expected, check_self);
 }
 
+template <typename T, typename Operation>
+requires std::integral<T> || std::floating_point<T>
+bool Interpreter::is_overflow(const T& left, const T& right, Operation) {
+  if constexpr (std::is_same_v<Operation, std::plus<>>) {
+    if ((right > 0 && left > std::numeric_limits<T>::max() - right) ||
+        (right < 0 && left < std::numeric_limits<T>::min() - right)) {
+      return true;
+    }
+  } else if constexpr (std::is_same_v<Operation, std::multiplies<>>) {
+    if ((right > 0 && left > std::numeric_limits<T>::max() / right) ||
+        (right < 0 && left < std::numeric_limits<T>::min() / right)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+template <typename T, typename Operation>
+requires std::integral<T> || std::floating_point<T>
+bool Interpreter::is_underflow(const T& left, const T& right, Operation) {
+  if constexpr (std::is_same_v<Operation, std::minus<>>) {
+    if ((right > 0 && left < std::numeric_limits<T>::min() + right) ||
+        (right < 0 && left > std::numeric_limits<T>::max() + right)) {
+      return true;
+    }
+  } else if constexpr (std::is_same_v<Operation, std::multiplies<>>) {
+    if ((right > 0 && left < std::numeric_limits<T>::min() / right) ||
+        (right < 0 && left > std::numeric_limits<T>::max() / right)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 template <typename Operation>
 void Interpreter::perform_arithmetic_operation(Expr* left, Expr* right,
                                                Operation op,
@@ -816,25 +853,39 @@ void Interpreter::perform_arithmetic_operation(Expr* left, Expr* right,
 
   std::visit(
       overloaded{
-          [&](int lhs, int rhs) { set_evaluation(op(lhs, rhs)); },
-          [&](float lhs, float rhs) { set_evaluation(op(lhs, rhs)); },
-          [&](const std::string& lhs, const std::string& rhs) {
-            if constexpr (std::is_same_v<Operation, std::plus<>>) {
-              set_evaluation(lhs + rhs);
-            } else {
-              throw RuntimeError(position, "Unsupported operation for strings");
-            }
-          },
-          [&](auto lhs, auto rhs) {
-            if constexpr (std::is_same_v<decltype(lhs), decltype(rhs)>) {
-              throw RuntimeError(position,
-                                 "Unsupported types for arithmetic operation");
-            }
-            throw RuntimeError(
-                position,
-                "Arithmetic operation cannot be applied to different types");
-          },
-      },
+     [&]<typename T>(T lhs, T rhs)
+     requires std::integral<T> || std::floating_point<T>
+     {
+       if constexpr (std::is_same_v<Operation, std::divides<>>) {
+         if (rhs == 0) {
+           throw RuntimeError(position, "Division by zero");
+         }
+       }
+       if (is_overflow(lhs, rhs, op)) {
+         throw RuntimeError(position, "Detected overflow");
+       }
+       if (is_underflow(lhs, rhs, op)) {
+         throw RuntimeError(position, "Detected underflow");
+       }
+       set_evaluation(op(lhs, rhs));
+    },
+    [&](const std::string& lhs, const std::string& rhs) {
+      if constexpr (std::is_same_v<Operation, std::plus<>>) {
+        set_evaluation(lhs + rhs);
+      } else {
+        throw RuntimeError(position, "Unsupported operation for strings");
+      }
+    },
+    [&]<typename T>(T, T) {
+      throw RuntimeError(position,
+                         "Unsupported types for arithmetic operation");
+    },
+    [&](auto, auto) {
+      throw RuntimeError(
+          position,
+          "Arithmetic operation cannot be applied to different types");
+    },
+},
       leftValue, rightValue);
 }
 
@@ -847,17 +898,16 @@ void Interpreter::perform_comparison_operation(Expr* left, Expr* right,
 
   std::visit(
       overloaded{
-          [&](int lhs, int rhs) { set_evaluation(op(lhs, rhs)); },
-          [&](float lhs, float rhs) { set_evaluation(op(lhs, rhs)); },
-          [&](bool lhs, bool rhs) { set_evaluation(op(lhs, rhs)); },
-          [&](const std::string& lhs, const std::string& rhs) {
+          [&]<typename T>(T lhs, T rhs)
+          requires std::integral<T> || std::floating_point<T> || std::same_as<bool, T> || std::same_as<std::string, T>
+          {
             set_evaluation(op(lhs, rhs));
           },
-          [&](auto lhs, auto rhs) {
-            if constexpr (std::is_same_v<decltype(lhs), decltype(rhs)>) {
-              throw RuntimeError(position,
-                                 "Unsupported types for comparison operation");
-            }
+          [&]<typename T>(T, T) {
+            throw RuntimeError(position,
+                               "Unsupported types for comparison operation");
+          },
+          [&](auto, auto) {
             throw RuntimeError(
                 position,
                 "Comparison operation cannot be applied to different types");

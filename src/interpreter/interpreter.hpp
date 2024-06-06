@@ -29,25 +29,20 @@ class Interpreter : public ExprVisitor, public StmtVisitor {
       const eval_value_t& value); /**< Boolifies eval_value_t. */
 
   template <typename VisitType>
-  typename std::enable_if<std::is_same<VisitType, Stmt>::value ||
-                              std::is_same<VisitType, Expr>::value,
-                          eval_value_t>::type
-  evaluate(
-      const VisitType* visited); /**< Evaluates statements and expressions. */
+  requires std::same_as<VisitType, Stmt> || std::same_as<VisitType, Expr>
+  eval_value_t evaluate(const VisitType* visited); /**< Evaluates statements
+                                                          and expressions. */
 
   template <typename VisitType>
-  typename std::enable_if<std::is_same<VisitType, Stmt>::value ||
-                              std::is_same<VisitType, Expr>::value,
-                          eval_value_t>::type
-  evaluate_var(
-      const VisitType* visited); /**< Evaluates statements and expressions, and
-                                    extracts value from Variable. */
+  requires std::same_as<VisitType, Stmt> || std::same_as<VisitType, Expr>
+  eval_value_t evaluate_var(const VisitType* visited); /**< Evaluates statements and expressions,
+                                    and extracts value from Variable. */
 
   void set_evaluation(eval_value_t value);
 
   template <typename T>
-  typename std::enable_if<std::is_same_v<T, value_t>>::type set_evaluation(
-      T value);
+  requires std::same_as<T, value_t>
+  void set_evaluation(T value);
 
   eval_value_t get_evaluation();
 
@@ -92,6 +87,14 @@ class Interpreter : public ExprVisitor, public StmtVisitor {
   template <typename Operation>
   void perform_comparison_operation(Expr* left, Expr* right, Operation op,
                                     const Position& position);
+
+  template <typename T, typename Operation>
+  requires std::integral<T> || std::floating_point<T>
+  bool is_overflow(const T& left, const T& right, Operation);
+
+  template <typename T, typename Operation>
+  requires std::integral<T> || std::floating_point<T>
+  bool is_underflow(const T& left, const T& right, Operation);
 
  public:
   Interpreter() { scopes_.push_back(std::make_unique<Scope>()); };

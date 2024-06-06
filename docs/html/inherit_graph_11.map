@@ -1,0 +1,36 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classStmt.html" title="Interface for statements." alt="" coords="5,411,59,437"/>
+<area shape="rect" id="node2" href="$classStmtType.html" title=" " alt="" coords="115,5,325,32"/>
+<area shape="rect" id="node4" href="$classStmtType.html" title=" " alt="" coords="107,56,333,83"/>
+<area shape="rect" id="node6" href="$classStmtType.html" title=" " alt="" coords="113,107,327,133"/>
+<area shape="rect" id="node8" href="$classStmtType.html" title=" " alt="" coords="129,157,311,184"/>
+<area shape="rect" id="node10" href="$classStmtType.html" title=" " alt="" coords="143,208,297,235"/>
+<area shape="rect" id="node12" href="$classStmtType.html" title=" " alt="" coords="130,259,310,285"/>
+<area shape="rect" id="node14" href="$classStmtType.html" title=" " alt="" coords="111,309,329,336"/>
+<area shape="rect" id="node16" href="$classStmtType.html" title=" " alt="" coords="136,360,304,387"/>
+<area shape="rect" id="node18" href="$classStmtType.html" title=" " alt="" coords="133,411,307,437"/>
+<area shape="rect" id="node20" href="$classStmtType.html" title=" " alt="" coords="127,461,313,488"/>
+<area shape="rect" id="node22" href="$classStmtType.html" title=" " alt="" coords="135,512,305,539"/>
+<area shape="rect" id="node24" href="$classStmtType.html" title=" " alt="" coords="113,563,327,589"/>
+<area shape="rect" id="node26" href="$classStmtType.html" title=" " alt="" coords="133,613,307,640"/>
+<area shape="rect" id="node28" href="$classStmtType.html" title=" " alt="" coords="123,664,317,691"/>
+<area shape="rect" id="node30" href="$classStmtType.html" title=" " alt="" coords="127,715,313,741"/>
+<area shape="rect" id="node32" href="$classStmtType.html" title=" " alt="" coords="125,765,315,792"/>
+<area shape="rect" id="node34" href="$classStmtType.html" title=" " alt="" coords="138,816,302,843"/>
+<area shape="rect" id="node3" href="$classStructDeclStmt.html" title=" " alt="" coords="389,5,509,32"/>
+<area shape="rect" id="node5" href="$classLambdaFuncStmt.html" title=" " alt="" coords="381,56,516,83"/>
+<area shape="rect" id="node7" href="$classFuncParamStmt.html" title=" " alt="" coords="387,107,511,133"/>
+<area shape="rect" id="node9" href="$classWhileStmt.html" title=" " alt="" coords="403,157,494,184"/>
+<area shape="rect" id="node11" href="$classIfStmt.html" title=" " alt="" coords="417,208,480,235"/>
+<area shape="rect" id="node13" href="$classBlockStmt.html" title=" " alt="" coords="404,259,493,285"/>
+<area shape="rect" id="node15" href="$classVariantDeclStmt.html" title=" " alt="" coords="385,309,513,336"/>
+<area shape="rect" id="node17" href="$classProgram.html" title=" " alt="" coords="410,360,487,387"/>
+<area shape="rect" id="node19" href="$classPrintStmt.html" title=" " alt="" coords="407,411,490,437"/>
+<area shape="rect" id="node21" href="$classAssignStmt.html" title=" " alt="" coords="401,461,497,488"/>
+<area shape="rect" id="node23" href="$classCallStmt.html" title=" " alt="" coords="409,512,488,539"/>
+<area shape="rect" id="node25" href="$classStructFieldStmt.html" title=" " alt="" coords="387,563,510,589"/>
+<area shape="rect" id="node27" href="$classFuncStmt.html" title=" " alt="" coords="407,613,490,640"/>
+<area shape="rect" id="node29" href="$classVarDeclStmt.html" title=" " alt="" coords="397,664,500,691"/>
+<area shape="rect" id="node31" href="$classReturnStmt.html" title=" " alt="" coords="401,715,497,741"/>
+<area shape="rect" id="node33" href="$classInspectStmt.html" title=" " alt="" coords="399,765,499,792"/>
+</map>

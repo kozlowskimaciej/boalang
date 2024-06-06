@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['peek_64',['peek',['../classSource.html#a771f80275373fcda1462436f7de60c92',1,'Source']]]
+  ['identifier_5fin_5fvariant_337',['identifier_in_variant',['../classScope.html#ae054d5629417471fb14b80d29ccd9969',1,'Scope']]]
 ];

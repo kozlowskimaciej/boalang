@@ -279,3 +279,47 @@ TEST(InterpreterFunctionTests, return_value_type_mismatch) {
       },
       RuntimeError);
 }
+
+TEST(InterpreterFunctionTests, param_redefinition) {
+  std::string code = R"(
+    int func(int a, int a) {
+      return 1;
+    }
+  )";
+
+  EXPECT_THROW(
+      {
+        try {
+          capture_interpreted_stdout(code);
+        } catch (const RuntimeError& e) {
+          EXPECT_TRUE(
+              str_contains(e.what(), "Param 'a' already defined in function"));
+          throw;
+        }
+      },
+      RuntimeError);
+}
+
+TEST(InterpreterFunctionTests, return_stops_while) {
+  std::string code = R"(
+    void func(int a) {
+        while(a>0) {
+            print a;
+            if (a == 6) {
+                return;
+            }
+            a = a - 1;
+        }
+    }
+
+    func(10);
+  )";
+
+  auto stdout = capture_interpreted_stdout(code);
+  EXPECT_TRUE(str_contains(stdout, "10"));
+  EXPECT_TRUE(str_contains(stdout, "9"));
+  EXPECT_TRUE(str_contains(stdout, "8"));
+  EXPECT_TRUE(str_contains(stdout, "7"));
+  EXPECT_TRUE(str_contains(stdout, "6"));
+  EXPECT_TRUE(!str_contains(stdout, "5"));
+}

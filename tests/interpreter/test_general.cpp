@@ -375,3 +375,23 @@ TEST(InterpreterGeneralTests, function_undefined) {
       },
       RuntimeError);
 }
+
+class InterpreterInvalidDivisionTests
+    : public ::testing::TestWithParam<std::string> {};
+
+TEST_P(InterpreterInvalidDivisionTests, invalid_arithmetic) {
+  EXPECT_THROW(
+      {
+        try {
+          capture_interpreted_stdout("print " + GetParam() + ";");
+        } catch (const RuntimeError& e) {
+          EXPECT_TRUE(str_contains(e.what(), "Division by zero"));
+          throw;
+        }
+      },
+      RuntimeError);
+}
+
+INSTANTIATE_TEST_SUITE_P(InterpreterGeneralTests,
+                         InterpreterInvalidDivisionTests,
+                         ::testing::Values("1 / 0", "1.0 / 0.0"));

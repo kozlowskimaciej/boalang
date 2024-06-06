@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['token_68',['Token',['../classToken.html#a3f1f78b934c66fed61e83bf28e524923',1,'Token::Token(TokenType type, Position position)'],['../classToken.html#a9c4fa6ae4a70e2dd3299571b9eb350a1',1,'Token::Token(TokenType type, token_value_t value, Position position)']]]
+  ['next_340',['next',['../classSource.html#a3861da93c406b12e3be6f19e9fc9469e',1,'Source']]],
+  ['next_5ftoken_341',['next_token',['../classLexer.html#aae0c369b839847c717e0ddc0ee60ada2',1,'Lexer::next_token()'],['../classLexerCommentFilter.html#af86efd33ae31b72c848cc210f9a9cade',1,'LexerCommentFilter::next_token()']]]
 ];
