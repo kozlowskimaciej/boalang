@@ -3,14 +3,6 @@
 #include <iostream>
 #include <magic_enum/magic_enum.hpp>
 
-template <class... Ts>
-struct overloaded : Ts... {
-  using Ts::operator()...;
-};
-
-template <class... Ts>
-overloaded(Ts...) -> overloaded<Ts...>;
-
 void ASTPrinter::parenthesize(
     std::initializer_list<std::variant<const Expr*, const Stmt*>> exprstmts,
     std::optional<Token> token) {
@@ -293,8 +285,7 @@ void ASTPrinter::visit(const InitalizerListExpr& expr) {
 
 void ASTPrinter::visit(const CallExpr& expr) {
   print_memory_info("CallExpr", &expr);
-  std::cout << "\nCallee:";
-  parenthesize({expr.callee.get()});
+  std::cout << "\nCallee: {" << expr.identifier << "}";
   std::cout << "\nArguments:";
   for (const auto& arg : expr.arguments) {
     parenthesize({arg.get()});
@@ -311,9 +302,12 @@ void ASTPrinter::visit(const FieldAccessExpr& expr) {
 }
 
 void ASTPrinter::visit_type(const VarType& type) {
-  std::visit(overloaded{[](const std::string& arg) { std::cout << arg; },
-                        [](BuiltinType arg) {
-                          std::cout << std::string(magic_enum::enum_name(arg));
-                        }},
-             type);
+  switch (type.type) {
+    case IDENTIFIER:
+      std::cout << type.name;
+      break;
+    default:
+      std::cout << std::string(magic_enum::enum_name(type.type));
+      break;
+  }
 }

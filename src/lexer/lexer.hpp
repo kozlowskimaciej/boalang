@@ -9,6 +9,7 @@
 
 #include "source/source.hpp"
 #include "token/token.hpp"
+#include "utils/errors.hpp"
 
 constexpr unsigned int MAX_IDENTIFIER_LENGTH =
     64; /**< Maximum identifier length supported by lexer. */
@@ -54,7 +55,7 @@ class Lexer : public ILexer {
    * @return The constructed token.
    */
   [[nodiscard]] Token build_token_with_value(const TokenType& type,
-                                             const token_value_t& value) const;
+                                             const value_t& value) const;
   /**
    * @brief Builds a token of the specified type without a value.
    *
@@ -119,22 +120,6 @@ class LexerCommentFilter : public ILexer {
    * @return A token that is not a comment.
    */
   Token next_token() override;
-};
-
-/**
- * @brief Represents a lexer related error.
- */
-class LexerError : public std::runtime_error {
-  Token token_;
-
- public:
-  LexerError(const Token& token, const std::string& message)
-      : runtime_error("Line " + std::to_string(token.get_position().line) +
-                      " column " + std::to_string(token.get_position().column) +
-                      " at '" + token.stringify() + "': " + message),
-        token_(token){};
-
-  [[nodiscard]] const Token& get_token() const { return token_; }
 };
 
 #endif  // BOALANG_LEXER_HPP

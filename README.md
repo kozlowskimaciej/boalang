@@ -19,11 +19,19 @@ Opcjonalnie: `Clang-Format`, `Doxygen Graphviz`
    - generowanie dokumentacji `sudo apt install doxygen graphviz && cd build && make docs`
    - uruchamianie testów `cd build && make test`
 
+`Clang-Tidy` uruchamiane jest automatycznie na plikach źródłowych w trakcie kompilacji.
+
 ## Sposób uruchamiania
 
 ### Windows + WSL / Linux (Ubuntu 22.04)
 1. Kompilacja: `./build.sh`
 2. Uruchamianie: `./build/src/boalang <ścieżka_do_pliku>` lub `./build/src/boalang --cmd "<kod>"`
+
+## Statystyki
+
+- liczba linii kodu: **6724** (`find . -type f \( -name "*.cpp" -o -name "*.hpp" -o -name "*.tpp" \) -print0 | xargs -0 wc -l`)
+- procentowe pokrycie kodu testami: **91%** (mierzone przy użyciu `llvm-cov`)
+- liczba testów: **238**
 
 ## Zasady działania języka
 
@@ -89,18 +97,25 @@ obj.b = 3;  // BŁĄD, PRÓBA PRZYPISANIA NOWEJ WARTOŚCI DO STAŁEJ
 
 ### Zasady przykrywania zmiennych
 
-Zmienne mogą być przykrywane jedynie w podrzędnych scope'ach.
+Zmienne, funkcje oraz typy nie mogą być przykrywane w podrzędnych scope'ach, jedynie w oddzielnych kontekstach zawołań.
 
 ```
 int a = 5;
 {
-    int a = 10;
-    print a == 10;  // PRAWDA   
+    int a = 10; // BŁĄD, ZMIENNA 'a' JUŻ ISTNIEJE
 }
-print a == 10;  // FAŁSZ
-print a == 5;  // PRAWDA
 
-float a = 1.0; // BŁĄD, ZMIENNA 'a' JUŻ ISTNIEJE
+void func(int n) {
+   variant V{int, float};  // rekursywne tworzenie typu w funkcji
+   void nested_func(){}  // rekursywne tworzenie funkcji w funkcji
+   int var = 1;  // rekursywne tworzenie zmiennej w funkcji
+   if (n < 5) {
+     n = n + 1;
+     func(n);
+   }
+   return;
+}
+func(1);
 ```
 
 ### Funkcje
@@ -138,15 +153,13 @@ Przykład:
 
 **Błędy interpretera**
 
-`RuntimeError: Line {number} column {number} at '{lexeme}': {message}`
+`RuntimeError: Line {number} column {number}: {message}`
 
 Przykład:
 
-`RuntimeError: Line 25 column 15 at 'obj': Cannot cast type B to float.`
+`RuntimeError: Line 4 column 8: Non-void function did not return a value`
 
-`RuntimeError: Line 25 column 15 at '"10"': Cannot assign value of type str to variable 'b' of type int.`
-
-`RuntimeError: Line 25 column 15 at 'a': Variable undefined.`
+`RuntimeError: Line 4 column 7: Type mismatch in initalizer list for 'a.number'`
 
 ### Inne założenia
 
@@ -179,6 +192,8 @@ Długość identyfikatorów i zakres wartości zmiennych `int` i `float` ogranic
 
 `Interpreter` - wykonuje instrukcje z `drzewa AST`
 
+![Architecture](docs/img/architecture.jpg)
+
 ## Testownie
 
 - testy jednostkowe analizatora leksykalnego
@@ -206,8 +221,8 @@ while_stmt	=	"while" "(" expression ")" statement ;
 return_stmt	=	"return" [ expression ] ";" ;
 print_stmt	=	"print" expression ";" ;
 
-inspect_stmt    =       "inspect" expression "{" { lambda_func } [ "default" "=>" statement ] "}" ;
-lambda_func     =       type identifier "=>" statement
+inspect_stmt    =       "inspect" expression "{" { lambda_func } [ "default" "=>" block_stmt ] "}" ;
+lambda_func     =       type identifier "=>" block_stmt ;
 
 block_stmt	=	"{" { statement } "}" ;
 
@@ -231,7 +246,7 @@ mut_var_decl    =	"mut" type identifier var_decl ;
 void_func_decl	=	"void" identifier func_decl ;
 
 var_decl        =       "=" expression ";" ;
-func_decl	=	"(" [ func_params ] ")" block ;
+func_decl	=	"(" [ func_params ] ")" block_stmt ;
 func_params     =	type identifier { "," type identifier } ;
 
 expression	=	logic_or ;
@@ -290,21 +305,21 @@ variant V { int, float, S };
 mut V varnt_obj = st_obj;
 
 if ( varnt_obj is S ) {
-    print varnt_obj.a;
+    print (varnt_obj as S).a;
 }
 
 inspect varnt_obj {
-    int val => print val;
-    float val => print val;
-    S val => print val.a;
-    default => print "default";
+    int val => {print val;}
+    float val => {print val;}
+    S val => {print val.a;}
+    default => {print "default";}
 }
 
 /*
     PRINT & WHILE
 */
 mut int a = 1;
-while (a < 5) {
+while (a <= 5) {
     print a;  // 1 2 3 4 5
     a = a + 1;    
 }
@@ -315,7 +330,7 @@ while (a < 5) {
 a = 1;
 mut bool b = false;
 b = a as bool;  // true
-b = not a;  // false
+b = !a;  // false
 b = a or false;  // true
 b = a and false; // false
 
@@ -330,38 +345,33 @@ b = a <= c;  // false
 variant Numeric { int, float };
 
 Numeric fib(Numeric n) {
-    if (n is int) {
-        int val = n as int;
-        if (val <= 1) {
-            return n;
-        }
-        return fib((n - 1) as Numeric) + fib((n - 2) as Numeric);
-    } else {
-        float val = n as float;
-        if (val <= 1.0) {
-            return n;
-        }
-        return fib((n - 1.0) as Numeric) + fib((n - 2.0) as Numeric);
-    }
-}
-
-Numeric fib2(Numeric n) {
     inspect n {
         int val => {
-            if (val <= 1) {
-                return n;
+            if (val == 1 or val == 2) {
+                return 1;
             }
-            return fib((val - 1) as Numeric) + fib((val - 2) as Numeric);
+            Numeric n1 = val - 1;
+            Numeric n2 = val - 2;
+            Numeric result = fib(n1) as int + fib(n2) as int;
+            return result;
         }
         float val => {
-            if (val <= 1.0) {
-                return n;
+            if (val == 1.0 or val == 2.0) {
+                return 1.0;
             }
-            return fib((val - 1) as Numeric) + fib((val - 2) as Numeric);
+            Numeric n1 = val - 1.0;
+            Numeric n2 = val - 2.0;
+            Numeric result = fib(n1) as float + fib(n2) as float;
+            return result;
         }
     }
 }
 
-int fibval = fib2(3 as Numeric) as int;
+Numeric val = 3;
+int fibval = fib(val) as int;
 print fibval;
 ```
+
+## Podsumowanie
+
+Udało się zaimplementować wszystkie planowane funkcjonalności języka. W stosunku do planowanego rozwiązania zmienił się sposób zapisu kilku reguł z gramatyki. Produkt końcowy umożliwia uruchomienie kodu napisanego w języku `boalang`.

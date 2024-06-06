@@ -1,17 +1,22 @@
-/*! @file ast_printer.hpp
+/*! @file astprinter.hpp
     @brief Ast printer.
 */
 
 #ifndef BOALANG_ASTPRINTER_HPP
 #define BOALANG_ASTPRINTER_HPP
 
-#include <expr/expr.hpp>
 #include <memory>
 #include <optional>
-#include <stmt/stmt.hpp>
 #include <variant>
 #include <vector>
 
+#include "expr/expr.hpp"
+#include "stmt/stmt.hpp"
+#include "utils/overloaded.tpp"
+
+/**
+ * @brief Prints abstract syntax tree.
+ */
 class ASTPrinter : public ExprVisitor, public StmtVisitor {
  private:
   unsigned int indent_ = 0;
@@ -19,12 +24,13 @@ class ASTPrinter : public ExprVisitor, public StmtVisitor {
   void parenthesize(
       std::initializer_list<std::variant<const Expr*, const Stmt*>> exprstmts,
       std::optional<Token> token = std::nullopt);
-  static void print_memory_info(const std::string& class_name,
-                                const void* address);
+  static void print_memory_info(
+      const std::string& class_name,
+      const void* address); /**< Prints address in memory of an object */
   static void visit_type(const VarType& type);
 
  public:
-  void print(Program* program);
+  void print(Program* program); /**< Visits Program and prints new line. */
 
   void visit(const Program& stmt) override;
   void visit(const PrintStmt& stmt) override;

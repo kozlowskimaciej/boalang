@@ -34,9 +34,19 @@ class InitalizerListExpr;
 class CallExpr;
 class FieldAccessExpr;
 
+/**
+ * @brief Interface for expressions visitor.
+ */
 class ExprVisitor {
  public:
   virtual ~ExprVisitor() = default;
+
+  ExprVisitor() = default;
+  ExprVisitor(const ExprVisitor&) = delete;
+  ExprVisitor& operator=(const ExprVisitor&) = delete;
+
+  ExprVisitor(ExprVisitor&&) = default;
+  ExprVisitor& operator=(ExprVisitor&&) = default;
 
   virtual void visit(const AdditionExpr& expr) = 0;
   virtual void visit(const SubtractionExpr& expr) = 0;
@@ -62,10 +72,20 @@ class ExprVisitor {
   virtual void visit(const FieldAccessExpr& expr) = 0;
 };
 
+/**
+ * @brief Interface for expressions.
+ */
 class Expr {
  public:
   virtual ~Expr() = default;
   virtual void accept(ExprVisitor& visitor) const = 0;
+
+  Expr() = default;
+  Expr(const Expr&) = delete;
+  Expr& operator=(const Expr&) = delete;
+
+  Expr(Expr&&) = default;
+  Expr& operator=(Expr&&) = default;
 };
 
 template <typename Derived>
@@ -182,10 +202,10 @@ class LogicalAndExpr : public LogicalExpr<LogicalAndExpr> {
 
 class LiteralExpr : public ExprType<LiteralExpr> {
  public:
-  token_value_t literal;
+  value_t literal;
   Position position;
 
-  explicit LiteralExpr(token_value_t literal, Position position)
+  explicit LiteralExpr(value_t literal, Position position)
       : literal(std::move(literal)), position(position){};
 };
 
@@ -236,12 +256,15 @@ class InitalizerListExpr : public ExprType<InitalizerListExpr> {
 
 class CallExpr : public ExprType<CallExpr> {
  public:
-  std::unique_ptr<Expr> callee;
+  std::string identifier;
+  Position position;
   std::vector<std::unique_ptr<Expr>> arguments;
 
-  explicit CallExpr(std::unique_ptr<Expr> callee,
+  explicit CallExpr(std::string identifier, Position position,
                     std::vector<std::unique_ptr<Expr>> arguments = {})
-      : callee(std::move(callee)), arguments(std::move(arguments)){};
+      : identifier(std::move(identifier)),
+        position(position),
+        arguments(std::move(arguments)){};
 };
 
 class FieldAccessExpr : public ExprType<FieldAccessExpr> {

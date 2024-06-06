@@ -257,10 +257,7 @@ TEST(ParserTest, print_call_function_no_args) {
   auto call_expr = dynamic_cast<CallExpr*>(print_stmt->expr.get());
   EXPECT_TRUE(call_expr != nullptr);
   EXPECT_EQ(call_expr->arguments.size(), 0);
-
-  auto callee = dynamic_cast<VarExpr*>(call_expr->callee.get());
-  EXPECT_TRUE(callee != nullptr);
-  EXPECT_EQ(callee->identifier, "foo");
+  EXPECT_EQ(call_expr->identifier, "foo");
 }
 
 TEST(ParserTest, print_call_function_args) {
@@ -285,9 +282,7 @@ TEST(ParserTest, print_call_function_args) {
   EXPECT_TRUE(arg != nullptr);
   EXPECT_EQ(std::get<int>(arg->literal), 2);
 
-  auto callee = dynamic_cast<VarExpr*>(call_expr->callee.get());
-  EXPECT_TRUE(callee != nullptr);
-  EXPECT_EQ(callee->identifier, "foo");
+  EXPECT_EQ(call_expr->identifier, "foo");
 }
 
 TEST(ParserTest, print_call_function_args_over_limit) {
@@ -346,7 +341,7 @@ TEST(ParserTypeCastExprTest, print_type_as) {
 
   auto cast_expr = dynamic_cast<AsTypeExpr*>(print_stmt->expr.get());
   EXPECT_TRUE(cast_expr != nullptr);
-  EXPECT_EQ(std::get<BuiltinType>(cast_expr->type), INT);
+  EXPECT_EQ(cast_expr->type.type, INT);
 
   auto left = dynamic_cast<VarExpr*>(cast_expr->left.get());
   EXPECT_TRUE(left != nullptr);
@@ -365,7 +360,7 @@ TEST(ParserTypeCastExprTest, print_type_is) {
 
   auto cast_expr = dynamic_cast<IsTypeExpr*>(print_stmt->expr.get());
   EXPECT_TRUE(cast_expr != nullptr);
-  EXPECT_EQ(std::get<BuiltinType>(cast_expr->type), INT);
+  EXPECT_EQ(cast_expr->type.type, INT);
 
   auto left = dynamic_cast<VarExpr*>(cast_expr->left.get());
   EXPECT_TRUE(left != nullptr);
@@ -625,9 +620,9 @@ TEST(ParserTest, block_stmt) {
 TEST(ParserTest, inspect_stmt) {
   StringSource source(
       "inspect variant_obj {"
-      "int val => print val;"
-      "float val => print val;"
-      "default => print \"default\";"
+      "int val => { print val; }"
+      "float val => { print val; }"
+      "default => { print \"default\"; }"
       "}");
   Lexer lexer(source);
   Parser parser(lexer);
@@ -645,19 +640,19 @@ TEST(ParserTest, inspect_stmt) {
   auto lambda_stmt =
       dynamic_cast<LambdaFuncStmt*>(inspect_stmt->lambdas[0].get());
   EXPECT_TRUE(lambda_stmt != nullptr);
-  EXPECT_EQ(std::get<BuiltinType>(lambda_stmt->type), INT);
+  EXPECT_EQ(lambda_stmt->type.type, INT);
 
   EXPECT_EQ(lambda_stmt->identifier, "val");
-  EXPECT_TRUE(dynamic_cast<PrintStmt*>(lambda_stmt->body.get()) != nullptr);
+  EXPECT_TRUE(dynamic_cast<BlockStmt*>(lambda_stmt->body.get()) != nullptr);
 
   lambda_stmt = dynamic_cast<LambdaFuncStmt*>(inspect_stmt->lambdas[1].get());
   EXPECT_TRUE(lambda_stmt != nullptr);
-  EXPECT_EQ(std::get<BuiltinType>(lambda_stmt->type), FLOAT);
+  EXPECT_EQ(lambda_stmt->type.type, FLOAT);
 
   EXPECT_EQ(lambda_stmt->identifier, "val");
-  EXPECT_TRUE(dynamic_cast<PrintStmt*>(lambda_stmt->body.get()) != nullptr);
+  EXPECT_TRUE(dynamic_cast<BlockStmt*>(lambda_stmt->body.get()) != nullptr);
 
-  EXPECT_TRUE(dynamic_cast<PrintStmt*>(inspect_stmt->default_lambda.get()) !=
+  EXPECT_TRUE(dynamic_cast<BlockStmt*>(inspect_stmt->default_lambda.get()) !=
               nullptr);
 }
 
@@ -761,14 +756,14 @@ TEST(ParserTest, struct_decl_stmt) {
   auto field = dynamic_cast<StructFieldStmt*>(struct_stmt->fields[0].get());
   EXPECT_TRUE(field != nullptr);
   EXPECT_EQ(field->mut, true);
-  EXPECT_EQ(std::get<BuiltinType>(field->type), INT);
+  EXPECT_EQ(field->type.type, INT);
 
   EXPECT_EQ(field->identifier, "a");
 
   field = dynamic_cast<StructFieldStmt*>(struct_stmt->fields[1].get());
   EXPECT_TRUE(field != nullptr);
   EXPECT_EQ(field->mut, false);
-  EXPECT_EQ(std::get<BuiltinType>(field->type), FLOAT);
+  EXPECT_EQ(field->type.type, FLOAT);
 
   EXPECT_EQ(field->identifier, "b");
 }
@@ -786,9 +781,9 @@ TEST(ParserTest, variant_decl_stmt) {
   EXPECT_EQ(variant_stmt->identifier, "V");
 
   EXPECT_EQ(variant_stmt->params.size(), 3);
-  EXPECT_EQ(std::get<BuiltinType>(variant_stmt->params[0]), INT);
-  EXPECT_EQ(std::get<BuiltinType>(variant_stmt->params[1]), FLOAT);
-  EXPECT_EQ(std::get<std::string>(variant_stmt->params[2]), "S");
+  EXPECT_EQ(variant_stmt->params[0].type, INT);
+  EXPECT_EQ(variant_stmt->params[1].type, FLOAT);
+  EXPECT_EQ(variant_stmt->params[2].name, "S");
 }
 
 TEST(ParserTest, assign_stmt) {
@@ -847,13 +842,13 @@ TEST(ParserTest, func_decl_stmt) {
   auto func_stmt = dynamic_cast<FuncStmt*>(program->statements[0].get());
   EXPECT_TRUE(func_stmt != nullptr);
   EXPECT_EQ(func_stmt->identifier, "func");
-  EXPECT_EQ(std::get<BuiltinType>(func_stmt->return_type), VOID);
+  EXPECT_EQ(func_stmt->return_type.type, VOID);
 
   auto& params = func_stmt->params;
   EXPECT_EQ(params.size(), 1);
   auto param = dynamic_cast<FuncParamStmt*>(params[0].get());
   EXPECT_TRUE(param != nullptr);
-  EXPECT_EQ(std::get<BuiltinType>(param->type), INT);
+  EXPECT_EQ(param->type.type, INT);
   EXPECT_EQ(param->identifier, "a");
 
   auto body = dynamic_cast<BlockStmt*>(func_stmt->body.get());

@@ -9,11 +9,23 @@
 #include <string>
 #include <variant>
 
+#include "utils/overloaded.tpp"
 #include "utils/position.hpp"
 
-using token_value_t =
+using value_t =
     std::variant<std::monostate, std::string, int, float,
                  bool>; /**< Variant of all available value types. */
+
+enum BuiltinType { IDENTIFIER, INT, FLOAT, STR, BOOL, VOID };
+
+struct VarType {
+  std::string name;
+  BuiltinType type;
+
+  VarType(BuiltinType type) : type(type){};
+  VarType(std::string name, BuiltinType type)
+      : name(std::move(name)), type(type){};
+};
 
 /**
  * @brief Represents all available token types.
@@ -85,9 +97,9 @@ enum TokenType {
  * Holds type, value and position in source.
  */
 class Token {
-  TokenType type;      /**< Token's type. */
-  token_value_t value; /**< Stored value. */
-  Position position;   /**< Position in source. */
+  TokenType type;    /**< Token's type. */
+  value_t value;     /**< Stored value. */
+  Position position; /**< Position in source. */
 
  public:
   /**
@@ -104,12 +116,12 @@ class Token {
    * @param value token's value
    * @param position token's position in source
    */
-  Token(TokenType type, token_value_t value, Position position)
+  Token(TokenType type, value_t value, Position position)
       : type(type), value(std::move(value)), position(position){};
 
   [[nodiscard]] const TokenType& get_type() const { return type; };
   [[nodiscard]] VarType get_var_type() const;
-  [[nodiscard]] const token_value_t& get_value() const { return value; };
+  [[nodiscard]] const value_t& get_value() const { return value; };
   [[nodiscard]] const Position& get_position() const { return position; };
 
   /**

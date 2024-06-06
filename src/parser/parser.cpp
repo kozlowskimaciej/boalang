@@ -128,7 +128,7 @@ std::unique_ptr<Stmt> Parser::print_stmt() {
 }
 
 // RULE inspect_stmt = "inspect" expression "{" { lambda_func } [ "default" "=>"
-// statement ] "}" ;
+// block_stmt ] "}" ;
 std::unique_ptr<Stmt> Parser::inspect_stmt() {
   if (!match(TOKEN_INSPECT)) {
     return nullptr;
@@ -146,9 +146,9 @@ std::unique_ptr<Stmt> Parser::inspect_stmt() {
   std::unique_ptr<Stmt> default_lambda;
   if (match(TOKEN_DEFAULT)) {
     consume("Expected '=>' after default lambda.", TOKEN_ARROW);
-    default_lambda = statement();
+    default_lambda = block_stmt();
     if (!default_lambda) {
-      throw SyntaxError(current_token_, "Expected statement after '=>'.");
+      throw SyntaxError(current_token_, "Expected block statement after '=>'.");
     }
   }
   consume("Expected '}' after inspect lambdas.", TOKEN_RBRACE);
@@ -156,7 +156,7 @@ std::unique_ptr<Stmt> Parser::inspect_stmt() {
                                        std::move(default_lambda));
 }
 
-// RULE lambda_func = type identifier "=>" statement
+// RULE lambda_func = type identifier "=>" block_stmt
 std::unique_ptr<LambdaFuncStmt> Parser::lambda_func() {
   std::optional<Token> lambda_type = type();
   if (!lambda_type) {
@@ -165,7 +165,7 @@ std::unique_ptr<LambdaFuncStmt> Parser::lambda_func() {
   Token lambda_id =
       consume("Expected identifier after lambda type.", TOKEN_IDENTIFIER);
   consume("Expected '=>' after lambda identifier.", TOKEN_ARROW);
-  std::unique_ptr<Stmt> lambda_body = statement();
+  std::unique_ptr<Stmt> lambda_body = block_stmt();
   if (!lambda_body) {
     throw SyntaxError(current_token_, "Expected statement for lambda body.");
   }
@@ -414,7 +414,7 @@ std::unique_ptr<VarDeclStmt> Parser::var_decl(const Token& type,
                                        identifier.get_position(), mut);
 }
 
-// RULE func_decl = "(" [ func_params ] ")" block ;
+// RULE func_decl = "(" [ func_params ] ")" block_stmt ;
 std::unique_ptr<FuncStmt> Parser::func_decl(const Token& return_type,
                                             const Token& identifier) {
   if (!match(TOKEN_LPAREN)) {
@@ -710,7 +710,12 @@ std::unique_ptr<Expr> Parser::call() {
       call_args = std::move(*args);
       consume("Excepted ')' after call arguments.", TOKEN_RPAREN);
     }
-    expr = std::make_unique<CallExpr>(std::move(expr), std::move(call_args));
+    auto* var = dynamic_cast<VarExpr*>(expr.get());
+    if (!var) {
+      throw SyntaxError(current_token_, "Expected identifier as callee.");
+    }
+    expr = std::make_unique<CallExpr>(var->identifier, var->position,
+                                      std::move(call_args));
   } else if (match(TOKEN_DOT)) {
     expr = field_access(std::move(expr));
   }

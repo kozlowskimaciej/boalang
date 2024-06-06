@@ -27,9 +27,19 @@ class ReturnStmt;
 class LambdaFuncStmt;
 class InspectStmt;
 
+/**
+ * @brief Interface for statements visitor.
+ */
 class StmtVisitor {
  public:
   virtual ~StmtVisitor() = default;
+
+  StmtVisitor() = default;
+  StmtVisitor(const StmtVisitor&) = delete;
+  StmtVisitor& operator=(const StmtVisitor&) = delete;
+
+  StmtVisitor(StmtVisitor&&) = default;
+  StmtVisitor& operator=(StmtVisitor&&) = default;
 
   virtual void visit(const Program& stmt) = 0;
   virtual void visit(const PrintStmt& stmt) = 0;
@@ -49,10 +59,20 @@ class StmtVisitor {
   virtual void visit(const InspectStmt& stmt) = 0;
 };
 
+/**
+ * @brief Interface for statements.
+ */
 class Stmt {
  public:
   virtual ~Stmt() = default;
   virtual void accept(StmtVisitor& stmt_visitor) const = 0;
+
+  Stmt() = default;
+  Stmt(const Stmt&) = delete;
+  Stmt& operator=(const Stmt&) = delete;
+
+  Stmt(Stmt&&) = default;
+  Stmt& operator=(Stmt&&) = default;
 };
 
 template <typename Derived>
