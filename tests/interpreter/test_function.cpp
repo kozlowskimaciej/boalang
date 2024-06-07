@@ -323,3 +323,29 @@ TEST(InterpreterFunctionTests, return_stops_while) {
   EXPECT_TRUE(str_contains(stdout, "6"));
   EXPECT_TRUE(!str_contains(stdout, "5"));
 }
+
+TEST(InterpreterFunctionTests, return_val_not_assigned) {
+  std::string code = R"(
+    int func() {
+        func2();
+    }
+
+    int func2() {
+        return 1;
+    }
+
+    print func();
+  )";
+
+  EXPECT_THROW(
+      {
+        try {
+          capture_interpreted_stdout(code);
+        } catch (const RuntimeError& e) {
+          EXPECT_TRUE(str_contains(e.what(),
+                                   "Non-void function did not return a value"));
+          throw;
+        }
+      },
+      RuntimeError);
+}

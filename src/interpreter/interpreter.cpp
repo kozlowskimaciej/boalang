@@ -241,6 +241,8 @@ void Interpreter::visit(const AssignStmt& stmt) {
 void Interpreter::visit(const CallStmt& stmt) {
   const auto& args = stmt.arguments;
   make_call(stmt.identifier, stmt.position, args);
+  // clearing evaluation as return value from call statements is always ignored
+  evaluation_ = std::nullopt;
 }
 
 void Interpreter::visit(const FuncParamStmt&) {}
