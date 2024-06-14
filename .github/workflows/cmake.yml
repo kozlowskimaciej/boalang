@@ -24,8 +24,8 @@ jobs:
              sudo apt-get install -y cmake python3 python3.10-venv clang-14 clang-tidy
       shell: bash
 
-    # - name: Install Doxygen
-    #   run: sudo apt-get update && sudo apt-get install -y --no-install-recommends doxygen graphviz
+    - name: Install Doxygen
+      run: sudo apt-get update && sudo apt-get install -y --no-install-recommends doxygen graphviz
 
     - name: Build
       run:  chmod +x configure.sh build.sh && ./configure.sh ${{env.BUILD_TYPE}}
@@ -35,12 +35,12 @@ jobs:
       working-directory: ${{github.workspace}}/build
       run: make test
 
-    # - name: Doxygen Docs Generation
-    #   working-directory: ${{github.workspace}}/build
-    #   run: make docs
+    - name: Doxygen Docs Generation
+      working-directory: ${{github.workspace}}/build
+      run: make docs
 
-    # - name: Deploy Doxygen Docs To Github Pages
-    #   uses: peaceiris/actions-gh-pages@v3
-    #   with:
-    #     github_token: ${{ secrets.GITHUB_TOKEN }}
-    #     publish_dir: ./docs/html
+    - name: Deploy Doxygen Docs To Github Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./docs/
