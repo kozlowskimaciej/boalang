@@ -1,6 +1,7 @@
 #include "scope.hpp"
 
 #include <algorithm>
+#include <functional>
 
 bool Scope::type_in_variant(const std::vector<VarType>& variant_types,
                             BuiltinType type) {
