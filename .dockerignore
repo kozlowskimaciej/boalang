@@ -1,8 +1,0 @@
-.idea/
-_deps/
-venv/
-cmake-build-debug/
-build/
-example/
-CMakeFiles/
-CMakeUserPresets.json
