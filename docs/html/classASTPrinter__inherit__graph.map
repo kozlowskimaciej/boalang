@@ -1,5 +1,0 @@
-<map id="ASTPrinter" name="ASTPrinter">
-<area shape="rect" id="node1" title="Prints abstract syntax tree." alt="" coords="65,80,156,107"/>
-<area shape="rect" id="node2" href="$classExprVisitor.html" title="Interface for expressions visitor." alt="" coords="5,5,99,32"/>
-<area shape="rect" id="node3" href="$classStmtVisitor.html" title="Interface for statements visitor." alt="" coords="123,5,218,32"/>
-</map>

@@ -1,5 +1,0 @@
-<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$classSource.html" title="The Source class represents a source of characters, such as a file or a string." alt="" coords="5,31,72,57"/>
-<area shape="rect" id="node2" href="$classFileSource.html" title="The FileSource class represents a source of characters from a file." alt="" coords="127,5,217,32"/>
-<area shape="rect" id="node3" href="$classStringSource.html" title="The StringSource class represents a source of characters from a string." alt="" coords="120,56,224,83"/>
-</map>

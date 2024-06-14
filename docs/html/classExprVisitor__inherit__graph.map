@@ -1,5 +1,0 @@
-<map id="ExprVisitor" name="ExprVisitor">
-<area shape="rect" id="node1" title="Interface for expressions visitor." alt="" coords="61,5,155,32"/>
-<area shape="rect" id="node2" href="$classASTPrinter.html" title="Prints abstract syntax tree." alt="" coords="5,80,96,107"/>
-<area shape="rect" id="node3" href="$classInterpreter.html" title="Interprets statements and expressions." alt="" coords="120,80,211,107"/>
-</map>

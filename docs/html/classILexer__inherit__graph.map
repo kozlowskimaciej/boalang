@@ -1,5 +1,0 @@
-<map id="ILexer" name="ILexer">
-<area shape="rect" id="node1" title="Lexer interface." alt="" coords="69,5,130,32"/>
-<area shape="rect" id="node2" href="$classLexer.html" title="Lexer used for lazy source tokenization." alt="" coords="5,80,63,107"/>
-<area shape="rect" id="node3" href="$classLexerCommentFilter.html" title="Decorator class used for filtering out comments." alt="" coords="87,80,242,107"/>
-</map>

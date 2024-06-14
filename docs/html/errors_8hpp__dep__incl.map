@@ -1,7 +1,0 @@
-<map id="src/utils/errors.hpp" name="src/utils/errors.hpp">
-<area shape="rect" id="node1" title="Errors." alt="" coords="165,5,308,32"/>
-<area shape="rect" id="node2" href="$interpreter_8hpp.html" title="boalang interpreter." alt="" coords="5,169,220,196"/>
-<area shape="rect" id="node3" href="$scope_8hpp.html" title="boalang interpreter&#39;s scope." alt="" coords="73,80,229,121"/>
-<area shape="rect" id="node4" href="$lexer_8hpp.html" title="Lexer&#45;related classes." alt="" coords="253,87,393,114"/>
-<area shape="rect" id="node5" href="$parser_8hpp.html" title="boalang parser." alt="" coords="283,169,441,196"/>
-</map>

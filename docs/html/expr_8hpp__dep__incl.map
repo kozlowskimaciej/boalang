@@ -1,8 +1,0 @@
-<map id="src/expr/expr.hpp" name="src/expr/expr.hpp">
-<area shape="rect" id="node1" title="Expressions." alt="" coords="341,5,476,32"/>
-<area shape="rect" id="node2" href="$astprinter_8hpp.html" title="Ast printer." alt="" coords="5,162,164,189"/>
-<area shape="rect" id="node3" href="$interpreter_8hpp.html" title="boalang interpreter." alt="" coords="211,244,425,271"/>
-<area shape="rect" id="node4" href="$parser_8hpp.html" title="boalang parser." alt="" coords="420,162,579,189"/>
-<area shape="rect" id="node5" href="$stmt_8hpp.html" title="Statements." alt="" coords="249,80,387,107"/>
-<area shape="rect" id="node6" href="$scope_8hpp.html" title="boalang interpreter&#39;s scope." alt="" coords="240,155,396,196"/>
-</map>

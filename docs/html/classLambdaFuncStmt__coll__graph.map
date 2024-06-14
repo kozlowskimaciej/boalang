@@ -1,7 +1,0 @@
-<map id="LambdaFuncStmt" name="LambdaFuncStmt">
-<area shape="rect" id="node1" title=" " alt="" coords="226,171,361,197"/>
-<area shape="rect" id="node2" href="$classStmtType.html" title=" " alt="" coords="5,81,232,108"/>
-<area shape="rect" id="node3" href="$classStmt.html" title="Interface for statements." alt="" coords="92,5,145,32"/>
-<area shape="rect" id="node4" href="$structVarType.html" title=" " alt="" coords="257,81,330,108"/>
-<area shape="rect" id="node5" href="$structPosition.html" title="Represents the position in source." alt="" coords="355,81,429,108"/>
-</map>
