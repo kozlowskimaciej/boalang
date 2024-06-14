@@ -37,10 +37,12 @@ jobs:
 
     - name: Doxygen Docs Generation
       working-directory: ${{github.workspace}}/build
+      if: github.ref == 'refs/heads/master'
       run: make docs
 
     - name: Deploy Doxygen Docs To Github Pages
       uses: peaceiris/actions-gh-pages@v3
+      if: github.ref == 'refs/heads/master'
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./docs/html/
