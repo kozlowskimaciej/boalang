@@ -1,0 +1,46 @@
+name: CMake
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Get Dependencies
+      run:   |
+             sudo apt-get install -y cmake python3 python3.10-venv clang-14 clang-tidy
+      shell: bash
+
+    # - name: Install Doxygen
+    #   run: sudo apt-get update && sudo apt-get install -y --no-install-recommends doxygen graphviz
+
+    - name: Build
+      run:  chmod +x configure.sh build.sh && ./configure.sh ${{env.BUILD_TYPE}}
+      shell: bash
+
+    - name: Run CMake Tests
+      working-directory: ${{github.workspace}}/build
+      run: make test
+
+    # - name: Doxygen Docs Generation
+    #   working-directory: ${{github.workspace}}/build
+    #   run: make docs
+
+    # - name: Deploy Doxygen Docs To Github Pages
+    #   uses: peaceiris/actions-gh-pages@v3
+    #   with:
+    #     github_token: ${{ secrets.GITHUB_TOKEN }}
+    #     publish_dir: ./docs/html
