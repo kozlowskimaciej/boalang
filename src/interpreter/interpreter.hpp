@@ -30,13 +30,15 @@ class Interpreter : public ExprVisitor, public StmtVisitor {
 
   template <typename VisitType>
   requires std::same_as<VisitType, Stmt> || std::same_as<VisitType, Expr>
-  eval_value_t evaluate(const VisitType* visited); /**< Evaluates statements
-                                                          and expressions. */
+      eval_value_t
+      evaluate(const VisitType* visited); /**< Evaluates statements
+                                                 and expressions. */
 
   template <typename VisitType>
   requires std::same_as<VisitType, Stmt> || std::same_as<VisitType, Expr>
-  eval_value_t evaluate_var(const VisitType* visited); /**< Evaluates statements and expressions,
-                                    and extracts value from Variable. */
+      eval_value_t
+      evaluate_var(const VisitType* visited); /**< Evaluates statements and
+                           expressions, and extracts value from Variable. */
 
   void set_evaluation(eval_value_t value);
 

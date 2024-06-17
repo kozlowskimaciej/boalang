@@ -37,7 +37,7 @@ std::unique_ptr<Program> Parser::parse() {
   if (!match(TOKEN_ETX)) {
     throw SyntaxError(current_token_, "Expected statement or declaration.");
   }
-  return std::make_unique<Program>(std::move(statements));
+  return std::make_unique<Program>(std::move(statements), Position{0, 0});
 }
 
 // RULE statement = if_stmt
@@ -55,105 +55,112 @@ std::unique_ptr<Stmt> Parser::statement() {
 
 // RULE if_stmt = "if" "(" expression ")" statement [ "else" statement ] ;
 std::unique_ptr<Stmt> Parser::if_stmt() {
-  if (!match(TOKEN_IF)) {
-    return nullptr;
-  }
-  consume("Expected '(' after 'if'.", TOKEN_LPAREN);
-  std::unique_ptr<Expr> condition = expression();
-  if (!condition) {
-    throw SyntaxError(current_token_, "Expected if condition statement.");
-  }
-  consume("Expected ')' after condition.", TOKEN_RPAREN);
-  std::unique_ptr<Stmt> then_branch = statement();
-  if (!then_branch) {
-    throw SyntaxError(current_token_, "Expected if's then branch statement.");
-  }
-  std::unique_ptr<Stmt> else_branch;
-  if (match(TOKEN_ELSE)) {
-    else_branch = statement();
-    if (!else_branch) {
-      throw SyntaxError(current_token_, "Expected if's else branch statement.");
+  if (auto token = match(TOKEN_IF)) {
+    consume("Expected '(' after 'if'.", TOKEN_LPAREN);
+    std::unique_ptr<Expr> condition = expression();
+    if (!condition) {
+      throw SyntaxError(current_token_, "Expected if condition statement.");
     }
+    consume("Expected ')' after condition.", TOKEN_RPAREN);
+    std::unique_ptr<Stmt> then_branch = statement();
+    if (!then_branch) {
+      throw SyntaxError(current_token_, "Expected if's then branch statement.");
+    }
+    std::unique_ptr<Stmt> else_branch;
+    if (match(TOKEN_ELSE)) {
+      else_branch = statement();
+      if (!else_branch) {
+        throw SyntaxError(current_token_,
+                          "Expected if's else branch statement.");
+      }
+    }
+    return std::make_unique<IfStmt>(
+        std::move(condition), std::move(then_branch), std::move(else_branch),
+        token->get_position());
   }
-  return std::make_unique<IfStmt>(std::move(condition), std::move(then_branch),
-                                  std::move(else_branch));
+  return nullptr;
 }
 
 // RULE while_stmt = "while" "(" expression ")" statement ;
 std::unique_ptr<Stmt> Parser::while_stmt() {
-  if (!match(TOKEN_WHILE)) {
-    return nullptr;
-  }
-  consume("Expected '(' after 'while'.", TOKEN_LPAREN);
-  std::unique_ptr<Expr> condition = expression();
-  if (!condition) {
-    throw SyntaxError(current_token_, "Expected condition expression.");
-  }
-  consume("Expected ')' after while condition.", TOKEN_RPAREN);
-  std::unique_ptr<Stmt> body = statement();
-  if (!body) {
-    throw SyntaxError(current_token_, "Expected body statement.");
-  }
+  if (auto token = match(TOKEN_WHILE)) {
+    consume("Expected '(' after 'while'.", TOKEN_LPAREN);
+    std::unique_ptr<Expr> condition = expression();
+    if (!condition) {
+      throw SyntaxError(current_token_, "Expected condition expression.");
+    }
+    consume("Expected ')' after while condition.", TOKEN_RPAREN);
+    std::unique_ptr<Stmt> body = statement();
+    if (!body) {
+      throw SyntaxError(current_token_, "Expected body statement.");
+    }
 
-  return std::make_unique<WhileStmt>(std::move(condition), std::move(body));
+    return std::make_unique<WhileStmt>(std::move(condition), std::move(body),
+                                       token->get_position());
+  }
+  return nullptr;
 }
 
 // RULE return_stmt = "return" [ expression ] ";" ;
 std::unique_ptr<Stmt> Parser::return_stmt() {
-  if (!match(TOKEN_RETURN)) {
-    return nullptr;
-  }
-  std::unique_ptr<Expr> value;
-  if (!match(TOKEN_SEMICOLON)) {
-    value = expression();
-    if (!value) {
-      throw SyntaxError(current_token_, "Expected expression after 'return'.");
+  if (auto token = match(TOKEN_RETURN)) {
+    std::unique_ptr<Expr> value;
+    if (!match(TOKEN_SEMICOLON)) {
+      value = expression();
+      if (!value) {
+        throw SyntaxError(current_token_,
+                          "Expected expression after 'return'.");
+      }
+      consume("Expected ';' after returned expression.", TOKEN_SEMICOLON);
     }
-    consume("Expected ';' after returned expression.", TOKEN_SEMICOLON);
+    return std::make_unique<ReturnStmt>(std::move(value),
+                                        token->get_position());
   }
-  return std::make_unique<ReturnStmt>(std::move(value));
+  return nullptr;
 }
 
 // RULE print_stmt = "print" expression ";" ;
 std::unique_ptr<Stmt> Parser::print_stmt() {
-  if (!match(TOKEN_PRINT)) {
-    return nullptr;
+  if (auto token = match(TOKEN_PRINT)) {
+    std::unique_ptr<Expr> expr = expression();
+    if (!expr) {
+      throw SyntaxError(current_token_, "Expected expression after 'print'.");
+    }
+    consume("Expected ';' after printed expression.", TOKEN_SEMICOLON);
+    return std::make_unique<PrintStmt>(std::move(expr), token->get_position());
   }
-  std::unique_ptr<Expr> expr = expression();
-  if (!expr) {
-    throw SyntaxError(current_token_, "Expected expression after 'print'.");
-  }
-  consume("Expected ';' after printed expression.", TOKEN_SEMICOLON);
-  return std::make_unique<PrintStmt>(std::move(expr));
+  return nullptr;
 }
 
 // RULE inspect_stmt = "inspect" expression "{" { lambda_func } [ "default" "=>"
 // block_stmt ] "}" ;
 std::unique_ptr<Stmt> Parser::inspect_stmt() {
-  if (!match(TOKEN_INSPECT)) {
-    return nullptr;
-  }
-  std::unique_ptr<Expr> inspected = expression();
-  if (!inspected) {
-    throw SyntaxError(current_token_, "Expected expression after 'inspect'.");
-  }
-  consume("Expected '{' after inspected expression.", TOKEN_LBRACE);
-  std::vector<std::unique_ptr<LambdaFuncStmt>> lambdas;
-  while (auto lambda = lambda_func()) {
-    lambdas.push_back(std::move(lambda));
-  }
-
-  std::unique_ptr<Stmt> default_lambda;
-  if (match(TOKEN_DEFAULT)) {
-    consume("Expected '=>' after default lambda.", TOKEN_ARROW);
-    default_lambda = block_stmt();
-    if (!default_lambda) {
-      throw SyntaxError(current_token_, "Expected block statement after '=>'.");
+  if (auto token = match(TOKEN_INSPECT)) {
+    std::unique_ptr<Expr> inspected = expression();
+    if (!inspected) {
+      throw SyntaxError(current_token_, "Expected expression after 'inspect'.");
     }
+    consume("Expected '{' after inspected expression.", TOKEN_LBRACE);
+    std::vector<std::unique_ptr<LambdaFuncStmt>> lambdas;
+    while (auto lambda = lambda_func()) {
+      lambdas.push_back(std::move(lambda));
+    }
+
+    std::unique_ptr<Stmt> default_lambda;
+    if (match(TOKEN_DEFAULT)) {
+      consume("Expected '=>' after default lambda.", TOKEN_ARROW);
+      default_lambda = block_stmt();
+      if (!default_lambda) {
+        throw SyntaxError(current_token_,
+                          "Expected block statement after '=>'.");
+      }
+    }
+    consume("Expected '}' after inspect lambdas.", TOKEN_RBRACE);
+    return std::make_unique<InspectStmt>(
+        std::move(inspected), std::move(lambdas), token->get_position(),
+        std::move(default_lambda));
   }
-  consume("Expected '}' after inspect lambdas.", TOKEN_RBRACE);
-  return std::make_unique<InspectStmt>(std::move(inspected), std::move(lambdas),
-                                       std::move(default_lambda));
+  return nullptr;
 }
 
 // RULE lambda_func = type identifier "=>" block_stmt
@@ -176,15 +183,16 @@ std::unique_ptr<LambdaFuncStmt> Parser::lambda_func() {
 
 // RULE block_stmt = "{" { statement } "}" ;
 std::unique_ptr<Stmt> Parser::block_stmt() {
-  if (!match(TOKEN_LBRACE)) {
-    return nullptr;
+  if (auto token = match(TOKEN_LBRACE)) {
+    std::vector<std::unique_ptr<Stmt>> statements;
+    while (auto stmt = statement()) {
+      statements.push_back(std::move(stmt));
+    }
+    consume("Expected '}' after block statement.", TOKEN_RBRACE);
+    return std::make_unique<BlockStmt>(std::move(statements),
+                                       token->get_position());
   }
-  std::vector<std::unique_ptr<Stmt>> statements;
-  while (auto stmt = statement()) {
-    statements.push_back(std::move(stmt));
-  }
-  consume("Expected '}' after block statement.", TOKEN_RBRACE);
-  return std::make_unique<BlockStmt>(std::move(statements));
+  return nullptr;
 }
 
 // RULE struct_decl = "struct" identifier "{" { struct_field } "}" ;
@@ -310,21 +318,27 @@ std::unique_ptr<Stmt> Parser::assign_or_call(const Token& identifier) {
 
 // RULE assign = [ "." field_access ] "=" expression ";" ;
 std::unique_ptr<AssignStmt> Parser::assign_stmt(std::unique_ptr<Expr> var) {
+  bool is_field = false;
+
   if (match(TOKEN_DOT)) {
     var = field_access(std::move(var));
-    consume("Expected '=' after field access for assignment.", TOKEN_EQUAL);
-  } else {
-    if (!match(TOKEN_EQUAL)) {
-      return nullptr;
-    }
+    is_field = true;
   }
 
-  auto value = expression();
-  if (!value) {
-    throw SyntaxError(current_token_, "Expected expression for assignment.");
+  if (auto token = match(TOKEN_EQUAL)) {
+    auto value = expression();
+    if (!value) {
+      throw SyntaxError(current_token_, "Expected expression for assignment.");
+    }
+    consume("Expected ';' after assignment.", TOKEN_SEMICOLON);
+    return std::make_unique<AssignStmt>(std::move(var), std::move(value),
+                                        token->get_position());
   }
-  consume("Expected ';' after assignment.", TOKEN_SEMICOLON);
-  return std::make_unique<AssignStmt>(std::move(var), std::move(value));
+  if (is_field) {
+    throw SyntaxError(current_token_,
+                      "Expected '=' after field access for assignment.");
+  }
+  return nullptr;
 }
 
 // RULE call_stmt = "(" [ arguments ] ");" ;
@@ -736,23 +750,25 @@ std::unique_ptr<Expr> Parser::primary() {
     return std::make_unique<VarExpr>(token->stringify(), token->get_position());
   }
 
-  if (match(TOKEN_LPAREN)) {
+  if (auto token = match(TOKEN_LPAREN)) {
     std::unique_ptr<Expr> expr = expression();
     if (!expr) {
       throw SyntaxError(current_token_, "Expected expression after '('.");
     }
     consume("Excepted ')' after expression.", TOKEN_RPAREN);
-    return std::make_unique<GroupingExpr>(std::move(expr));
+    return std::make_unique<GroupingExpr>(std::move(expr),
+                                          token->get_position());
   }
 
-  if (match(TOKEN_LBRACE)) {
+  if (auto token = match(TOKEN_LBRACE)) {
     auto args = arguments();
     if (!args) {
       throw SyntaxError(current_token_,
                         "Expected arguments for initalizer list.");
     }
     consume("Excepted '}' after initializer list.", TOKEN_RBRACE);
-    return std::make_unique<InitalizerListExpr>(std::move(*args));
+    return std::make_unique<InitalizerListExpr>(std::move(*args),
+                                                token->get_position());
   }
 
   return nullptr;

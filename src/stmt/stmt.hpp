@@ -64,10 +64,12 @@ class StmtVisitor {
  */
 class Stmt {
  public:
+  Position position;
+
   virtual ~Stmt() = default;
   virtual void accept(StmtVisitor& stmt_visitor) const = 0;
 
-  Stmt() = default;
+  Stmt(Position position) : position(position){};
   Stmt(const Stmt&) = delete;
   Stmt& operator=(const Stmt&) = delete;
 
@@ -78,6 +80,7 @@ class Stmt {
 template <typename Derived>
 class StmtType : public Stmt {
  public:
+  using Stmt::Stmt;
   void accept(StmtVisitor& visitor) const override {
     visitor.visit(static_cast<const Derived&>(*this));
   }
@@ -87,15 +90,17 @@ class Program : public StmtType<Program> {
  public:
   std::vector<std::unique_ptr<Stmt>> statements;
 
-  explicit Program(std::vector<std::unique_ptr<Stmt>> statements)
-      : statements(std::move(statements)){};
+  explicit Program(std::vector<std::unique_ptr<Stmt>> statements,
+                   Position position)
+      : StmtType(position), statements(std::move(statements)){};
 };
 
 class PrintStmt : public StmtType<PrintStmt> {
  public:
   std::unique_ptr<Expr> expr;
 
-  explicit PrintStmt(std::unique_ptr<Expr> expr) : expr(std::move(expr)){};
+  explicit PrintStmt(std::unique_ptr<Expr> expr, Position position)
+      : StmtType(position), expr(std::move(expr)){};
 };
 
 class IfStmt : public StmtType<IfStmt> {
@@ -105,8 +110,9 @@ class IfStmt : public StmtType<IfStmt> {
   std::unique_ptr<Stmt> else_branch;
 
   IfStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> then_branch,
-         std::unique_ptr<Stmt> else_branch)
-      : condition(std::move(condition)),
+         std::unique_ptr<Stmt> else_branch, Position position)
+      : StmtType(position),
+        condition(std::move(condition)),
         then_branch(std::move(then_branch)),
         else_branch(std::move(else_branch)){};
 };
@@ -115,8 +121,9 @@ class BlockStmt : public StmtType<BlockStmt> {
  public:
   std::vector<std::unique_ptr<Stmt>> statements;
 
-  explicit BlockStmt(std::vector<std::unique_ptr<Stmt>> statements)
-      : statements(std::move(statements)){};
+  explicit BlockStmt(std::vector<std::unique_ptr<Stmt>> statements,
+                     Position position)
+      : StmtType(position), statements(std::move(statements)){};
 };
 
 class WhileStmt : public StmtType<WhileStmt> {
@@ -124,8 +131,11 @@ class WhileStmt : public StmtType<WhileStmt> {
   std::unique_ptr<Expr> condition;
   std::unique_ptr<Stmt> body;
 
-  WhileStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> body)
-      : condition(std::move(condition)), body(std::move(body)){};
+  WhileStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> body,
+            Position position)
+      : StmtType(position),
+        condition(std::move(condition)),
+        body(std::move(body)){};
 };
 
 class VarDeclStmt : public StmtType<VarDeclStmt> {
@@ -133,16 +143,15 @@ class VarDeclStmt : public StmtType<VarDeclStmt> {
   VarType type;
   std::string identifier;
   std::unique_ptr<Expr> initializer;
-  Position position;
   bool mut;
 
   VarDeclStmt(VarType type, std::string identifier,
               std::unique_ptr<Expr> initializer, Position position,
               bool mut = false)
-      : type(std::move(type)),
+      : StmtType(position),
+        type(std::move(type)),
         identifier(std::move(identifier)),
         initializer(std::move(initializer)),
-        position(position),
         mut(mut){};
 };
 
@@ -150,14 +159,13 @@ class StructFieldStmt : public StmtType<StructFieldStmt> {
  public:
   VarType type;
   std::string identifier;
-  Position position;
   bool mut;
 
   StructFieldStmt(VarType type, std::string identifier, Position position,
                   bool mut = false)
-      : type(std::move(type)),
+      : StmtType(position),
+        type(std::move(type)),
         identifier(std::move(identifier)),
-        position(position),
         mut(mut){};
 };
 
@@ -165,27 +173,25 @@ class StructDeclStmt : public StmtType<StructDeclStmt> {
  public:
   std::string identifier;
   std::vector<std::unique_ptr<StructFieldStmt>> fields;
-  Position position;
 
   StructDeclStmt(std::string identifier,
                  std::vector<std::unique_ptr<StructFieldStmt>> fields,
                  Position position)
-      : identifier(std::move(identifier)),
-        fields(std::move(fields)),
-        position(position){};
+      : StmtType(position),
+        identifier(std::move(identifier)),
+        fields(std::move(fields)){};
 };
 
 class VariantDeclStmt : public StmtType<VariantDeclStmt> {
  public:
   std::string identifier;
   std::vector<VarType> params;
-  Position position;
 
   VariantDeclStmt(std::string identifier, std::vector<VarType> params,
                   Position position)
-      : identifier(std::move(identifier)),
-        params(std::move(params)),
-        position(position){};
+      : StmtType(position),
+        identifier(std::move(identifier)),
+        params(std::move(params)){};
 };
 
 class AssignStmt : public StmtType<AssignStmt> {
@@ -193,20 +199,20 @@ class AssignStmt : public StmtType<AssignStmt> {
   std::unique_ptr<Expr> var;
   std::unique_ptr<Expr> value;
 
-  AssignStmt(std::unique_ptr<Expr> var, std::unique_ptr<Expr> value)
-      : var(std::move(var)), value(std::move(value)){};
+  AssignStmt(std::unique_ptr<Expr> var, std::unique_ptr<Expr> value,
+             Position position)
+      : StmtType(position), var(std::move(var)), value(std::move(value)){};
 };
 
 class CallStmt : public StmtType<CallStmt> {
  public:
   std::string identifier;
-  Position position;
   std::vector<std::unique_ptr<Expr>> arguments;
 
   explicit CallStmt(std::string identifier, Position position,
                     std::vector<std::unique_ptr<Expr>> arguments = {})
-      : identifier(std::move(identifier)),
-        position(position),
+      : StmtType(position),
+        identifier(std::move(identifier)),
         arguments(std::move(arguments)){};
 };
 
@@ -214,12 +220,11 @@ class FuncParamStmt : public StmtType<FuncParamStmt> {
  public:
   VarType type;
   std::string identifier;
-  Position position;
 
   FuncParamStmt(VarType type, std::string identifier, Position position)
-      : type(std::move(type)),
-        identifier(std::move(identifier)),
-        position(position){};
+      : StmtType(position),
+        type(std::move(type)),
+        identifier(std::move(identifier)){};
 };
 
 class FuncStmt : public StmtType<FuncStmt> {
@@ -228,23 +233,23 @@ class FuncStmt : public StmtType<FuncStmt> {
   VarType return_type;
   std::vector<std::unique_ptr<FuncParamStmt>> params;
   std::unique_ptr<Stmt> body;
-  Position position;
 
   FuncStmt(std::string identifier, VarType return_type,
            std::vector<std::unique_ptr<FuncParamStmt>> params,
            std::unique_ptr<Stmt> body, Position position)
-      : identifier(std::move(identifier)),
+      : StmtType(position),
+        identifier(std::move(identifier)),
         return_type(std::move(return_type)),
         params(std::move(params)),
-        body(std::move(body)),
-        position(position){};
+        body(std::move(body)){};
 };
 
 class ReturnStmt : public StmtType<ReturnStmt> {
  public:
   std::unique_ptr<Expr> value;
 
-  ReturnStmt(std::unique_ptr<Expr> value) : value(std::move(value)){};
+  ReturnStmt(std::unique_ptr<Expr> value, Position position)
+      : StmtType(position), value(std::move(value)){};
 };
 
 class LambdaFuncStmt : public StmtType<LambdaFuncStmt> {
@@ -252,14 +257,13 @@ class LambdaFuncStmt : public StmtType<LambdaFuncStmt> {
   VarType type;
   std::string identifier;
   std::unique_ptr<Stmt> body;
-  Position position;
 
   LambdaFuncStmt(VarType type, std::string identifier,
                  std::unique_ptr<Stmt> body, Position position)
-      : type(std::move(type)),
+      : StmtType(position),
+        type(std::move(type)),
         identifier(std::move(identifier)),
-        body(std::move(body)),
-        position(position){};
+        body(std::move(body)){};
 };
 
 class InspectStmt : public StmtType<InspectStmt> {
@@ -270,8 +274,9 @@ class InspectStmt : public StmtType<InspectStmt> {
 
   InspectStmt(std::unique_ptr<Expr> inspected,
               std::vector<std::unique_ptr<LambdaFuncStmt>> lambdas,
-              std::unique_ptr<Stmt> default_lambda = nullptr)
-      : inspected(std::move(inspected)),
+              Position position, std::unique_ptr<Stmt> default_lambda = nullptr)
+      : StmtType(position),
+        inspected(std::move(inspected)),
         lambdas(std::move(lambdas)),
         default_lambda(std::move(default_lambda)){};
 };

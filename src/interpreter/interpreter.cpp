@@ -9,14 +9,14 @@
 
 template <typename VisitType>
 requires std::same_as<VisitType, Stmt> || std::same_as<VisitType, Expr>
-eval_value_t Interpreter::evaluate(const VisitType* visited) {
+    eval_value_t Interpreter::evaluate(const VisitType* visited) {
   visited->accept(*this);
   return get_evaluation();
 }
 
 template <typename VisitType>
 requires std::same_as<VisitType, Stmt> || std::same_as<VisitType, Expr>
-eval_value_t Interpreter::evaluate_var(const VisitType* visited) {
+    eval_value_t Interpreter::evaluate_var(const VisitType* visited) {
   auto var = evaluate(visited);
   while (const auto& v = std::get_if<std::shared_ptr<Variable>>(&var)) {
     var = *(v->get()->value);
@@ -63,7 +63,7 @@ void Interpreter::visit(const PrintStmt& stmt) {
 
   std::visit(
       overloaded{
-          [](auto) { throw RuntimeError("Value unprintable"); },
+          [&](auto) { throw RuntimeError(stmt.position, "Value unprintable"); },
           [](int arg) { std::cout << std::to_string(arg); },
           [](float arg) { std::cout << std::to_string(arg); },
           [](const std::string& arg) { std::cout << arg; },
@@ -193,47 +193,55 @@ void Interpreter::visit(const AssignStmt& stmt) {
 
   std::visit(
       overloaded{
-          [this, &value](const std::shared_ptr<Variable>& arg) {
+          [&](const std::shared_ptr<Variable>& arg) {
             if (!arg->mut) {
-              throw RuntimeError("Tried assigning value to a const '" +
-                                 arg->name + "'");
+              throw RuntimeError(
+                  stmt.position,
+                  "Tried assigning value to a const '" + arg->name + "'");
             }
             if (!match_type(value, arg->type)) {
               throw RuntimeError(
+                  stmt.position,
                   "Tried assigning value with different type to '" + arg->name +
-                  "'");
+                      "'");
             }
             arg->value = value;
           },
-          [this, &value](const std::shared_ptr<VariantObject>& arg) {
+          [&](const std::shared_ptr<VariantObject>& arg) {
             if (!arg->mut) {
-              throw RuntimeError("Tried assigning value to a const '" +
-                                 arg->name + "'");
+              throw RuntimeError(
+                  stmt.position,
+                  "Tried assigning value to a const '" + arg->name + "'");
             }
             if (!std::ranges::any_of(arg->type_def->types,
                                      [&](const VarType& param) {
                                        return match_type(value, param);
                                      })) {
               throw RuntimeError(
+                  stmt.position,
                   "Tried assigning value with different type to '" + arg->name +
-                  "'");
+                      "'");
             }
             arg->contained = value;
           },
-          [this, &value](const std::shared_ptr<StructObject>& arg) {
+          [&](const std::shared_ptr<StructObject>& arg) {
             if (!arg->mut) {
-              throw RuntimeError("Tried assigning value to a const '" +
-                                 arg->name + "'");
+              throw RuntimeError(
+                  stmt.position,
+                  "Tried assigning value to a const '" + arg->name + "'");
             }
             if (!match_type(value,
                             VarType(arg->type_def->type_name, IDENTIFIER))) {
               throw RuntimeError(
+                  stmt.position,
                   "Tried assigning value with different type to '" + arg->name +
-                  "'");
+                      "'");
             }
             arg->scope = std::get<std::shared_ptr<StructObject>>(value)->scope;
           },
-          [](auto) { throw RuntimeError("Invalid assignment"); },
+          [&](auto) {
+            throw RuntimeError(stmt.position, "Invalid assignment");
+          },
       },
       var);
 }
@@ -256,10 +264,10 @@ void Interpreter::visit(const FuncStmt& stmt) {
   std::vector<std::pair<std::string, VarType>> params{};
   for (const auto& param : stmt.params) {
     if (std::ranges::any_of(params, [&](const auto& pair) {
-        return pair.first == param->identifier;
-      })) {
-      throw RuntimeError(stmt.position,
-                         "Param '" + param->identifier + "' already defined in function");
+          return pair.first == param->identifier;
+        })) {
+      throw RuntimeError(stmt.position, "Param '" + param->identifier +
+                                            "' already defined in function");
     }
     params.emplace_back(param->identifier, param->type);
   }
@@ -323,12 +331,13 @@ void Interpreter::visit(const InspectStmt& stmt) {
     }
     if (!stmt.default_lambda) {
       throw RuntimeError(
+          stmt.position,
           "Inspect did not match any types and default not present");
     }
     stmt.default_lambda->accept(*this);
     pop_last_scope();
   } else {
-    throw RuntimeError("Cannot inspect non-variant objects");
+    throw RuntimeError(stmt.position, "Cannot inspect non-variant objects");
   }
 }
 
@@ -858,18 +867,18 @@ void Interpreter::perform_arithmetic_operation(Expr* left, Expr* right,
      [&]<typename T>(T lhs, T rhs)
      requires std::integral<T> || std::floating_point<T>
      {
-       if constexpr (std::is_same_v<Operation, std::divides<>>) {
-         if (rhs == 0) {
-           throw RuntimeError(position, "Division by zero");
-         }
-       }
-       if (is_overflow(lhs, rhs, op)) {
-         throw RuntimeError(position, "Detected overflow");
-       }
-       if (is_underflow(lhs, rhs, op)) {
-         throw RuntimeError(position, "Detected underflow");
-       }
-       set_evaluation(op(lhs, rhs));
+      if constexpr (std::is_same_v<Operation, std::divides<>>) {
+        if (rhs == 0) {
+          throw RuntimeError(position, "Division by zero");
+        }
+      }
+      if (is_overflow(lhs, rhs, op)) {
+        throw RuntimeError(position, "Detected overflow");
+      }
+      if (is_underflow(lhs, rhs, op)) {
+        throw RuntimeError(position, "Detected underflow");
+      }
+      set_evaluation(op(lhs, rhs));
     },
     [&](const std::string& lhs, const std::string& rhs) {
       if constexpr (std::is_same_v<Operation, std::plus<>>) {

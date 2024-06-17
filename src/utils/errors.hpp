@@ -51,7 +51,6 @@ class SyntaxError : public std::runtime_error {
  */
 class RuntimeError : public std::runtime_error {
  public:
-  RuntimeError(const std::string& message) : std::runtime_error(message){};
   RuntimeError(const Position& position, const std::string& message)
       : std::runtime_error("Line " + std::to_string(position.line) +
                            " column " + std::to_string(position.column) + ": " +

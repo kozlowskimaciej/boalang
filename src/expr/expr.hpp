@@ -77,10 +77,12 @@ class ExprVisitor {
  */
 class Expr {
  public:
+  Position position;
+
   virtual ~Expr() = default;
   virtual void accept(ExprVisitor& visitor) const = 0;
 
-  Expr() = default;
+  Expr(Position position) : position(position){};
   Expr(const Expr&) = delete;
   Expr& operator=(const Expr&) = delete;
 
@@ -91,6 +93,7 @@ class Expr {
 template <typename Derived>
 class ExprType : public Expr {
  public:
+  using Expr::Expr;
   void accept(ExprVisitor& visitor) const override {
     visitor.visit(static_cast<const Derived&>(*this));
   }
@@ -101,11 +104,12 @@ class BinaryExpr : public ExprType<Derived> {
  public:
   std::unique_ptr<Expr> left;
   std::unique_ptr<Expr> right;
-  Position position;
 
   BinaryExpr(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right,
              Position position)
-      : left(std::move(left)), right(std::move(right)), position(position){};
+      : ExprType<Derived>(position),
+        left(std::move(left)),
+        right(std::move(right)){};
 };
 
 class AdditionExpr : public BinaryExpr<AdditionExpr> {
@@ -162,10 +166,9 @@ template <typename Derived>
 class UnaryExpr : public ExprType<Derived> {
  public:
   std::unique_ptr<Expr> right;
-  Position position;
 
   UnaryExpr(std::unique_ptr<Expr> right, Position position)
-      : right(std::move(right)), position(position){};
+      : ExprType<Derived>(position), right(std::move(right)){};
 };
 
 class NegationExpr : public UnaryExpr<NegationExpr> {
@@ -183,11 +186,12 @@ class LogicalExpr : public ExprType<Derived> {
  public:
   std::unique_ptr<Expr> left;
   std::unique_ptr<Expr> right;
-  Position position;
 
   LogicalExpr(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right,
               Position position)
-      : left(std::move(left)), right(std::move(right)), position(position) {}
+      : ExprType<Derived>(position),
+        left(std::move(left)),
+        right(std::move(right)) {}
 };
 
 class LogicalOrExpr : public LogicalExpr<LogicalOrExpr> {
@@ -203,26 +207,25 @@ class LogicalAndExpr : public LogicalExpr<LogicalAndExpr> {
 class LiteralExpr : public ExprType<LiteralExpr> {
  public:
   value_t literal;
-  Position position;
 
   explicit LiteralExpr(value_t literal, Position position)
-      : literal(std::move(literal)), position(position){};
+      : ExprType(position), literal(std::move(literal)){};
 };
 
 class GroupingExpr : public ExprType<GroupingExpr> {
  public:
   std::unique_ptr<Expr> expr;
 
-  explicit GroupingExpr(std::unique_ptr<Expr> expr) : expr(std::move(expr)){};
+  explicit GroupingExpr(std::unique_ptr<Expr> expr, Position position)
+      : ExprType(position), expr(std::move(expr)){};
 };
 
 class VarExpr : public ExprType<VarExpr> {
  public:
   std::string identifier;
-  Position position;
 
   explicit VarExpr(std::string identifier, Position position)
-      : identifier(std::move(identifier)), position(position){};
+      : ExprType(position), identifier(std::move(identifier)){};
 };
 
 template <typename Derived>
@@ -230,10 +233,11 @@ class CastExpr : public ExprType<Derived> {
  public:
   std::unique_ptr<Expr> left;
   VarType type;
-  Position position;
 
   CastExpr(std::unique_ptr<Expr> left, VarType type, Position position)
-      : left(std::move(left)), type(std::move(type)), position(position){};
+      : ExprType<Derived>(position),
+        left(std::move(left)),
+        type(std::move(type)){};
 };
 
 class IsTypeExpr : public CastExpr<IsTypeExpr> {
@@ -250,20 +254,20 @@ class InitalizerListExpr : public ExprType<InitalizerListExpr> {
  public:
   std::vector<std::unique_ptr<Expr>> list;
 
-  explicit InitalizerListExpr(std::vector<std::unique_ptr<Expr>> list)
-      : list(std::move(list)){};
+  explicit InitalizerListExpr(std::vector<std::unique_ptr<Expr>> list,
+                              Position position)
+      : ExprType(position), list(std::move(list)){};
 };
 
 class CallExpr : public ExprType<CallExpr> {
  public:
   std::string identifier;
-  Position position;
   std::vector<std::unique_ptr<Expr>> arguments;
 
   explicit CallExpr(std::string identifier, Position position,
                     std::vector<std::unique_ptr<Expr>> arguments = {})
-      : identifier(std::move(identifier)),
-        position(position),
+      : ExprType(position),
+        identifier(std::move(identifier)),
         arguments(std::move(arguments)){};
 };
 
@@ -271,13 +275,12 @@ class FieldAccessExpr : public ExprType<FieldAccessExpr> {
  public:
   std::unique_ptr<Expr> parent_struct;
   std::string field_name;
-  Position position;
 
   explicit FieldAccessExpr(std::unique_ptr<Expr> parent_struct,
                            std::string field_name, Position position)
-      : parent_struct(std::move(parent_struct)),
-        field_name(std::move(field_name)),
-        position(position){};
+      : ExprType(position),
+        parent_struct(std::move(parent_struct)),
+        field_name(std::move(field_name)){};
 };
 
 #endif  // BOALANG_EXPR_HPP
