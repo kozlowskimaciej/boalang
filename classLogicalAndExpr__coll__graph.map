@@ -1,6 +1,7 @@
 <map id="LogicalAndExpr" name="LogicalAndExpr">
-<area shape="rect" id="node1" title=" " alt="" coords="57,229,180,256"/>
-<area shape="rect" id="node2" href="$classLogicalExpr.html" title=" " alt="" coords="5,155,232,181"/>
-<area shape="rect" id="node3" href="$classExprType.html" title=" " alt="" coords="37,80,200,107"/>
-<area shape="rect" id="node4" href="$classExpr.html" title="Interface for expressions." alt="" coords="93,5,144,32"/>
+<area shape="rect" id="node1" title=" " alt="" coords="57,323,180,349"/>
+<area shape="rect" id="node2" href="$classLogicalExpr.html" title=" " alt="" coords="5,247,232,273"/>
+<area shape="rect" id="node3" href="$classExprType.html" title=" " alt="" coords="37,171,200,197"/>
+<area shape="rect" id="node4" href="$classExpr.html" title="Interface for expressions." alt="" coords="93,95,144,121"/>
+<area shape="rect" id="node5" href="$structPosition.html" title="Represents the position in source." alt="" coords="81,5,156,32"/>
 </map>

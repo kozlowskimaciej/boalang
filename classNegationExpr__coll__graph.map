@@ -1,6 +1,7 @@
 <map id="NegationExpr" name="NegationExpr">
-<area shape="rect" id="node1" title=" " alt="" coords="54,229,165,256"/>
-<area shape="rect" id="node2" href="$classUnaryExpr.html" title=" " alt="" coords="5,155,213,181"/>
-<area shape="rect" id="node3" href="$classExprType.html" title=" " alt="" coords="28,80,191,107"/>
-<area shape="rect" id="node4" href="$classExpr.html" title="Interface for expressions." alt="" coords="84,5,135,32"/>
+<area shape="rect" id="node1" title=" " alt="" coords="54,323,165,349"/>
+<area shape="rect" id="node2" href="$classUnaryExpr.html" title=" " alt="" coords="5,247,213,273"/>
+<area shape="rect" id="node3" href="$classExprType.html" title=" " alt="" coords="28,171,191,197"/>
+<area shape="rect" id="node4" href="$classExpr.html" title="Interface for expressions." alt="" coords="84,95,135,121"/>
+<area shape="rect" id="node5" href="$structPosition.html" title="Represents the position in source." alt="" coords="72,5,147,32"/>
 </map>

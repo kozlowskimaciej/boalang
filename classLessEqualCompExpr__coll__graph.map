@@ -1,6 +1,7 @@
 <map id="LessEqualCompExpr" name="LessEqualCompExpr">
-<area shape="rect" id="node1" title=" " alt="" coords="33,244,188,271"/>
-<area shape="rect" id="node2" href="$classBinaryExpr.html" title=" " alt="" coords="5,155,216,196"/>
-<area shape="rect" id="node3" href="$classExprType.html" title=" " alt="" coords="29,80,192,107"/>
-<area shape="rect" id="node4" href="$classExpr.html" title="Interface for expressions." alt="" coords="85,5,136,32"/>
+<area shape="rect" id="node1" title=" " alt="" coords="33,337,188,364"/>
+<area shape="rect" id="node2" href="$classBinaryExpr.html" title=" " alt="" coords="5,247,216,288"/>
+<area shape="rect" id="node3" href="$classExprType.html" title=" " alt="" coords="29,171,192,197"/>
+<area shape="rect" id="node4" href="$classExpr.html" title="Interface for expressions." alt="" coords="85,95,136,121"/>
+<area shape="rect" id="node5" href="$structPosition.html" title="Represents the position in source." alt="" coords="73,5,148,32"/>
 </map>

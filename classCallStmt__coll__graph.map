@@ -1,6 +1,6 @@
 <map id="CallStmt" name="CallStmt">
-<area shape="rect" id="node1" title=" " alt="" coords="124,171,203,197"/>
-<area shape="rect" id="node2" href="$classStmtType.html" title=" " alt="" coords="5,81,175,108"/>
-<area shape="rect" id="node3" href="$classStmt.html" title="Interface for statements." alt="" coords="63,5,117,32"/>
-<area shape="rect" id="node4" href="$structPosition.html" title="Represents the position in source." alt="" coords="199,81,274,108"/>
+<area shape="rect" id="node1" title=" " alt="" coords="51,247,129,273"/>
+<area shape="rect" id="node2" href="$classStmtType.html" title=" " alt="" coords="5,171,175,197"/>
+<area shape="rect" id="node3" href="$classStmt.html" title="Interface for statements." alt="" coords="63,95,117,121"/>
+<area shape="rect" id="node4" href="$structPosition.html" title="Represents the position in source." alt="" coords="53,5,127,32"/>
 </map>

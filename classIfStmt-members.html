@@ -71,10 +71,14 @@ $(function() {
   <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>accept</b>(StmtVisitor &amp;visitor) const override (defined in <a class="el" href="classStmtType.html">StmtType&lt; IfStmt &gt;</a>)</td><td class="entry"><a class="el" href="classStmtType.html">StmtType&lt; IfStmt &gt;</a></td><td class="entry"><span class="mlabel">inline</span><span class="mlabel">virtual</span></td></tr>
   <tr bgcolor="#f0f0f0"><td class="entry"><b>condition</b> (defined in <a class="el" href="classIfStmt.html">IfStmt</a>)</td><td class="entry"><a class="el" href="classIfStmt.html">IfStmt</a></td><td class="entry"></td></tr>
   <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>else_branch</b> (defined in <a class="el" href="classIfStmt.html">IfStmt</a>)</td><td class="entry"><a class="el" href="classIfStmt.html">IfStmt</a></td><td class="entry"></td></tr>
-  <tr bgcolor="#f0f0f0"><td class="entry"><b>IfStmt</b>(std::unique_ptr&lt; Expr &gt; condition, std::unique_ptr&lt; Stmt &gt; then_branch, std::unique_ptr&lt; Stmt &gt; else_branch) (defined in <a class="el" href="classIfStmt.html">IfStmt</a>)</td><td class="entry"><a class="el" href="classIfStmt.html">IfStmt</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
+  <tr bgcolor="#f0f0f0"><td class="entry"><b>IfStmt</b>(std::unique_ptr&lt; Expr &gt; condition, std::unique_ptr&lt; Stmt &gt; then_branch, std::unique_ptr&lt; Stmt &gt; else_branch, Position position) (defined in <a class="el" href="classIfStmt.html">IfStmt</a>)</td><td class="entry"><a class="el" href="classIfStmt.html">IfStmt</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
   <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>operator=</b>(const Stmt &amp;)=delete (defined in <a class="el" href="classStmt.html">Stmt</a>)</td><td class="entry"><a class="el" href="classStmt.html">Stmt</a></td><td class="entry"></td></tr>
   <tr bgcolor="#f0f0f0"><td class="entry"><b>operator=</b>(Stmt &amp;&amp;)=default (defined in <a class="el" href="classStmt.html">Stmt</a>)</td><td class="entry"><a class="el" href="classStmt.html">Stmt</a></td><td class="entry"></td></tr>
-  <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>Stmt</b>()=default (defined in <a class="el" href="classStmt.html">Stmt</a>)</td><td class="entry"><a class="el" href="classStmt.html">Stmt</a></td><td class="entry"></td></tr>
+  <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>position</b> (defined in <a class="el" href="classStmt.html">Stmt</a>)</td><td class="entry"><a class="el" href="classStmt.html">Stmt</a></td><td class="entry"></td></tr>
+  <tr bgcolor="#f0f0f0"><td class="entry"><b>Stmt</b>(Position position) (defined in <a class="el" href="classStmtType.html">StmtType&lt; IfStmt &gt;</a>)</td><td class="entry"><a class="el" href="classStmtType.html">StmtType&lt; IfStmt &gt;</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
+  <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>Stmt</b>(const Stmt &amp;)=delete (defined in <a class="el" href="classStmtType.html">StmtType&lt; IfStmt &gt;</a>)</td><td class="entry"><a class="el" href="classStmtType.html">StmtType&lt; IfStmt &gt;</a></td><td class="entry"></td></tr>
+  <tr bgcolor="#f0f0f0"><td class="entry"><b>Stmt</b>(Stmt &amp;&amp;)=default (defined in <a class="el" href="classStmtType.html">StmtType&lt; IfStmt &gt;</a>)</td><td class="entry"><a class="el" href="classStmtType.html">StmtType&lt; IfStmt &gt;</a></td><td class="entry"></td></tr>
+  <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>Stmt</b>(Position position) (defined in <a class="el" href="classStmt.html">Stmt</a>)</td><td class="entry"><a class="el" href="classStmt.html">Stmt</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
   <tr bgcolor="#f0f0f0"><td class="entry"><b>Stmt</b>(const Stmt &amp;)=delete (defined in <a class="el" href="classStmt.html">Stmt</a>)</td><td class="entry"><a class="el" href="classStmt.html">Stmt</a></td><td class="entry"></td></tr>
   <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>Stmt</b>(Stmt &amp;&amp;)=default (defined in <a class="el" href="classStmt.html">Stmt</a>)</td><td class="entry"><a class="el" href="classStmt.html">Stmt</a></td><td class="entry"></td></tr>
   <tr bgcolor="#f0f0f0"><td class="entry"><b>then_branch</b> (defined in <a class="el" href="classIfStmt.html">IfStmt</a>)</td><td class="entry"><a class="el" href="classIfStmt.html">IfStmt</a></td><td class="entry"></td></tr>
@@ -82,7 +86,7 @@ $(function() {
 </table></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jun 14 2024 19:57:33 for boalang by&#160;<a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1
+Generated on Mon Jun 17 2024 22:31:15 for boalang by&#160;<a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1
 </small></address>
 </body>
 </html>

@@ -1,6 +1,7 @@
 <map id="DivisionExpr" name="DivisionExpr">
-<area shape="rect" id="node1" title=" " alt="" coords="56,229,160,256"/>
-<area shape="rect" id="node2" href="$classBinaryExpr.html" title=" " alt="" coords="5,155,211,181"/>
-<area shape="rect" id="node3" href="$classExprType.html" title=" " alt="" coords="27,80,189,107"/>
-<area shape="rect" id="node4" href="$classExpr.html" title="Interface for expressions." alt="" coords="83,5,133,32"/>
+<area shape="rect" id="node1" title=" " alt="" coords="56,323,160,349"/>
+<area shape="rect" id="node2" href="$classBinaryExpr.html" title=" " alt="" coords="5,247,211,273"/>
+<area shape="rect" id="node3" href="$classExprType.html" title=" " alt="" coords="27,171,189,197"/>
+<area shape="rect" id="node4" href="$classExpr.html" title="Interface for expressions." alt="" coords="83,95,133,121"/>
+<area shape="rect" id="node5" href="$structPosition.html" title="Represents the position in source." alt="" coords="71,5,145,32"/>
 </map>

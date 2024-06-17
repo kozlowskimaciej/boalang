@@ -1,6 +1,6 @@
 <map id="LiteralExpr" name="LiteralExpr">
-<area shape="rect" id="node1" title=" " alt="" coords="163,171,255,197"/>
-<area shape="rect" id="node2" href="$classExprType.html" title=" " alt="" coords="5,81,187,108"/>
-<area shape="rect" id="node3" href="$classExpr.html" title="Interface for expressions." alt="" coords="71,5,121,32"/>
-<area shape="rect" id="node4" href="$structPosition.html" title="Represents the position in source." alt="" coords="211,81,285,108"/>
+<area shape="rect" id="node1" title=" " alt="" coords="50,247,142,273"/>
+<area shape="rect" id="node2" href="$classExprType.html" title=" " alt="" coords="5,171,187,197"/>
+<area shape="rect" id="node3" href="$classExpr.html" title="Interface for expressions." alt="" coords="71,95,121,121"/>
+<area shape="rect" id="node4" href="$structPosition.html" title="Represents the position in source." alt="" coords="59,5,133,32"/>
 </map>

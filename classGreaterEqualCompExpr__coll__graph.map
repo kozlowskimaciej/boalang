@@ -1,6 +1,7 @@
 <map id="GreaterEqualCompExpr" name="GreaterEqualCompExpr">
-<area shape="rect" id="node1" title=" " alt="" coords="15,244,189,271"/>
-<area shape="rect" id="node2" href="$classBinaryExpr.html" title=" " alt="" coords="5,155,199,196"/>
-<area shape="rect" id="node3" href="$classExprType.html" title=" " alt="" coords="21,80,183,107"/>
-<area shape="rect" id="node4" href="$classExpr.html" title="Interface for expressions." alt="" coords="77,5,127,32"/>
+<area shape="rect" id="node1" title=" " alt="" coords="15,337,189,364"/>
+<area shape="rect" id="node2" href="$classBinaryExpr.html" title=" " alt="" coords="5,247,199,288"/>
+<area shape="rect" id="node3" href="$classExprType.html" title=" " alt="" coords="21,171,183,197"/>
+<area shape="rect" id="node4" href="$classExpr.html" title="Interface for expressions." alt="" coords="77,95,127,121"/>
+<area shape="rect" id="node5" href="$structPosition.html" title="Represents the position in source." alt="" coords="65,5,139,32"/>
 </map>

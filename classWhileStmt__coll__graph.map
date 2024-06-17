@@ -1,5 +1,6 @@
 <map id="WhileStmt" name="WhileStmt">
-<area shape="rect" id="node1" title=" " alt="" coords="51,155,141,181"/>
-<area shape="rect" id="node2" href="$classStmtType.html" title=" " alt="" coords="5,80,187,107"/>
-<area shape="rect" id="node3" href="$classStmt.html" title="Interface for statements." alt="" coords="69,5,123,32"/>
+<area shape="rect" id="node1" title=" " alt="" coords="51,247,141,273"/>
+<area shape="rect" id="node2" href="$classStmtType.html" title=" " alt="" coords="5,171,187,197"/>
+<area shape="rect" id="node3" href="$classStmt.html" title="Interface for statements." alt="" coords="69,95,123,121"/>
+<area shape="rect" id="node4" href="$structPosition.html" title="Represents the position in source." alt="" coords="59,5,133,32"/>
 </map>

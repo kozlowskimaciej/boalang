@@ -84,22 +84,35 @@ Collaboration diagram for ReturnStmt:</div>
 <div class="dyncontent">
 <div class="center"><img src="classReturnStmt__coll__graph.png" border="0" usemap="#aReturnStmt_coll__map" alt="Collaboration graph"/></div>
 <map name="aReturnStmt_coll__map" id="aReturnStmt_coll__map">
-<area shape="rect" title=" " alt="" coords="51,155,147,181"/>
-<area shape="rect" href="classStmtType.html" title=" " alt="" coords="5,80,192,107"/>
-<area shape="rect" href="classStmt.html" title="Interface for statements." alt="" coords="72,5,125,32"/>
+<area shape="rect" title=" " alt="" coords="51,247,147,273"/>
+<area shape="rect" href="classStmtType.html" title=" " alt="" coords="5,171,192,197"/>
+<area shape="rect" href="classStmt.html" title="Interface for statements." alt="" coords="72,95,125,121"/>
+<area shape="rect" href="structPosition.html" title="Represents the position in source." alt="" coords="61,5,136,32"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:abe9a85fbda21911d7780dfabaa41e308"><td class="memItemLeft" align="right" valign="top"><a id="abe9a85fbda21911d7780dfabaa41e308"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ReturnStmt</b> (std::unique_ptr&lt; <a class="el" href="classExpr.html">Expr</a> &gt; value)</td></tr>
-<tr class="separator:abe9a85fbda21911d7780dfabaa41e308"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2167c99c58db052d6131a0c2f6e253a1"><td class="memItemLeft" align="right" valign="top"><a id="a2167c99c58db052d6131a0c2f6e253a1"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>ReturnStmt</b> (std::unique_ptr&lt; <a class="el" href="classExpr.html">Expr</a> &gt; value, <a class="el" href="structPosition.html">Position</a> position)</td></tr>
+<tr class="separator:a2167c99c58db052d6131a0c2f6e253a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classStmtType"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classStmtType')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classStmtType.html">StmtType&lt; ReturnStmt &gt;</a></td></tr>
 <tr class="memitem:aaa18a9a60ab4429db6ef79e1e57426a3 inherit pub_methods_classStmtType"><td class="memItemLeft" align="right" valign="top"><a id="aaa18a9a60ab4429db6ef79e1e57426a3"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>accept</b> (<a class="el" href="classStmtVisitor.html">StmtVisitor</a> &amp;visitor) const override</td></tr>
 <tr class="separator:aaa18a9a60ab4429db6ef79e1e57426a3 inherit pub_methods_classStmtType"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5c61e30825fa745f45623482cd86726b inherit pub_methods_classStmtType"><td class="memItemLeft" align="right" valign="top"><a id="a5c61e30825fa745f45623482cd86726b"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Stmt</b> (<a class="el" href="structPosition.html">Position</a> position)</td></tr>
+<tr class="separator:a5c61e30825fa745f45623482cd86726b inherit pub_methods_classStmtType"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af9f347f91855c8b10ce2191c8f6071b0 inherit pub_methods_classStmtType"><td class="memItemLeft" align="right" valign="top"><a id="af9f347f91855c8b10ce2191c8f6071b0"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Stmt</b> (const <a class="el" href="classStmt.html">Stmt</a> &amp;)=delete</td></tr>
+<tr class="separator:af9f347f91855c8b10ce2191c8f6071b0 inherit pub_methods_classStmtType"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa21cd48a9f01eaf59c7acf5a5b340e35 inherit pub_methods_classStmtType"><td class="memItemLeft" align="right" valign="top"><a id="aa21cd48a9f01eaf59c7acf5a5b340e35"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Stmt</b> (<a class="el" href="classStmt.html">Stmt</a> &amp;&amp;)=default</td></tr>
+<tr class="separator:aa21cd48a9f01eaf59c7acf5a5b340e35 inherit pub_methods_classStmtType"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classStmt"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classStmt')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classStmt.html">Stmt</a></td></tr>
+<tr class="memitem:a5c61e30825fa745f45623482cd86726b inherit pub_methods_classStmt"><td class="memItemLeft" align="right" valign="top"><a id="a5c61e30825fa745f45623482cd86726b"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Stmt</b> (<a class="el" href="structPosition.html">Position</a> position)</td></tr>
+<tr class="separator:a5c61e30825fa745f45623482cd86726b inherit pub_methods_classStmt"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af9f347f91855c8b10ce2191c8f6071b0 inherit pub_methods_classStmt"><td class="memItemLeft" align="right" valign="top"><a id="af9f347f91855c8b10ce2191c8f6071b0"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Stmt</b> (const <a class="el" href="classStmt.html">Stmt</a> &amp;)=delete</td></tr>
 <tr class="separator:af9f347f91855c8b10ce2191c8f6071b0 inherit pub_methods_classStmt"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -118,6 +131,10 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a5d1a301f1b0dfad9c19ec3a0f53d7b36"><td class="memItemLeft" align="right" valign="top"><a id="a5d1a301f1b0dfad9c19ec3a0f53d7b36"></a>
 std::unique_ptr&lt; <a class="el" href="classExpr.html">Expr</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>value</b></td></tr>
 <tr class="separator:a5d1a301f1b0dfad9c19ec3a0f53d7b36"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_attribs_classStmt"><td colspan="2" onclick="javascript:toggleInherit('pub_attribs_classStmt')"><img src="closed.png" alt="-"/>&#160;Public Attributes inherited from <a class="el" href="classStmt.html">Stmt</a></td></tr>
+<tr class="memitem:a2c3e33998d99bca7af25c19f7ab375f2 inherit pub_attribs_classStmt"><td class="memItemLeft" align="right" valign="top"><a id="a2c3e33998d99bca7af25c19f7ab375f2"></a>
+<a class="el" href="structPosition.html">Position</a>&#160;</td><td class="memItemRight" valign="bottom"><b>position</b></td></tr>
+<tr class="separator:a2c3e33998d99bca7af25c19f7ab375f2 inherit pub_attribs_classStmt"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following file:<ul>
 <li>src/stmt/<a class="el" href="stmt_8hpp_source.html">stmt.hpp</a></li>
@@ -125,7 +142,7 @@ std::unique_ptr&lt; <a class="el" href="classExpr.html">Expr</a> &gt;&#160;</td>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jun 14 2024 19:57:33 for boalang by&#160;<a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1
+Generated on Mon Jun 17 2024 22:31:15 for boalang by&#160;<a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1
 </small></address>
 </body>
 </html>

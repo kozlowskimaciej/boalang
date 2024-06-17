@@ -1,7 +1,7 @@
 <map id="FuncStmt" name="FuncStmt">
-<area shape="rect" id="node1" title=" " alt="" coords="199,171,282,197"/>
-<area shape="rect" id="node2" href="$classStmtType.html" title=" " alt="" coords="5,81,180,108"/>
-<area shape="rect" id="node3" href="$classStmt.html" title="Interface for statements." alt="" coords="66,5,119,32"/>
-<area shape="rect" id="node4" href="$structVarType.html" title=" " alt="" coords="204,81,277,108"/>
-<area shape="rect" id="node5" href="$structPosition.html" title="Represents the position in source." alt="" coords="314,81,389,108"/>
+<area shape="rect" id="node1" title=" " alt="" coords="162,260,245,287"/>
+<area shape="rect" id="node2" href="$classStmtType.html" title=" " alt="" coords="5,171,180,197"/>
+<area shape="rect" id="node3" href="$classStmt.html" title="Interface for statements." alt="" coords="66,95,119,121"/>
+<area shape="rect" id="node4" href="$structPosition.html" title="Represents the position in source." alt="" coords="55,5,130,32"/>
+<area shape="rect" id="node5" href="$structVarType.html" title=" " alt="" coords="204,171,277,197"/>
 </map>
