@@ -1,4 +1,4 @@
-# boalang
+![boalang](docs/img/boalang.png)
 
 `silne, stałe, wartość`
 
@@ -11,10 +11,9 @@ Opcjonalnie: `Clang-Format`, `Doxygen Graphviz`
 
 1. Pobieranie zależności potrzebnych do kompliacji `CMake`, `Python`, `Clang`:
 `sudo apt install cmake python3 python3.10-venv clang-14 clang-tidy`
-2. Klonowanie repozytorium: `git clone https://gitlab-stud.elka.pw.edu.pl/TKOM_24L_WW/Maciej_Kozlowski/tkom-boalang.git`
-3. Instalacja i konfiguracja `Conan 2`, pierwszy build:
+2. Instalacja i konfiguracja `Conan 2`, pierwszy build:
    `chmod +x configure.sh build.sh && ./configure.sh` (skrypty jako argument pozycyjny mogą przyjąć Debug (domyślnie) lub Release)
-4. Opcjonalnie:
+3. Opcjonalnie:
    - formatowanie kodu `sudo apt install clang-format && cd build && make format` (w projekcie użyty jest styl Google)
    - generowanie dokumentacji `sudo apt install doxygen graphviz && cd build && make docs`
    - uruchamianie testów `cd build && make test`
@@ -371,7 +370,3 @@ Numeric val = 3;
 int fibval = fib(val) as int;
 print fibval;
 ```
-
-## Podsumowanie
-
-Udało się zaimplementować wszystkie planowane funkcjonalności języka. W stosunku do planowanego rozwiązania zmienił się sposób zapisu kilku reguł z gramatyki. Produkt końcowy umożliwia uruchomienie kodu napisanego w języku `boalang`.
