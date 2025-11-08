@@ -7,7 +7,7 @@ var indexSectionsWithContent =
   4: "bcefilmprstv",
   5: "efostv",
   6: "t",
-  7: "b"
+  7: "r"
 };
 
 var indexSectionNames =
