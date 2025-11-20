@@ -458,19 +458,12 @@ std::optional<std::vector<std::unique_ptr<FuncParamStmt>>>
 Parser::func_params() {
   std::vector<std::unique_ptr<FuncParamStmt>> params;
 
-  if (auto param_type = type()) {
-    Token param_id =
-        consume("Expected identifier after type.", TOKEN_IDENTIFIER);
-    params.push_back(std::make_unique<FuncParamStmt>(param_type->get_var_type(),
-                                                     param_id.stringify(),
-                                                     param_id.get_position()));
-  } else {
-    return std::nullopt;
-  }
-
-  while (match(TOKEN_COMMA)) {
+  do {
     std::optional<Token> param_type = type();
     if (!param_type) {
+      if (params.empty()) {
+        return std::nullopt;
+      }
       throw SyntaxError(current_token_, "Expected function parameter type.");
     }
     Token param_id =
@@ -478,7 +471,8 @@ Parser::func_params() {
     params.push_back(std::make_unique<FuncParamStmt>(param_type->get_var_type(),
                                                      param_id.stringify(),
                                                      param_id.get_position()));
-  }
+  } while (match(TOKEN_COMMA));
+
   return params;
 }
 
