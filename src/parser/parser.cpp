@@ -57,12 +57,12 @@ std::unique_ptr<Stmt> Parser::statement() {
 std::unique_ptr<Stmt> Parser::if_stmt() {
   if (auto token = match(TOKEN_IF)) {
     consume("Expected '(' after 'if'.", TOKEN_LPAREN);
-    std::unique_ptr<Expr> condition = expression();
+    auto condition = expression();
     if (!condition) {
       throw SyntaxError(current_token_, "Expected if condition statement.");
     }
     consume("Expected ')' after condition.", TOKEN_RPAREN);
-    std::unique_ptr<Stmt> then_branch = statement();
+    auto then_branch = statement();
     if (!then_branch) {
       throw SyntaxError(current_token_, "Expected if's then branch statement.");
     }
@@ -85,12 +85,12 @@ std::unique_ptr<Stmt> Parser::if_stmt() {
 std::unique_ptr<Stmt> Parser::while_stmt() {
   if (auto token = match(TOKEN_WHILE)) {
     consume("Expected '(' after 'while'.", TOKEN_LPAREN);
-    std::unique_ptr<Expr> condition = expression();
+    auto condition = expression();
     if (!condition) {
       throw SyntaxError(current_token_, "Expected condition expression.");
     }
     consume("Expected ')' after while condition.", TOKEN_RPAREN);
-    std::unique_ptr<Stmt> body = statement();
+    auto body = statement();
     if (!body) {
       throw SyntaxError(current_token_, "Expected body statement.");
     }
@@ -122,7 +122,7 @@ std::unique_ptr<Stmt> Parser::return_stmt() {
 // RULE print_stmt = "print" expression ";" ;
 std::unique_ptr<Stmt> Parser::print_stmt() {
   if (auto token = match(TOKEN_PRINT)) {
-    std::unique_ptr<Expr> expr = expression();
+    auto expr = expression();
     if (!expr) {
       throw SyntaxError(current_token_, "Expected expression after 'print'.");
     }
@@ -136,7 +136,7 @@ std::unique_ptr<Stmt> Parser::print_stmt() {
 // block_stmt ] "}" ;
 std::unique_ptr<Stmt> Parser::inspect_stmt() {
   if (auto token = match(TOKEN_INSPECT)) {
-    std::unique_ptr<Expr> inspected = expression();
+    auto inspected = expression();
     if (!inspected) {
       throw SyntaxError(current_token_, "Expected expression after 'inspect'.");
     }
@@ -418,7 +418,7 @@ std::unique_ptr<VarDeclStmt> Parser::var_decl(const Token& type,
   if (!match(TOKEN_EQUAL)) {
     return nullptr;
   }
-  std::unique_ptr<Expr> expr = expression();
+  auto expr = expression();
   if (!expr) {
     throw SyntaxError(current_token_, "Expected expression.");
   }
@@ -481,14 +481,14 @@ std::unique_ptr<Expr> Parser::expression() { return logic_or(); }
 
 // RULE logic_or = logic_and { "or" logic_and } ;
 std::unique_ptr<Expr> Parser::logic_or() {
-  std::unique_ptr<Expr> expr = logic_and();
+  auto expr = logic_and();
 
   if (!expr) {
     return nullptr;
   }
 
   while (auto token = match(TOKEN_OR)) {
-    std::unique_ptr<Expr> right = logic_and();
+    auto right = logic_and();
     if (!right) {
       throw SyntaxError(current_token_, "Expected expression.");
     }
@@ -501,14 +501,14 @@ std::unique_ptr<Expr> Parser::logic_or() {
 
 // RULE logic_and = equality { "and" equality } ;
 std::unique_ptr<Expr> Parser::logic_and() {
-  std::unique_ptr<Expr> expr = equality();
+  auto expr = equality();
 
   if (!expr) {
     return nullptr;
   }
 
   while (auto token = match(TOKEN_AND)) {
-    std::unique_ptr<Expr> right = equality();
+    auto right = equality();
     if (!right) {
       throw SyntaxError(current_token_, "Expected expression.");
     }
@@ -521,14 +521,14 @@ std::unique_ptr<Expr> Parser::logic_and() {
 
 // RULE equality = comparison { ( "!=" | "==" ) comparison } ;
 std::unique_ptr<Expr> Parser::equality() {
-  std::unique_ptr<Expr> expr = comparison();
+  auto expr = comparison();
 
   if (!expr) {
     return nullptr;
   }
 
   while (auto token = match(TOKEN_NOT_EQUAL, TOKEN_EQUAL_EQUAL)) {
-    std::unique_ptr<Expr> right = comparison();
+    auto right = comparison();
     if (!right) {
       throw SyntaxError(current_token_, "Expected expression.");
     }
@@ -551,7 +551,7 @@ std::unique_ptr<Expr> Parser::equality() {
 
 // RULE comparison = term { ( ">" | ">=" | "<" | "<=" ) term } ;
 std::unique_ptr<Expr> Parser::comparison() {
-  std::unique_ptr<Expr> expr = term();
+  auto expr = term();
 
   if (!expr) {
     return nullptr;
@@ -772,25 +772,22 @@ std::unique_ptr<Expr> Parser::primary() {
 std::optional<std::vector<std::unique_ptr<Expr>>> Parser::arguments() {
   std::vector<std::unique_ptr<Expr>> args;
 
-  if (auto expr = expression()) {
-    args.push_back(std::move(expr));
-  } else {
-    return std::nullopt;
-  }
-
-  if (match(TOKEN_COMMA)) {
-    while (auto expr = expression()) {
-      if (args.size() > MAX_ARGUMENTS) {
-        throw SyntaxError(current_token_, "Maximum amount (" +
-                                              std::to_string(MAX_ARGUMENTS) +
-                                              ") of arguments exceeded.");
+  do {
+    auto expr = expression();
+    if (!expr) {
+      if (args.empty()) {
+        return std::nullopt;
       }
-      args.push_back(std::move(expr));
-      if (!match(TOKEN_COMMA)) {
-        break;
-      }
+      return args;
     }
-  }
+    if (args.size() > MAX_ARGUMENTS) {
+      throw SyntaxError(
+        current_token_,
+        "Maximum amount (" + std::to_string(MAX_ARGUMENTS) + ") of arguments exceeded."
+      );
+    }
+    args.push_back(std::move(expr));
+  } while(match(TOKEN_COMMA));
 
   return args;
 }
